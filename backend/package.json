@@ -1,0 +1,18 @@
+{
+  "name": "subscripciones-y-contratos-ms",
+  "version": "0.0.4",
+  "private": true,
+  "type": "module",
+  "description": "Microservicio Node.js + Fastify (suscripciones y contratos)",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
+    "husky": "^9.1.7"
+  }
+}
