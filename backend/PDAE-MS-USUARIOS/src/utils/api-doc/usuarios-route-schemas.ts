@@ -11,7 +11,7 @@ import {
 export const esquemaPostCrearUsuario = {
   operationId: 'crearUsuario',
   summary: 'Crear usuario',
-  description: 'Inserta un registro en la tabla Users con el campo type (texto 1–255 caracteres).',
+  description: 'Inserta un registro en la tabla Users con type e isActive (opcional).',
   tags: ['Usuarios'],
   body: {
     type: 'object',
@@ -22,6 +22,10 @@ export const esquemaPostCrearUsuario = {
         minLength: 1,
         maxLength: 255,
         description: 'Rol o categoría del usuario',
+      },
+      isActive: {
+        type: 'boolean',
+        description: 'Indica si el usuario inicia activo (por defecto true)',
       },
     },
   },
@@ -36,7 +40,7 @@ export const esquemaGetListarUsuarios = {
   operationId: 'listarUsuarios',
   summary: 'Listar usuarios',
   description:
-    'Filtros opcionales: id_users exacto, type como subcadena (ILIKE). Paginación: page_size, page_number.',
+    'Filtros opcionales: id_users exacto, type como subcadena (ILIKE), isActive. Paginacion: page_size, page_number.',
   tags: ['Usuarios'],
   querystring: {
     type: 'object',
@@ -50,6 +54,10 @@ export const esquemaGetListarUsuarios = {
         type: 'string',
         maxLength: 255,
         description: 'Texto contenido en type (búsqueda parcial)',
+      },
+      isActive: {
+        type: 'boolean',
+        description: 'Filtrar por usuarios activos/inactivos',
       },
       page_size: {
         type: 'integer',
@@ -75,7 +83,7 @@ export const esquemaGetListarUsuarios = {
 export const esquemaPostActualizarUsuario = {
   operationId: 'actualizarUsuario',
   summary: 'Actualizar usuario',
-  description: 'Cambia el type del usuario indicado por id_users.',
+  description: 'Cambia el type del usuario indicado por id_users. isActive es opcional.',
   tags: ['Usuarios'],
   body: {
     type: 'object',
@@ -91,6 +99,10 @@ export const esquemaPostActualizarUsuario = {
         minLength: 1,
         maxLength: 255,
         description: 'Nuevo valor de type',
+      },
+      isActive: {
+        type: 'boolean',
+        description: 'Nuevo estado activo/inactivo (opcional)',
       },
     },
   },

@@ -46,7 +46,7 @@ function getOpenApiServers(): { url: string; description: string }[] {
 
 /** Texto breve en la portada de Swagger; el detalle va en cada operación (esquema y descripciones por ruta). */
 const INFO_DESCRIPTION =
-  'Usuarios: crear, listar y actualizar bajo `/api/usuarios`. id_users en JSON como cadena numérica (BIGSERIAL).';
+  'Usuarios: crear, listar y actualizar bajo `/api/usuarios`. id_users en JSON como cadena numérica (BIGSERIAL) y isActive como booleano.';
 
 export const registerSwagger = async (app: FastifyInstance) => {
   await app.register(swagger, {

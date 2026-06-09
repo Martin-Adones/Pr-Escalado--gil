@@ -1,7 +1,7 @@
 -- =============================================================================
 -- USUARIOS — Script único para funciones del dominio (tabla "Users" en init.sql)
 -- =============================================================================
--- Columnas: id_users (BIGSERIAL), type (VARCHAR 255, rol o categoría del usuario).
+-- Columnas: id_users (BIGSERIAL), type (VARCHAR 255, rol o categoria del usuario), isActive (BOOLEAN).
 -- Requisito: haber ejecutado database/init.sql.
 -- Aplicación: psql -v ON_ERROR_STOP=1 -U <usuario> -d <base> -f database/usuarios/usuarios_funciones.sql
 -- =============================================================================
@@ -48,10 +48,11 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 -- -----------------------------------------------------------------------------
 -- sp_crear_usuario
 -- -----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION sp_crear_usuario(p_tipo VARCHAR)
+CREATE OR REPLACE FUNCTION sp_crear_usuario(p_tipo VARCHAR, p_is_active BOOLEAN DEFAULT TRUE)
 RETURNS TABLE (
-    id_users BIGINT,
-    type VARCHAR(255)
+  id_users BIGINT,
+  type VARCHAR(255),
+  "isActive" BOOLEAN
 ) AS $$
 DECLARE
   v_tipo VARCHAR(255);
@@ -66,9 +67,9 @@ BEGIN
   END IF;
 
   RETURN QUERY
-  INSERT INTO "Users" AS u ("type")
-  VALUES (v_tipo)
-  RETURNING u."id_users", u."type";
+  INSERT INTO "Users" AS u ("type", "isActive")
+  VALUES (v_tipo, COALESCE(p_is_active, TRUE))
+  RETURNING u."id_users", u."type", u."isActive";
 
   RETURN;
 END;
@@ -81,11 +82,13 @@ CREATE OR REPLACE FUNCTION sp_listar_usuarios(
     p_id_usuario BIGINT DEFAULT NULL,
     p_tipo_contiene VARCHAR DEFAULT NULL,
     p_tam_pagina INTEGER DEFAULT 10,
-    p_num_pagina INTEGER DEFAULT 1
+  p_num_pagina INTEGER DEFAULT 1,
+  p_is_active BOOLEAN DEFAULT NULL
 )
 RETURNS TABLE (
     id_users BIGINT,
-    type VARCHAR(255),
+  type VARCHAR(255),
+  "isActive" BOOLEAN,
     total_count BIGINT
 ) AS $$
 DECLARE
@@ -102,16 +105,19 @@ BEGIN
   SELECT COUNT(*) INTO v_total
   FROM "Users" u
   WHERE (p_id_usuario IS NULL OR u."id_users" = p_id_usuario)
-    AND (v_filtro IS NULL OR u."type" ILIKE '%' || v_filtro || '%');
+    AND (v_filtro IS NULL OR u."type" ILIKE '%' || v_filtro || '%')
+    AND (p_is_active IS NULL OR u."isActive" = p_is_active);
 
   RETURN QUERY
   SELECT
     u."id_users",
     u."type",
+    u."isActive",
     v_total AS total_count
   FROM "Users" u
   WHERE (p_id_usuario IS NULL OR u."id_users" = p_id_usuario)
     AND (v_filtro IS NULL OR u."type" ILIKE '%' || v_filtro || '%')
+    AND (p_is_active IS NULL OR u."isActive" = p_is_active)
   ORDER BY u."id_users"
   LIMIT GREATEST(COALESCE(p_tam_pagina, 10), 1)
   OFFSET v_offset;
@@ -125,11 +131,13 @@ $$ LANGUAGE plpgsql;
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION sp_actualizar_usuario(
     p_id_usuario BIGINT,
-    p_tipo VARCHAR
+  p_tipo VARCHAR,
+  p_is_active BOOLEAN DEFAULT NULL
 )
 RETURNS TABLE (
     id_users BIGINT,
-    type VARCHAR(255)
+  type VARCHAR(255),
+  "isActive" BOOLEAN
 ) AS $$
 DECLARE
   v_existe BOOLEAN;
@@ -151,9 +159,10 @@ BEGIN
 
   RETURN QUERY
   UPDATE "Users" u
-  SET "type" = v_tipo
+  SET "type" = v_tipo,
+      "isActive" = COALESCE(p_is_active, u."isActive")
   WHERE u."id_users" = p_id_usuario
-  RETURNING u."id_users", u."type";
+  RETURNING u."id_users", u."type", u."isActive";
 
   RETURN;
 END;
