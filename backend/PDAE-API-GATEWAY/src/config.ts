@@ -8,7 +8,7 @@ export interface MicroserviceConfig {
 }
 
 // Configuración por defecto si no se define la variable de entorno
-const defaultRoutes = 'usuarios:http://localhost:3003,contratos:http://localhost:3002';
+const defaultRoutes = 'auditoria:http://localhost:3007,contratos:http://localhost:3002,planes:http://localhost:3004,productos:http://localhost:3005,soporte:http://localhost:3006,usuarios:http://localhost:3003';
 const routesConfig = process.env.MS_RUTAS_URL || defaultRoutes;
 
 /**

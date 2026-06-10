@@ -1,3 +1,17 @@
+# Stage de desarrollo
+FROM node:20-alpine AS dev
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+ENV NODE_ENV=development
+
+CMD ["npm", "run", "dev"]
+
 # STAGE 1: Build y compilación limpia con TypeScript
 FROM node:20-alpine AS builder
 

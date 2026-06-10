@@ -17,9 +17,9 @@ describe('UsuariosService', () => {
   });
 
   it('crearUsuario delega al repositorio', async () => {
-    const filas = [{ id_users: '1', type: 'X' } as never];
+    const filas = [{ id_users: '1', type: 'X', isActive: true } as never];
     (repositorioSimulado.ejecutarCrearUsuario as jest.Mock).mockResolvedValue(filas);
-    const dto = { type: 'CUSTOMER' } as never;
+    const dto = { type: 'CUSTOMER', isActive: true } as never;
     const resultado = await servicio.crearUsuario(dto);
     expect(repositorioSimulado.ejecutarCrearUsuario).toHaveBeenCalledWith(dto);
     expect(resultado).toEqual(filas);
@@ -33,7 +33,7 @@ describe('UsuariosService', () => {
 
   it('actualizarUsuario delega al repositorio', async () => {
     (repositorioSimulado.ejecutarActualizarUsuario as jest.Mock).mockResolvedValue([]);
-    await servicio.actualizarUsuario({ id_users: '1', type: 'Y' } as never);
+    await servicio.actualizarUsuario({ id_users: '1', type: 'Y', isActive: false } as never);
     expect(repositorioSimulado.ejecutarActualizarUsuario).toHaveBeenCalled();
   });
 });

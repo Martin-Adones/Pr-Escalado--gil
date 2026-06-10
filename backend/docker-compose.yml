@@ -1,0 +1,224 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: postgres_db_ms
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  ms-contratos:
+    build:
+      context: ./PDAE-MS-CONTRATOS
+      dockerfile: Dockerfile
+      target: dev
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      PORT: "${CONTRATOS_PORT}"
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      - "${CONTRATOS_PORT}:${CONTRATOS_PORT}"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: npm run dev
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: sync
+          path: ./PDAE-MS-CONTRATOS/src
+          target: /app/src
+        - action: rebuild
+          path: ./PDAE-MS-CONTRATOS/package.json
+
+  ms-usuarios:
+    build:
+      context: ./PDAE-MS-USUARIOS
+      dockerfile: Dockerfile
+      target: dev
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      PORT: "${USUARIOS_PORT}"
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      - "${USUARIOS_PORT}:${USUARIOS_PORT}"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: npm run dev
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: sync
+          path: ./PDAE-MS-USUARIOS/src
+          target: /app/src
+        - action: rebuild
+          path: ./PDAE-MS-USUARIOS/package.json
+
+  ms-planes:
+    build:
+      context: ./PDAE-MS-PLANES
+      dockerfile: Dockerfile
+      target: dev
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      PORT: "${PLANES_PORT}"
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      - "${PLANES_PORT}:${PLANES_PORT}"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: npm run dev
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: sync
+          path: ./PDAE-MS-PLANES/src
+          target: /app/src
+        - action: rebuild
+          path: ./PDAE-MS-PLANES/package.json
+
+  ms-productos:
+    build:
+      context: ./PDAE-MS-PRODUCTOS
+      dockerfile: Dockerfile
+      target: dev
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      PORT: "${PRODUCTOS_PORT}"
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      - "${PRODUCTOS_PORT}:${PRODUCTOS_PORT}"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: npm run dev
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: sync
+          path: ./PDAE-MS-PRODUCTOS/src
+          target: /app/src
+        - action: rebuild
+          path: ./PDAE-MS-PRODUCTOS/package.json
+
+  ms-soporte:
+    build:
+      context: ./PDAE-MS-SOPORTE
+      dockerfile: Dockerfile
+      target: dev
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      PORT: "${SOPORTE_PORT}"
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      - "${SOPORTE_PORT}:${SOPORTE_PORT}"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: npm run dev
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: sync
+          path: ./PDAE-MS-SOPORTE/src
+          target: /app/src
+        - action: rebuild
+          path: ./PDAE-MS-SOPORTE/package.json
+
+  ms-auditoria:
+    build:
+      context: ./PDAE-MS-AUDITORIA
+      dockerfile: Dockerfile
+      target: dev
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      PORT: "${AUDITORIA_PORT}"
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      - "${AUDITORIA_PORT}:${AUDITORIA_PORT}"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: npm run dev
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: sync
+          path: ./PDAE-MS-AUDITORIA/src
+          target: /app/src
+        - action: rebuild
+          path: ./PDAE-MS-AUDITORIA/package.json
+
+  api-gateway:
+    build:
+      context: ./PDAE-API-GATEWAY
+      dockerfile: Dockerfile
+      target: dev
+    env_file:
+      - .env
+    environment:
+      PORT: "${GATEWAY_PORT}"
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+      MS_RUTAS_URL: "${MS_RUTAS_URL}"
+    ports:
+      - "${GATEWAY_PORT}:${GATEWAY_PORT}"
+    depends_on:
+      - ms-contratos
+      - ms-usuarios
+      - ms-planes
+      - ms-productos
+      - ms-soporte
+      - ms-auditoria
+    command: npm run dev
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: sync
+          path: ./PDAE-API-GATEWAY/src
+          target: /app/src
+        - action: rebuild
+          path: ./PDAE-API-GATEWAY/package.json
+
+volumes:
+  postgres_data:

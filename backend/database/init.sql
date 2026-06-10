@@ -15,14 +15,16 @@ DROP TABLE IF EXISTS "Products" CASCADE;
 -- 1. Tablas Base (Sin dependencias de llaves foráneas)
 CREATE TABLE "Users" (
     "id_users" BIGSERIAL PRIMARY KEY,   
-    "type" VARCHAR(255) NOT NULL
+    "type" VARCHAR(255) NOT NULL,
+    "isActive" BOOLEAN NOT NULL
 );
 
 CREATE TABLE "Plans" (
     "id_plans" BIGSERIAL PRIMARY KEY,
     "name" VARCHAR(255) NOT NULL,
     "billing_cycle" VARCHAR(255) NOT NULL,
-    "amount" DECIMAL(12, 2) NOT NULL
+    "amount" DECIMAL(12, 2) NOT NULL,
+    "isActive" BOOLEAN NOT NULL
 );
 
 CREATE TABLE "Products" (
@@ -31,7 +33,8 @@ CREATE TABLE "Products" (
     "description" TEXT,
     "type" VARCHAR(255) NOT NULL,
     "quantity" INTEGER,
-    "price" DECIMAL(12, 2) NOT NULL
+    "price" DECIMAL(12, 2) NOT NULL,
+    "isActive" BOOLEAN NOT NULL
 );
 
 -- 2. Tablas con Relaciones Directas
@@ -93,3 +96,9 @@ CREATE TABLE "Plans_Products" (
     "id_products" BIGINT NOT NULL REFERENCES "Products"("id_products") ON DELETE CASCADE,
     PRIMARY KEY ("id_plans", "id_products")
 );
+
+-- 5. Funciones y Triggers
+\i /docker-entrypoint-initdb.d/contratos/contratos_funciones.sql
+\i /docker-entrypoint-initdb.d/planes/planes_funciones.sql
+\i /docker-entrypoint-initdb.d/productos/productos_funciones.sql
+\i /docker-entrypoint-initdb.d/usuarios/usuarios_funciones.sql

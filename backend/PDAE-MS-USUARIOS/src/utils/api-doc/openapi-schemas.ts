@@ -15,6 +15,10 @@ export const usuarioFilaProperties = {
     type: 'string',
     description: 'Rol o categoría (VARCHAR 255 en base de datos).',
   },
+  isActive: {
+    type: 'boolean',
+    description: 'Indica si el usuario esta activo.',
+  },
 } as const;
 
 export const usuarioFilaListadoProperties = {

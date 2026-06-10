@@ -30,7 +30,7 @@ describe('UsuariosController', () => {
 
   describe('manejarCrearUsuario', () => {
     it('responde 200 cuando el servicio devuelve datos', async () => {
-      const datos = [{ id_users: '1', type: 'CUSTOMER' }];
+      const datos = [{ id_users: '1', type: 'CUSTOMER', isActive: true }];
       (servicioSimulado.crearUsuario as jest.Mock).mockResolvedValue(datos);
 
       await controlador.manejarCrearUsuario(
@@ -70,7 +70,7 @@ describe('UsuariosController', () => {
 
   describe('manejarListarUsuarios', () => {
     it('responde 200 con lista', async () => {
-      const datos = [{ id_users: '1', type: 'A', total_count: '1' }];
+      const datos = [{ id_users: '1', type: 'A', isActive: true, total_count: '1' }];
       (servicioSimulado.listarUsuarios as jest.Mock).mockResolvedValue(datos);
 
       await controlador.manejarListarUsuarios(
@@ -109,7 +109,7 @@ describe('UsuariosController', () => {
 
   describe('manejarActualizarUsuario', () => {
     it('responde 200', async () => {
-      const datos = [{ id_users: '1', type: 'ADMIN' }];
+      const datos = [{ id_users: '1', type: 'ADMIN', isActive: false }];
       (servicioSimulado.actualizarUsuario as jest.Mock).mockResolvedValue(datos);
 
       await controlador.manejarActualizarUsuario(

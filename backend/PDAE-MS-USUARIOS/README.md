@@ -1,6 +1,6 @@
 # PDAE · Microservicio Usuarios
 
-API REST (Fastify) sobre la tabla **`Users`** (`id_users`, `type`). La lógica está en PostgreSQL: `database/usuarios/usuarios_funciones.sql` (en el repo padre). Puerto por defecto **3003** (el de contratos suele ser 3002).
+API REST (Fastify) sobre la tabla **`Users`** (`id_users`, `type`, `isActive`). La lógica está en PostgreSQL: `database/usuarios/usuarios_funciones.sql` (en el repo padre). Puerto por defecto **3003** (el de contratos suele ser 3002).
 
 ## Rutas (`/api`)
 
