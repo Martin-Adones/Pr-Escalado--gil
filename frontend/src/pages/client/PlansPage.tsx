@@ -1,15 +1,19 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import PortalTemplate from '../../portal/PortalTemplate'
 import PlanChangeModal from '../../components/PlanChangeModal'
+import { listarPlanes } from '../../services/planes.service'
+import { listarContratos, cambiarPlanContrato } from '../../services/contratos.service'
 
 type ClientPlansPageProps = {
   navItems: { label: string; iconClass: string; onClick?: () => void }[]
   activeNavLabel: string
+  userId: string | null
 }
 
 type BillingPeriod = 'monthly' | 'yearly'
 
 type Plan = {
+  id: string
   name: string
   level: string
   monthlyPrice: string
@@ -20,48 +24,87 @@ type Plan = {
   isRecommended?: boolean
   isCurrent?: boolean
   actionLabel: string
+  billingCycle: string
 }
 
-const plans: Plan[] = [
-  {
-    name: 'Básico',
-    level: 'Entrada',
-    monthlyPrice: '$19.990',
-    yearlyPrice: '$203.900',
-    yearlyOriginalPrice: '$239.880',
-    description: 'Ideal para comenzar con las herramientas esenciales.',
-    features: ['1 contrato activo', 'Soporte estándar', 'Facturación mensual', 'Reportes básicos'],
-    actionLabel: 'Contratar básico',
-  },
-  {
-    name: 'Profesional',
-    level: 'Recomendado',
-    monthlyPrice: '$32.990',
-    yearlyPrice: '$336.500',
-    yearlyOriginalPrice: '$395.880',
-    description: 'Equilibrio perfecto para equipos que buscan escalar.',
-    features: ['5 contratos activos', 'Soporte prioritario', 'Métricas avanzadas', 'Automatización de pagos'],
-    isRecommended: true,
-    actionLabel: 'Actualizar ahora',
-  },
-  {
-    name: 'Enterprise Plus',
-    level: 'Empresarial',
-    monthlyPrice: '$45.990',
-    yearlyPrice: '$469.100',
-    yearlyOriginalPrice: '$551.880',
-    description: 'Máximo rendimiento para operaciones críticas y equipos grandes.',
-    features: ['Contratos ilimitados', 'Disponibilidad garantizada 99.5%', 'Usuarios ilimitados', 'Panel de métricas completo'],
-    isCurrent: true,
-    actionLabel: 'Plan actual',
-  },
-]
+function formatPrice(amount: string): string {
+  const num = Number(amount)
+  return `$${num.toLocaleString('es-CL')}`
+}
 
-export default function Plans({ navItems, activeNavLabel }: ClientPlansPageProps) {
+function getYearlyPrice(monthlyAmount: number): number {
+  return monthlyAmount * 12
+}
+
+function getDiscountPct(): number {
+  return 15
+}
+
+function getLevel(_name: string, index: number, total: number): string {
+  if (index === 0) return 'Entrada'
+  if (index === total - 1) return 'Empresarial'
+  return 'Recomendado'
+}
+
+export default function Plans({ navItems, activeNavLabel, userId }: ClientPlansPageProps) {
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly')
-  const [isLoadingPlans] = useState(false)
+  const [plans, setPlans] = useState<Plan[]>([])
+  const [isLoadingPlans, setIsLoadingPlans] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        const [planesData, contratosData] = await Promise.all([
+          listarPlanes({ isActive: true }),
+          listarContratos({ status: 'ACTIVE', id_users: userId || undefined }),
+        ])
+        if (cancelled) return
+
+        const activeContractPlanId = contratosData.length > 0 ? contratosData[0].id_plans : null
+
+        const sortedPlanes = planesData.sort((a, b) => Number(a.amount) - Number(b.amount))
+        const total = sortedPlanes.length
+
+        const mapped: Plan[] = sortedPlanes.map((p, i) => {
+          const monthlyAmount = Number(p.amount)
+          const yearlyAmount = getYearlyPrice(monthlyAmount)
+          const yearlyDiscounted = Math.round(yearlyAmount * (1 - getDiscountPct() / 100))
+          const isCurrent = p.id_plans === activeContractPlanId
+
+          return {
+            id: p.id_plans,
+            name: p.name,
+            level: getLevel(p.name, i, total),
+            monthlyPrice: formatPrice(p.amount),
+            yearlyPrice: formatPrice(String(yearlyDiscounted)),
+            yearlyOriginalPrice: formatPrice(String(yearlyAmount)),
+            description: `Plan ${p.name} - Ciclo de facturación: ${p.billing_cycle}`,
+            features: [
+              `Ciclo: ${p.billing_cycle}`,
+              `Monto: ${formatPrice(p.amount)}/${p.billing_cycle === 'yearly' ? 'año' : 'mes'}`,
+              isCurrent ? 'Plan actual' : 'Disponible para contratar',
+              `ID: #${p.id_plans}`,
+            ],
+            isRecommended: total > 2 && i === Math.floor(total / 2),
+            isCurrent,
+            actionLabel: isCurrent ? 'Plan actual' : i < sortedPlanes.findIndex(sp => sp.id_plans === activeContractPlanId) ? `Cambiar a ${p.name}` : 'Actualizar ahora',
+            billingCycle: p.billing_cycle,
+          }
+        })
+
+        setPlans(mapped)
+      } catch {
+        setPlans([])
+      } finally {
+        if (!cancelled) setIsLoadingPlans(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [userId])
 
   const currentPlan = plans.find((p) => p.isCurrent)
 
@@ -71,10 +114,30 @@ export default function Plans({ navItems, activeNavLabel }: ClientPlansPageProps
     setIsModalOpen(true)
   }
 
-  const handleConfirmChange = () => {
-    console.log('Confirmar cambio de plan:', selectedPlan)
-    setIsModalOpen(false)
-    setSelectedPlan(null)
+  const handleConfirmChange = async () => {
+    if (!selectedPlan || !userId) return
+    try {
+      // Obtener contrato activo del usuario
+      const contratosData = await listarContratos({ status: 'ACTIVE', id_users: userId })
+      const activeContractId = contratosData.length > 0 ? contratosData[0].id_contracts : null
+      if (!activeContractId) {
+        console.error('No se encontró contrato activo para el usuario')
+        setIsModalOpen(false)
+        setSelectedPlan(null)
+        return
+      }
+
+      // Llamar al servicio para cambiar el plan
+      await cambiarPlanContrato(activeContractId, selectedPlan.id)
+
+      // Notificar a otras vistas (HistoryPage) que hay un nuevo registro de auditoría
+      try { window.dispatchEvent(new CustomEvent('auditoria:changed', { detail: { id_contracts: activeContractId } })) } catch (e) { /* noop */ }
+
+      setIsModalOpen(false)
+      setSelectedPlan(null)
+    } catch (error) {
+      console.error('Error al cambiar plan:', error)
+    }
   }
 
   const handleCloseModal = () => {
@@ -93,17 +156,17 @@ export default function Plans({ navItems, activeNavLabel }: ClientPlansPageProps
       contentZoom={0.75}
       navItems={navItems}
       activeNavLabel={activeNavLabel}
-      userInitial="C"
-      userName="Cliente"
+      userInitial={userId?.[0] || 'C'}
+      userName={`Usuario #${userId || '—'}`}
       userRole="Premium Member"
       headerTitle="Planes"
       headerSubtitle="Compara, elige y actualiza tu suscripción según tus necesidades."
       headerRightLabel="Ahorro anual"
-      headerRightValue="15%"
+      headerRightValue={`${getDiscountPct()}%`}
     >
-      <div className="space-y-8">
+      <div className="space-y-8 overflow-x-hidden">
         <section className="overflow-hidden rounded-2xl border border-gray-200 bg-[#D9D9D9] shadow-sm">
-          <div className="flex flex-col justify-between gap-4 border-b border-gray-100 bg-gray-50/60 p-6 lg:flex-row lg:items-center">
+          <div className="flex flex-col justify-between gap-4 border-b border-gray-100 bg-gray-50/60 p-5 lg:flex-row lg:items-center">
             <div>
               <p className="text-[10px] font-black uppercase tracking-wide text-gray-400">Comparación de precios</p>
               <h3 className="mt-1 text-lg font-black text-[#353535]">
@@ -159,7 +222,7 @@ export default function Plans({ navItems, activeNavLabel }: ClientPlansPageProps
 
                 return (
                   <article
-                    key={plan.name}
+                    key={plan.id}
                     className={
                       plan.isRecommended
                         ? 'relative flex min-h-full flex-col rounded-2xl border-2 border-[#3C6E71] bg-white p-6 shadow-lg transition duration-300 hover:-translate-y-1 hover:shadow-2xl'

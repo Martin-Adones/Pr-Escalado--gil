@@ -3,9 +3,10 @@ import PortalTemplate from '../../portal/PortalTemplate'
 type ClientTicketsPageProps = {
   navItems: { label: string; iconClass: string; onClick?: () => void }[]
   activeNavLabel: string
+  userId: string | null
 }
 
-export default function Tickets({ navItems, activeNavLabel }: ClientTicketsPageProps) {
+export default function Tickets({ navItems, activeNavLabel, userId }: ClientTicketsPageProps) {
   return (
     <PortalTemplate
       sidebarTitle="Cliente"
@@ -13,8 +14,8 @@ export default function Tickets({ navItems, activeNavLabel }: ClientTicketsPageP
       contentZoom={0.75}
       navItems={navItems}
       activeNavLabel={activeNavLabel}
-      userInitial="C"
-      userName="Cliente"
+      userInitial={userId?.[0] || 'C'}
+      userName={`Usuario #${userId || '—'}`}
       userRole="Premium Member"
       headerTitle="Tickets"
       headerSubtitle="Gestiona tus tickets de soporte."

@@ -14,6 +14,7 @@ import RoleSelectionPage, { type UserRole } from './portal/RoleSelectionPage'
 type PageProps = {
   navItems: { label: string; iconClass: string; onClick?: () => void }[]
   activeNavLabel: string
+  userId: string | null
 }
 
 const clientPages: Record<string, (props: PageProps) => ReactElement> = {
@@ -37,6 +38,10 @@ export default function App() {
     const saved = localStorage.getItem('selectedRole')
     return saved ? (saved as UserRole) : null
   })
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(() => {
+    const saved = localStorage.getItem('selectedUserId')
+    return saved || '1'
+  })
   const [activeClientNavLabel, setActiveClientNavLabel] = useState(() => {
     const saved = localStorage.getItem('activeClientNavLabel')
     return saved || 'Inicio'
@@ -46,7 +51,6 @@ export default function App() {
     return saved || 'Inicio'
   })
 
-  // Guardar estado en localStorage cuando cambie
   useEffect(() => {
     if (selectedRole) {
       localStorage.setItem('selectedRole', selectedRole)
@@ -56,12 +60,31 @@ export default function App() {
   }, [selectedRole])
 
   useEffect(() => {
+    if (selectedUserId) {
+      localStorage.setItem('selectedUserId', selectedUserId)
+    } else {
+      localStorage.removeItem('selectedUserId')
+    }
+  }, [selectedUserId])
+
+  useEffect(() => {
     localStorage.setItem('activeClientNavLabel', activeClientNavLabel)
   }, [activeClientNavLabel])
 
   useEffect(() => {
     localStorage.setItem('activeAdminNavLabel', activeAdminNavLabel)
   }, [activeAdminNavLabel])
+
+  const handleSelectRole = (role: UserRole) => {
+    setSelectedRole(role)
+    if (role === 'admin') {
+      setSelectedUserId(null)
+    }
+  }
+
+  const handleSelectUserId = (userId: string) => {
+    setSelectedUserId(userId)
+  }
 
   const clientNavItems = useMemo(
     () => [
@@ -78,7 +101,14 @@ export default function App() {
       },
       { label: 'Planes', iconClass: 'fa-solid fa-box-open', onClick: () => setActiveClientNavLabel('Planes') },
       { label: 'Tickets', iconClass: 'fa-solid fa-ticket', onClick: () => setActiveClientNavLabel('Tickets') },
-      { label: 'Cambiar perfil', iconClass: 'fa-solid fa-right-left', onClick: () => setSelectedRole(null) },
+      {
+        label: 'Cambiar perfil',
+        iconClass: 'fa-solid fa-right-left',
+        onClick: () => {
+          setSelectedRole(null)
+          setSelectedUserId(null)
+        },
+      },
     ],
     [],
   )
@@ -90,21 +120,44 @@ export default function App() {
       { label: 'Ciclos de Cobro', iconClass: 'fa-solid fa-rotate', onClick: () => setActiveAdminNavLabel('Ciclos de Cobro') },
       { label: 'Clientes', iconClass: 'fa-solid fa-users', onClick: () => setActiveAdminNavLabel('Clientes') },
       { label: 'Configuración', iconClass: 'fa-solid fa-gear', onClick: () => setActiveAdminNavLabel('Configuración') },
-      { label: 'Cambiar perfil', iconClass: 'fa-solid fa-right-left', onClick: () => setSelectedRole(null) },
+      {
+        label: 'Cambiar perfil',
+        iconClass: 'fa-solid fa-right-left',
+        onClick: () => {
+          setSelectedRole(null)
+          setSelectedUserId(null)
+        },
+      },
     ],
     [],
   )
 
   if (!selectedRole) {
-    return <RoleSelectionPage onSelectRole={setSelectedRole} />
+    return (
+      <RoleSelectionPage
+        onSelectRole={handleSelectRole}
+        onSelectUserId={handleSelectUserId}
+        initialUserId={selectedUserId}
+      />
+    )
   }
 
   if (selectedRole === 'admin') {
     const ActiveAdminPage = adminPages[activeAdminNavLabel] ?? AdminDashboard
-    return <ActiveAdminPage navItems={adminNavItems} activeNavLabel={activeAdminNavLabel} />
+    return <ActiveAdminPage navItems={adminNavItems} activeNavLabel={activeAdminNavLabel} userId={null} />
+  }
+
+  if (!selectedUserId) {
+    return (
+      <RoleSelectionPage
+        onSelectRole={handleSelectRole}
+        onSelectUserId={handleSelectUserId}
+        initialUserId={selectedUserId}
+      />
+    )
   }
 
   const ActiveClientPage = clientPages[activeClientNavLabel] ?? ClientDashboard
 
-  return <ActiveClientPage navItems={clientNavItems} activeNavLabel={activeClientNavLabel} />
+  return <ActiveClientPage navItems={clientNavItems} activeNavLabel={activeClientNavLabel} userId={selectedUserId} />
 }

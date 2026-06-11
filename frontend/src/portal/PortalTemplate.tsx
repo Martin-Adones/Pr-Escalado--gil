@@ -39,11 +39,11 @@ export default function PortalTemplate({
 }: PortalTemplateProps) {
   return (
     <div
-      className="font-sans antialiased bg-[#D9D9D9] text-[#353535] min-h-screen"
+      className="font-sans antialiased bg-[#D9D9D9] text-[#353535] min-h-screen overflow-x-hidden"
       style={{
         zoom: contentZoom,
         minHeight: `${100 / contentZoom}vh`,
-        minWidth: `${100 / contentZoom}vw`,
+        minWidth: '100%',
       }}
     >
       <div className="flex min-h-screen">
