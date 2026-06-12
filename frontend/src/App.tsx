@@ -1,4 +1,5 @@
-import { type ReactElement, useEffect, useMemo, useState } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import AdminDashboard from './pages/admin/DashboardPage'
 import ContratosPage from './pages/admin/ContratosPage'
 import CiclosDeCobroPage from './pages/admin/CiclosDeCobroPage'
@@ -17,20 +18,88 @@ type PageProps = {
   userId: string | null
 }
 
-const clientPages: Record<string, (props: PageProps) => ReactElement> = {
-  Inicio: ClientDashboard,
-  'Mis Contratos': Contracts,
-  Historial: History,
-  Planes: Plans,
-  Tickets: Tickets,
+const adminPathToLabel: Record<string, string> = {
+  '/admin': 'Inicio',
+  '/admin/contratos': 'Contratos',
+  '/admin/ciclos-de-cobro': 'Ciclos de Cobro',
+  '/admin/clientes': 'Clientes',
+  '/admin/configuracion': 'Configuración',
 }
 
-const adminPages: Record<string, (props: PageProps) => ReactElement> = {
-  Inicio: AdminDashboard,
-  Contratos: ContratosPage,
-  'Ciclos de Cobro': CiclosDeCobroPage,
-  Clientes: ClientesPage,
-  Configuración: ConfiguracionPage,
+const clientPathToLabel: Record<string, string> = {
+  '/client': 'Inicio',
+  '/client/contratos': 'Mis Contratos',
+  '/client/historial': 'Historial',
+  '/client/planes': 'Planes',
+  '/client/tickets': 'Tickets',
+}
+
+function AdminLayout({ onLogout }: { onLogout: () => void }) {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const activeNavLabel = adminPathToLabel[location.pathname] || 'Inicio'
+
+  const handleLogout = useCallback(() => {
+    onLogout()
+    navigate('/')
+  }, [navigate, onLogout])
+
+  const navItems = useMemo(
+    () => [
+      { label: 'Inicio', iconClass: 'fa-solid fa-house', onClick: () => navigate('/admin') },
+      { label: 'Contratos', iconClass: 'fa-solid fa-file-contract', onClick: () => navigate('/admin/contratos') },
+      { label: 'Ciclos de Cobro', iconClass: 'fa-solid fa-rotate', onClick: () => navigate('/admin/ciclos-de-cobro') },
+      { label: 'Clientes', iconClass: 'fa-solid fa-users', onClick: () => navigate('/admin/clientes') },
+      { label: 'Configuración', iconClass: 'fa-solid fa-gear', onClick: () => navigate('/admin/configuracion') },
+      { label: 'Cambiar perfil', iconClass: 'fa-solid fa-right-left', onClick: handleLogout },
+    ],
+    [navigate, handleLogout],
+  )
+
+  return (
+    <Routes>
+      <Route index element={<AdminDashboard navItems={navItems} activeNavLabel={activeNavLabel} />} />
+      <Route path="contratos" element={<ContratosPage navItems={navItems} activeNavLabel={activeNavLabel} />} />
+      <Route path="ciclos-de-cobro" element={<CiclosDeCobroPage navItems={navItems} activeNavLabel={activeNavLabel} />} />
+      <Route path="clientes" element={<ClientesPage navItems={navItems} activeNavLabel={activeNavLabel} />} />
+      <Route path="configuracion" element={<ConfiguracionPage navItems={navItems} activeNavLabel={activeNavLabel} />} />
+    </Routes>
+  )
+}
+
+function ClientLayout({ userId, onLogout }: { userId: string; onLogout: () => void }) {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const activeNavLabel = clientPathToLabel[location.pathname] || 'Inicio'
+
+  const handleLogout = useCallback(() => {
+    onLogout()
+    navigate('/')
+  }, [navigate, onLogout])
+
+  const navItems = useMemo(
+    () => [
+      { label: 'Inicio', iconClass: 'fa-solid fa-house', onClick: () => navigate('/client') },
+      { label: 'Mis Contratos', iconClass: 'fa-solid fa-file-invoice-dollar', onClick: () => navigate('/client/contratos') },
+      { label: 'Historial', iconClass: 'fa-solid fa-clock-rotate-left', onClick: () => navigate('/client/historial') },
+      { label: 'Planes', iconClass: 'fa-solid fa-box-open', onClick: () => navigate('/client/planes') },
+      { label: 'Tickets', iconClass: 'fa-solid fa-ticket', onClick: () => navigate('/client/tickets') },
+      { label: 'Cambiar perfil', iconClass: 'fa-solid fa-right-left', onClick: handleLogout },
+    ],
+    [navigate, handleLogout],
+  )
+
+  const pageProps: PageProps = { navItems, activeNavLabel, userId }
+
+  return (
+    <Routes>
+      <Route index element={<ClientDashboard {...pageProps} />} />
+      <Route path="contratos" element={<Contracts {...pageProps} />} />
+      <Route path="historial" element={<History {...pageProps} />} />
+      <Route path="planes" element={<Plans {...pageProps} />} />
+      <Route path="tickets" element={<Tickets {...pageProps} />} />
+    </Routes>
+  )
 }
 
 export default function App() {
@@ -41,14 +110,6 @@ export default function App() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(() => {
     const saved = localStorage.getItem('selectedUserId')
     return saved || '1'
-  })
-  const [activeClientNavLabel, setActiveClientNavLabel] = useState(() => {
-    const saved = localStorage.getItem('activeClientNavLabel')
-    return saved || 'Inicio'
-  })
-  const [activeAdminNavLabel, setActiveAdminNavLabel] = useState(() => {
-    const saved = localStorage.getItem('activeAdminNavLabel')
-    return saved || 'Inicio'
   })
 
   useEffect(() => {
@@ -67,97 +128,63 @@ export default function App() {
     }
   }, [selectedUserId])
 
-  useEffect(() => {
-    localStorage.setItem('activeClientNavLabel', activeClientNavLabel)
-  }, [activeClientNavLabel])
-
-  useEffect(() => {
-    localStorage.setItem('activeAdminNavLabel', activeAdminNavLabel)
-  }, [activeAdminNavLabel])
-
-  const handleSelectRole = (role: UserRole) => {
+  const handleSelectRole = useCallback((role: UserRole) => {
     setSelectedRole(role)
     if (role === 'admin') {
       setSelectedUserId(null)
     }
-  }
+  }, [])
 
-  const handleSelectUserId = (userId: string) => {
+  const handleSelectUserId = useCallback((userId: string) => {
     setSelectedUserId(userId)
-  }
+  }, [])
 
-  const clientNavItems = useMemo(
-    () => [
-      { label: 'Inicio', iconClass: 'fa-solid fa-house', onClick: () => setActiveClientNavLabel('Inicio') },
-      {
-        label: 'Mis Contratos',
-        iconClass: 'fa-solid fa-file-invoice-dollar',
-        onClick: () => setActiveClientNavLabel('Mis Contratos'),
-      },
-      {
-        label: 'Historial',
-        iconClass: 'fa-solid fa-clock-rotate-left',
-        onClick: () => setActiveClientNavLabel('Historial'),
-      },
-      { label: 'Planes', iconClass: 'fa-solid fa-box-open', onClick: () => setActiveClientNavLabel('Planes') },
-      { label: 'Tickets', iconClass: 'fa-solid fa-ticket', onClick: () => setActiveClientNavLabel('Tickets') },
-      {
-        label: 'Cambiar perfil',
-        iconClass: 'fa-solid fa-right-left',
-        onClick: () => {
-          setSelectedRole(null)
-          setSelectedUserId(null)
-        },
-      },
-    ],
-    [],
-  )
-
-  const adminNavItems = useMemo(
-    () => [
-      { label: 'Inicio', iconClass: 'fa-solid fa-house', onClick: () => setActiveAdminNavLabel('Inicio') },
-      { label: 'Contratos', iconClass: 'fa-solid fa-file-contract', onClick: () => setActiveAdminNavLabel('Contratos') },
-      { label: 'Ciclos de Cobro', iconClass: 'fa-solid fa-rotate', onClick: () => setActiveAdminNavLabel('Ciclos de Cobro') },
-      { label: 'Clientes', iconClass: 'fa-solid fa-users', onClick: () => setActiveAdminNavLabel('Clientes') },
-      { label: 'Configuración', iconClass: 'fa-solid fa-gear', onClick: () => setActiveAdminNavLabel('Configuración') },
-      {
-        label: 'Cambiar perfil',
-        iconClass: 'fa-solid fa-right-left',
-        onClick: () => {
-          setSelectedRole(null)
-          setSelectedUserId(null)
-        },
-      },
-    ],
-    [],
-  )
+  const handleLogout = useCallback(() => {
+    setSelectedRole(null)
+    setSelectedUserId(null)
+  }, [])
 
   if (!selectedRole) {
     return (
-      <RoleSelectionPage
-        onSelectRole={handleSelectRole}
-        onSelectUserId={handleSelectUserId}
-        initialUserId={selectedUserId}
-      />
+      <Routes>
+        <Route path="*" element={
+          <RoleSelectionPage
+            onSelectRole={handleSelectRole}
+            onSelectUserId={handleSelectUserId}
+          />
+        } />
+      </Routes>
     )
   }
 
   if (selectedRole === 'admin') {
-    const ActiveAdminPage = adminPages[activeAdminNavLabel] ?? AdminDashboard
-    return <ActiveAdminPage navItems={adminNavItems} activeNavLabel={activeAdminNavLabel} userId={null} />
+    return (
+      <Routes>
+        <Route path="/" element={<Navigate to="/admin" replace />} />
+        <Route path="/admin/*" element={<AdminLayout onLogout={handleLogout} />} />
+        <Route path="*" element={<Navigate to="/admin" replace />} />
+      </Routes>
+    )
   }
 
   if (!selectedUserId) {
     return (
-      <RoleSelectionPage
-        onSelectRole={handleSelectRole}
-        onSelectUserId={handleSelectUserId}
-        initialUserId={selectedUserId}
-      />
+      <Routes>
+        <Route path="*" element={
+          <RoleSelectionPage
+            onSelectRole={handleSelectRole}
+            onSelectUserId={handleSelectUserId}
+          />
+        } />
+      </Routes>
     )
   }
 
-  const ActiveClientPage = clientPages[activeClientNavLabel] ?? ClientDashboard
-
-  return <ActiveClientPage navItems={clientNavItems} activeNavLabel={activeClientNavLabel} userId={selectedUserId} />
+  return (
+    <Routes>
+      <Route path="/" element={<Navigate to="/client" replace />} />
+      <Route path="/client/*" element={<ClientLayout userId={selectedUserId} onLogout={handleLogout} />} />
+      <Route path="*" element={<Navigate to="/client" replace />} />
+    </Routes>
+  )
 }

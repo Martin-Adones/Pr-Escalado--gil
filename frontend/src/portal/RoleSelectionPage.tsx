@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { listarUsuarios } from '../services/usuarios.service'
 import type { FilaUsuario } from '../services/interfaces'
 
@@ -7,13 +8,13 @@ export type UserRole = 'client' | 'admin'
 type RoleSelectionPageProps = {
   onSelectRole: (role: UserRole) => void
   onSelectUserId: (userId: string) => void
-  initialUserId?: string | null
 }
 
-export default function RoleSelectionPage({ onSelectRole, onSelectUserId, initialUserId }: RoleSelectionPageProps) {
+export default function RoleSelectionPage({ onSelectRole, onSelectUserId }: RoleSelectionPageProps) {
+  const navigate = useNavigate()
   const [step, setStep] = useState<'role' | 'user'>('role')
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null)
-  const [userId, setUserId] = useState(initialUserId || '1')
+  const [userId, setUserId] = useState('1')
   const [users, setUsers] = useState<FilaUsuario[]>([])
   const [loadingUsers, setLoadingUsers] = useState(false)
 
@@ -21,6 +22,7 @@ export default function RoleSelectionPage({ onSelectRole, onSelectUserId, initia
     setSelectedRole(role)
     if (role === 'admin') {
       onSelectRole('admin')
+      navigate('/admin', { replace: true })
       return
     }
     setStep('user')
@@ -39,11 +41,13 @@ export default function RoleSelectionPage({ onSelectRole, onSelectUserId, initia
     }
   }
 
-  const handleStart = () => {
+  const handleStart = (directUserId?: string) => {
     if (selectedRole === 'admin') return
-    if (!userId.trim()) return
-    onSelectUserId(userId.trim())
+    const id = String(directUserId ?? userId ?? '').trim()
+    if (!id) return
+    onSelectUserId(id)
     onSelectRole('client')
+    navigate('/client', { replace: true })
   }
 
   if (step === 'user') {
@@ -70,7 +74,7 @@ export default function RoleSelectionPage({ onSelectRole, onSelectUserId, initia
                 <button
                   key={u.id_users}
                   type="button"
-                  onClick={() => { setUserId(u.id_users); handleStart() }}
+                  onClick={() => { setUserId(u.id_users); handleStart(u.id_users) }}
                   className={`w-full text-left p-4 rounded-xl border transition ${
                     userId === u.id_users
                       ? 'border-[#3C6E71] bg-[#3C6E71]/5 shadow-sm'
@@ -104,7 +108,7 @@ export default function RoleSelectionPage({ onSelectRole, onSelectUserId, initia
               />
               <button
                 type="button"
-                onClick={handleStart}
+                onClick={() => handleStart()}
                 disabled={!userId.trim()}
                 className="w-full rounded-xl bg-[#284B63] px-4 py-3 text-sm font-black text-white transition hover:bg-[#3C6E71] disabled:opacity-50"
               >

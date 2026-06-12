@@ -1,4 +1,6 @@
-const API_BASE = (import.meta.env.VITE_API_URL || '') + '/api'
+function getApiBase(): string {
+  return (import.meta.env.VITE_API_URL || '') + '/api'
+}
 
 export class ApiError extends Error {
   constructor(
@@ -29,15 +31,17 @@ function buildQuery(params: Record<string, string | number | boolean | undefined
 }
 
 export async function apiGet<T>(path: string, params?: Record<string, string | number | boolean | undefined | null>): Promise<T> {
-  const url = `${API_BASE}${path}${params ? buildQuery(params) : ''}`
+  const url = `${getApiBase()}${path}${params ? buildQuery(params) : ''}`
   const response = await fetch(url)
   return handleResponse<T>(response)
 }
 
 export async function apiPost<T>(path: string, body?: unknown): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await fetch(`${getApiBase()}${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+    },
     body: body ? JSON.stringify(body) : undefined,
   })
   return handleResponse<T>(response)
