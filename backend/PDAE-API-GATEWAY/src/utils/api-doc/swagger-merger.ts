@@ -15,17 +15,24 @@ export class SwaggerMerger {
    * Obtiene la especificación OpenAPI de un microservicio específico.
    * Si el microservicio está apagado, retorna null de forma segura.
    */
-  private async fetchSchema(service: MicroserviceConfig): Promise<any | null> {
-    try {
-      const response = await fetch(`${service.url}/api-doc/json`);
-      if (!response.ok) {
-        throw new Error(`HTTP status ${response.status}`);
+  private async fetchSchema(service: MicroserviceConfig, retries = 5, delay = 2000): Promise<any | null> {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const response = await fetch(`${service.url}/api-doc/json`, { signal: AbortSignal.timeout(3000) });
+        if (!response.ok) {
+          throw new Error(`HTTP status ${response.status}`);
+        }
+        return await response.json();
+      } catch (error: any) {
+        if (attempt < retries) {
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        } else {
+          console.warn(`[SwaggerMerger] No se pudo obtener el esquema de ${service.name} (${service.url}/api-doc/json): ${error.message}`);
+          return null;
+        }
       }
-      return await response.json();
-    } catch (error: any) {
-      console.warn(`[SwaggerMerger] No se pudo obtener el esquema de ${service.name} (${service.url}/api-doc/json): ${error.message}`);
-      return null;
     }
+    return null;
   }
 
   /**

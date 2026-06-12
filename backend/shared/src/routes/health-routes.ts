@@ -1,0 +1,30 @@
+import { FastifyInstance } from 'fastify';
+
+export async function healthRoute(fastify: FastifyInstance, serviceName: string) {
+  fastify.get('/health', {
+    schema: {
+      operationId: 'healthCheck',
+      summary: 'Estado del servicio',
+      description:
+        'Indica si la API responde. Úsalo como readiness/liveness. Respuesta típica: status **UP** y nombre del servicio.',
+      tags: ['Sistema'],
+      response: {
+        200: {
+          description: 'Servicio operativo',
+          type: 'object',
+          properties: {
+            status: { type: 'string', description: 'UP si el proceso está sirviendo peticiones' },
+            service: { type: 'string', description: 'Nombre lógico del microservicio' },
+            timestamp: { type: 'string', format: 'date-time', description: 'Momento de la respuesta en ISO-8601' },
+          },
+        },
+      },
+    },
+  }, async (_request, _reply) => {
+    return {
+      status: 'UP',
+      service: serviceName,
+      timestamp: new Date().toISOString()
+    };
+  });
+}

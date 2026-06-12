@@ -13,6 +13,7 @@
     "coverage": "jest --coverage"
   },
   "dependencies": {
+    "shared": "file:../shared",
     "fastify": "^4.26.0",
     "fastify-plugin": "^4.5.1",
     "@fastify/env": "^4.3.0",

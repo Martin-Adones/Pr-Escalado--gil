@@ -32,7 +32,7 @@ function normalizarBooleano({ value }: { value: unknown }) {
   return value;
 }
 
-/** Cuerpo POST → `sp_crear_usuario` */
+/** Cuerpo POST - `sp_crear_usuario` */
 export class CrearUsuarioEntradaDto {
   @IsString()
   @IsNotEmpty({ message: 'El campo type es requerido' })
@@ -52,7 +52,7 @@ export interface FilaUsuario {
   isActive: boolean;
 }
 
-/** Query GET → `sp_listar_usuarios` */
+/** Query GET - `sp_listar_usuarios` */
 export class ListarUsuariosConsultaDto {
   @Transform(vacioAIndefinido)
   @IsOptional()
@@ -86,7 +86,7 @@ export interface FilaUsuarioListado extends FilaUsuario {
   total_count: string;
 }
 
-/** Cuerpo POST → `sp_actualizar_usuario` */
+/** Cuerpo POST - `sp_actualizar_usuario` */
 export class ActualizarUsuarioEntradaDto {
   @Transform(vacioAIndefinido)
   @IsString()

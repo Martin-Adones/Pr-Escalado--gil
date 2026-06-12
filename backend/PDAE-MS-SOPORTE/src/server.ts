@@ -19,8 +19,8 @@ const start = async () => {
       host: '0.0.0.0' 
     });
 
-    console.log(`✅ Microservicio corriendo en el puerto ${port}`);
-    console.log(`📝 Documentación: http://localhost:${port}/api-doc\n`);
+    console.log(`Microservicio corriendo en el puerto ${port}`);
+    console.log(`Documentación: http://localhost:${port}/api-doc\n`);
     
   } catch (err) {
     console.error(err);

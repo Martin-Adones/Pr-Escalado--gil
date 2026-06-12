@@ -1,22 +1,35 @@
-/**
- * Fragmentos de JSON Schema reutilizables para OpenAPI y validacion en Fastify.
- * Nota: no usar la keyword `example` aqui; AJV en modo estricto de Fastify la rechaza.
- */
+export {
+  respuestaErrorValidacion,
+  respuestaErrorServidor,
+} from 'shared';
 
-export const respuestaErrorValidacion = {
-  description: 'Cuerpo enviado invalido o reglas de class-validator',
-  type: 'object',
-  properties: {
-    success: { type: 'boolean' },
-    message: { type: 'string' },
+export const filaLogAuditoriaProperties = {
+  id_audit_logs: { type: 'string', description: 'Identificador del log de auditoría.' },
+  id_contracts: { type: 'string', description: 'Identificador del contrato asociado.' },
+  action: { type: 'string', description: 'Acción realizada.' },
+  assignet_to: { type: 'string', description: 'Usuario o entidad responsable.' },
+  created_at: { type: 'string', format: 'date-time', description: 'Momento en que se registró el log.' },
+} as const;
+
+export const filaLogAuditoriaListadoProperties = {
+  ...filaLogAuditoriaProperties,
+  total_count: {
+    type: 'integer',
+    description: 'Total de filas que cumplen el filtro.',
   },
 } as const;
 
-export const respuestaErrorServidor = {
-  description: 'Error no controlado o fallo al ejecutar el procedimiento en base de datos',
+export const respuestaExitoListaLogsAuditoria = {
+  description: 'Lista paginada de logs de auditoría',
   type: 'object',
   properties: {
     success: { type: 'boolean' },
-    message: { type: 'string' },
+    data: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: filaLogAuditoriaListadoProperties,
+      },
+    },
   },
 } as const;

@@ -4,7 +4,7 @@ services:
     container_name: postgres_db_ms
     restart: always
     env_file:
-      - .env
+      - ./.env
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -13,7 +13,7 @@ services:
       - "${DB_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database:/docker-entrypoint-initdb.d
+      - ./backend/database:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h localhost -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
@@ -23,19 +23,17 @@ services:
 
   ms-contratos:
     build:
-      context: ./PDAE-MS-CONTRATOS
-      dockerfile: Dockerfile
+      context: ./backend
+      dockerfile: PDAE-MS-CONTRATOS/Dockerfile
       target: dev
     env_file:
-      - .env
+      - ./.env
     environment:
       DB_HOST: db
       DB_PORT: 5432
       PORT: "${CONTRATOS_PORT}"
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
-    ports:
-      - "${CONTRATOS_PORT}:${CONTRATOS_PORT}"
     depends_on:
       db:
         condition: service_healthy
@@ -44,26 +42,29 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./PDAE-MS-CONTRATOS/src
+          path: ./backend/PDAE-MS-CONTRATOS/src
           target: /app/src
+        - action: sync
+          path: ./backend/shared/src
+          target: /shared/src
         - action: rebuild
-          path: ./PDAE-MS-CONTRATOS/package.json
+          path: ./backend/PDAE-MS-CONTRATOS/package.json
+        - action: rebuild
+          path: ./backend/shared/package.json
 
   ms-usuarios:
     build:
-      context: ./PDAE-MS-USUARIOS
-      dockerfile: Dockerfile
+      context: ./backend
+      dockerfile: PDAE-MS-USUARIOS/Dockerfile
       target: dev
     env_file:
-      - .env
+      - ./.env
     environment:
       DB_HOST: db
       DB_PORT: 5432
       PORT: "${USUARIOS_PORT}"
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
-    ports:
-      - "${USUARIOS_PORT}:${USUARIOS_PORT}"
     depends_on:
       db:
         condition: service_healthy
@@ -72,26 +73,29 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./PDAE-MS-USUARIOS/src
+          path: ./backend/PDAE-MS-USUARIOS/src
           target: /app/src
+        - action: sync
+          path: ./backend/shared/src
+          target: /shared/src
         - action: rebuild
-          path: ./PDAE-MS-USUARIOS/package.json
+          path: ./backend/PDAE-MS-USUARIOS/package.json
+        - action: rebuild
+          path: ./backend/shared/package.json
 
   ms-planes:
     build:
-      context: ./PDAE-MS-PLANES
-      dockerfile: Dockerfile
+      context: ./backend
+      dockerfile: PDAE-MS-PLANES/Dockerfile
       target: dev
     env_file:
-      - .env
+      - ./.env
     environment:
       DB_HOST: db
       DB_PORT: 5432
       PORT: "${PLANES_PORT}"
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
-    ports:
-      - "${PLANES_PORT}:${PLANES_PORT}"
     depends_on:
       db:
         condition: service_healthy
@@ -100,26 +104,29 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./PDAE-MS-PLANES/src
+          path: ./backend/PDAE-MS-PLANES/src
           target: /app/src
+        - action: sync
+          path: ./backend/shared/src
+          target: /shared/src
         - action: rebuild
-          path: ./PDAE-MS-PLANES/package.json
+          path: ./backend/PDAE-MS-PLANES/package.json
+        - action: rebuild
+          path: ./backend/shared/package.json
 
   ms-productos:
     build:
-      context: ./PDAE-MS-PRODUCTOS
-      dockerfile: Dockerfile
+      context: ./backend
+      dockerfile: PDAE-MS-PRODUCTOS/Dockerfile
       target: dev
     env_file:
-      - .env
+      - ./.env
     environment:
       DB_HOST: db
       DB_PORT: 5432
       PORT: "${PRODUCTOS_PORT}"
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
-    ports:
-      - "${PRODUCTOS_PORT}:${PRODUCTOS_PORT}"
     depends_on:
       db:
         condition: service_healthy
@@ -128,26 +135,29 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./PDAE-MS-PRODUCTOS/src
+          path: ./backend/PDAE-MS-PRODUCTOS/src
           target: /app/src
+        - action: sync
+          path: ./backend/shared/src
+          target: /shared/src
         - action: rebuild
-          path: ./PDAE-MS-PRODUCTOS/package.json
+          path: ./backend/PDAE-MS-PRODUCTOS/package.json
+        - action: rebuild
+          path: ./backend/shared/package.json
 
   ms-soporte:
     build:
-      context: ./PDAE-MS-SOPORTE
-      dockerfile: Dockerfile
+      context: ./backend
+      dockerfile: PDAE-MS-SOPORTE/Dockerfile
       target: dev
     env_file:
-      - .env
+      - ./.env
     environment:
       DB_HOST: db
       DB_PORT: 5432
       PORT: "${SOPORTE_PORT}"
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
-    ports:
-      - "${SOPORTE_PORT}:${SOPORTE_PORT}"
     depends_on:
       db:
         condition: service_healthy
@@ -156,26 +166,29 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./PDAE-MS-SOPORTE/src
+          path: ./backend/PDAE-MS-SOPORTE/src
           target: /app/src
+        - action: sync
+          path: ./backend/shared/src
+          target: /shared/src
         - action: rebuild
-          path: ./PDAE-MS-SOPORTE/package.json
+          path: ./backend/PDAE-MS-SOPORTE/package.json
+        - action: rebuild
+          path: ./backend/shared/package.json
 
   ms-auditoria:
     build:
-      context: ./PDAE-MS-AUDITORIA
-      dockerfile: Dockerfile
+      context: ./backend
+      dockerfile: PDAE-MS-AUDITORIA/Dockerfile
       target: dev
     env_file:
-      - .env
+      - ./.env
     environment:
       DB_HOST: db
       DB_PORT: 5432
       PORT: "${AUDITORIA_PORT}"
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
-    ports:
-      - "${AUDITORIA_PORT}:${AUDITORIA_PORT}"
     depends_on:
       db:
         condition: service_healthy
@@ -184,18 +197,23 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./PDAE-MS-AUDITORIA/src
+          path: ./backend/PDAE-MS-AUDITORIA/src
           target: /app/src
+        - action: sync
+          path: ./backend/shared/src
+          target: /shared/src
         - action: rebuild
-          path: ./PDAE-MS-AUDITORIA/package.json
+          path: ./backend/PDAE-MS-AUDITORIA/package.json
+        - action: rebuild
+          path: ./backend/shared/package.json
 
   api-gateway:
     build:
-      context: ./PDAE-API-GATEWAY
+      context: ./backend/PDAE-API-GATEWAY
       dockerfile: Dockerfile
       target: dev
     env_file:
-      - .env
+      - ./.env
     environment:
       PORT: "${GATEWAY_PORT}"
       NODE_ENV: development
@@ -215,10 +233,32 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./PDAE-API-GATEWAY/src
+          path: ./backend/PDAE-API-GATEWAY/src
           target: /app/src
         - action: rebuild
-          path: ./PDAE-API-GATEWAY/package.json
+          path: ./backend/PDAE-API-GATEWAY/package.json
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=100
+      - FRONTEND_PORT=${FRONTEND_PORT}
+      - API_URL=http://api-gateway:${GATEWAY_PORT}
+    depends_on:
+      - api-gateway
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend/src
+          target: /app/src
+        - action: rebuild
+          path: ./frontend/package.json
 
 volumes:
   postgres_data:

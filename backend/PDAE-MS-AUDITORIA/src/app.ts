@@ -7,7 +7,7 @@ import fastifyMetrics from 'fastify-metrics';
 import { registerSwagger } from './utils/api-doc/swagger';
 
 import healthRoutes from './routes/health-routes';
-// import domainRoutes from './routes/domain.routes'; // TODO: Agregar rutas del dominio aquí
+import auditoriaRoutes from './routes/auditoria.routes';
 
 /**
  * Construye la app Fastify: plugins de seguridad, Swagger y rutas bajo `/api`.
@@ -63,7 +63,7 @@ export const createServer = async (): Promise<FastifyInstance> => {
   await registerSwagger(app);
 
   await app.register(healthRoutes, { prefix: '/api' });
-  // await app.register(domainRoutes, { prefix: '/api' }); // TODO: Registrar rutas del dominio aquí
+  await app.register(auditoriaRoutes, { prefix: '/api' });
 
   return app;
 };

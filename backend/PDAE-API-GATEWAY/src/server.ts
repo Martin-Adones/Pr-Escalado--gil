@@ -19,13 +19,13 @@ const start = async () => {
     });
 
     console.log(`\n======================================================`);
-    console.log(`🚀 PDAE API GATEWAY está corriendo en el puerto ${port}`);
-    console.log(`🔗 URL Base: http://localhost:${port}`);
-    console.log(`📝 Documentación Unificada: http://localhost:${port}/api-doc`);
+    console.log(`PDAE API GATEWAY está corriendo en el puerto ${port}`);
+    console.log(`URL Base: http://localhost:${port}`);
+    console.log(`Documentación Unificada: http://localhost:${port}/api-doc`);
     console.log(`======================================================\n`);
     
   } catch (err) {
-    console.error('❌ Error al iniciar el API Gateway:', err);
+    console.error('Error al iniciar el API Gateway:', err);
     process.exit(1);
   }
 };

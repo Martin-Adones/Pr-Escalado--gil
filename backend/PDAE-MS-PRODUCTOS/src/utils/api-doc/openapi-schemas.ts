@@ -1,8 +1,4 @@
-/**
- * Fragmentos de JSON Schema reutilizables para OpenAPI y validacion en Fastify.
- * Nota: no usar la keyword `example` aqui; AJV en modo estricto de Fastify la rechaza.
- * IDs numericos como string (BIGINT/BIGSERIAL en BD; `pg` suele devolverlos como string).
- */
+export { respuestaErrorValidacion, respuestaErrorServidor } from 'shared';
 
 const idBigint = {
   type: 'string' as const,
@@ -10,7 +6,6 @@ const idBigint = {
   description: 'Identificador numerico (BIGINT / BIGSERIAL en PostgreSQL). En JSON va como cadena, ej. "1".',
 };
 
-/** Propiedades de una fila de producto devuelta por los SP */
 export const productoFilaProperties = {
   id_products: { ...idBigint, description: 'Identificador del producto (BIGSERIAL).' },
   name: {
@@ -74,23 +69,5 @@ export const respuestaExitoProducto = {
         properties: productoFilaProperties,
       },
     },
-  },
-} as const;
-
-export const respuestaErrorValidacion = {
-  description: 'Cuerpo enviado invalido o reglas de class-validator',
-  type: 'object',
-  properties: {
-    success: { type: 'boolean' },
-    message: { type: 'string' },
-  },
-} as const;
-
-export const respuestaErrorServidor = {
-  description: 'Error no controlado o fallo al ejecutar el procedimiento en base de datos',
-  type: 'object',
-  properties: {
-    success: { type: 'boolean' },
-    message: { type: 'string' },
   },
 } as const;

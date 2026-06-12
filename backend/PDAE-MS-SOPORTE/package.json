@@ -28,7 +28,8 @@
     "pino-pretty": "^11.0.0",
     "class-validator": "^0.14.1",
     "class-transformer": "^0.5.1",
-    "reflect-metadata": "^0.2.1"
+    "reflect-metadata": "^0.2.1",
+    "shared": "file:../shared"
   },
   "devDependencies": {
     "@types/node": "^20.11.24",
