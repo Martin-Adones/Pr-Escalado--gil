@@ -18,6 +18,8 @@ describe('ContratosController', () => {
     servicioSimulado.finalizarContrato = jest.fn();
     servicioSimulado.listarContratos = jest.fn();
     servicioSimulado.actualizarContrato = jest.fn();
+    servicioSimulado.procesarPagoWebhook = jest.fn();
+    servicioSimulado.ejecutarProcesoExpiracion = jest.fn();
     controlador = new ContratosController();
     (controlador as unknown as { servicio: ContratosService }).servicio = servicioSimulado;
 
@@ -111,6 +113,43 @@ describe('ContratosController', () => {
 
       expect(respuestaSimulada.status).toHaveBeenCalledWith(500);
     });
+
+    it('responde 200 si el cliente finaliza su propio contrato', async () => {
+      const { transformAndValidate } = require('../../utils/validator');
+      transformAndValidate.mockImplementationOnce((_c: unknown, d: unknown) => Promise.resolve(d));
+      
+      const solicitud = {
+        method: 'POST',
+        log: logSimulado,
+        headers: { 'x-user-role': 'client', 'x-user-id': '3' },
+        body: { id_contracts: '1' }
+      };
+      
+      (servicioSimulado.listarContratos as jest.Mock).mockResolvedValueOnce([{ id_contracts: '1', id_users: '3' }]);
+      (servicioSimulado.finalizarContrato as jest.Mock).mockResolvedValue([{ id_contracts: '1', status: 'TERMINATED' }]);
+
+      await controlador.manejarFinalizarContrato(solicitud as unknown as FastifyRequest, respuestaSimulada as FastifyReply);
+
+      expect(respuestaSimulada.status).toHaveBeenCalledWith(200);
+    });
+
+    it('responde 403 si el cliente intenta finalizar un contrato de otro usuario', async () => {
+      const { transformAndValidate } = require('../../utils/validator');
+      transformAndValidate.mockImplementationOnce((_c: unknown, d: unknown) => Promise.resolve(d));
+      
+      const solicitud = {
+        method: 'POST',
+        log: logSimulado,
+        headers: { 'x-user-role': 'client', 'x-user-id': '3' },
+        body: { id_contracts: '1' }
+      };
+      
+      (servicioSimulado.listarContratos as jest.Mock).mockResolvedValueOnce([{ id_contracts: '1', id_users: '99' }]);
+
+      await controlador.manejarFinalizarContrato(solicitud as unknown as FastifyRequest, respuestaSimulada as FastifyReply);
+
+      expect(respuestaSimulada.status).toHaveBeenCalledWith(403);
+    });
   });
 
   describe('manejarListarContratos', () => {
@@ -184,6 +223,83 @@ describe('ContratosController', () => {
 
       await controlador.manejarActualizarContrato(
         { method: 'POST', log: logSimulado, query: {}, body: {} } as unknown as FastifyRequest,
+        respuestaSimulada as FastifyReply
+      );
+
+      expect(respuestaSimulada.status).toHaveBeenCalledWith(500);
+    });
+  });
+
+  describe('manejarWebhookPagos', () => {
+    it('responde 200 si el procesamiento de webhook es exitoso', async () => {
+      const { transformAndValidate } = require('../../utils/validator');
+      transformAndValidate.mockImplementationOnce((_c: unknown, d: unknown) => Promise.resolve(d));
+      
+      const datos = [{ id_contracts: '1', status: 'ACTIVE' }];
+      (servicioSimulado.procesarPagoWebhook as jest.Mock).mockResolvedValue(datos);
+
+      await controlador.manejarWebhookPagos(
+        { method: 'POST', log: logSimulado, body: { event: 'pago.completado', id_contracts: '1', amount: 19990 } } as unknown as FastifyRequest,
+        respuestaSimulada as FastifyReply
+      );
+
+      expect(respuestaSimulada.status).toHaveBeenCalledWith(200);
+      expect(respuestaSimulada.send).toHaveBeenCalledWith({
+        success: true,
+        message: 'Evento de pago procesado correctamente',
+        data: datos
+      });
+    });
+
+    it('responde 400 si la validación falla en webhook', async () => {
+      const { transformAndValidate } = require('../../utils/validator');
+      transformAndValidate.mockRejectedValueOnce(new Error('Error de Validación: event'));
+
+      await controlador.manejarWebhookPagos(
+        { method: 'POST', log: logSimulado, body: {} } as unknown as FastifyRequest,
+        respuestaSimulada as FastifyReply
+      );
+
+      expect(respuestaSimulada.status).toHaveBeenCalledWith(400);
+    });
+
+    it('responde 500 si el procesamiento de webhook falla', async () => {
+      const { transformAndValidate } = require('../../utils/validator');
+      transformAndValidate.mockImplementationOnce((_c: unknown, d: unknown) => Promise.resolve(d));
+      (servicioSimulado.procesarPagoWebhook as jest.Mock).mockRejectedValue(new Error('bd'));
+
+      await controlador.manejarWebhookPagos(
+        { method: 'POST', log: logSimulado, body: {} } as unknown as FastifyRequest,
+        respuestaSimulada as FastifyReply
+      );
+
+      expect(respuestaSimulada.status).toHaveBeenCalledWith(500);
+    });
+  });
+
+  describe('manejarCronExpiracion', () => {
+    it('responde 200 si el cron job se ejecuta correctamente', async () => {
+      const reporte = { procesados: 2, detalles: [] };
+      (servicioSimulado.ejecutarProcesoExpiracion as jest.Mock).mockResolvedValue(reporte);
+
+      await controlador.manejarCronExpiracion(
+        { method: 'POST', log: logSimulado } as unknown as FastifyRequest,
+        respuestaSimulada as FastifyReply
+      );
+
+      expect(respuestaSimulada.status).toHaveBeenCalledWith(200);
+      expect(respuestaSimulada.send).toHaveBeenCalledWith({
+        success: true,
+        message: 'Cron de expiración de contratos ejecutado correctamente',
+        data: reporte
+      });
+    });
+
+    it('responde 500 si la ejecución de cron falla', async () => {
+      (servicioSimulado.ejecutarProcesoExpiracion as jest.Mock).mockRejectedValue(new Error('cron fail'));
+
+      await controlador.manejarCronExpiracion(
+        { method: 'POST', log: logSimulado } as unknown as FastifyRequest,
         respuestaSimulada as FastifyReply
       );
 

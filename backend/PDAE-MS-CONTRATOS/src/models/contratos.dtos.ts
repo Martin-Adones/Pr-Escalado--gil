@@ -185,3 +185,21 @@ export class ActualizarContratoEntradaDto {
   @IsOptional()
   end_date!: string;
 }
+
+/** Entrada para Webhook de Pagos */
+export class WebhookPagosEntradaDto {
+  @IsNotEmpty({ message: 'El campo event es requerido' })
+  @IsString()
+  @IsIn(['pago.completado', 'pago.fallido'], {
+    message: 'event debe ser pago.completado o pago.fallido',
+  })
+  event!: string;
+
+  @IsNotEmpty({ message: 'El campo id_contracts es requerido' })
+  @IsString()
+  @Matches(REGEX_ID_BIGINT, { message: `id_contracts: ${MENSAJE_ID_BIGINT}` })
+  id_contracts!: string;
+
+  @IsNotEmpty({ message: 'El campo amount es requerido' })
+  amount!: number;
+}

@@ -128,6 +128,16 @@ export default function App() {
     }
   }, [selectedUserId])
 
+  useEffect(() => {
+    if (selectedRole) {
+      const payload = { id_users: selectedUserId, type: selectedRole }
+      const token = btoa(JSON.stringify(payload))
+      localStorage.setItem('sessionToken', token)
+    } else {
+      localStorage.removeItem('sessionToken')
+    }
+  }, [selectedRole, selectedUserId])
+
   const handleSelectRole = useCallback((role: UserRole) => {
     setSelectedRole(role)
     if (role === 'admin') {

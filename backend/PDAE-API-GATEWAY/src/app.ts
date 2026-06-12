@@ -187,6 +187,25 @@ export const createServer = async (): Promise<FastifyInstance> => {
     });
   });
 
+  // Hook para decodificar el token de sesión simulado e inyectar cabeceras de identidad seguras
+  app.addHook('preHandler', async (request, reply) => {
+    const authHeader = request.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      try {
+        const decoded = JSON.parse(Buffer.from(token, 'base64').toString('utf-8'));
+        if (decoded && decoded.type) {
+          if (decoded.id_users) {
+            request.headers['x-user-id'] = String(decoded.id_users);
+          }
+          request.headers['x-user-role'] = String(decoded.type);
+        }
+      } catch (err) {
+        app.log.warn('Error al decodificar token de identidad en Gateway');
+      }
+    }
+  });
+
   // Configuración dinámica de Proxies hacia los microservicios
   for (const service of microservices) {
     app.log.info(`[Proxy] Configurando redirección /api/${service.prefix}/* -> ${service.url}/api/${service.prefix}/*`);

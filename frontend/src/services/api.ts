@@ -30,9 +30,16 @@ function buildQuery(params: Record<string, string | number | boolean | undefined
   return '?' + entries.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`).join('&')
 }
 
+function getAuthHeaders(): Record<string, string> {
+  const token = localStorage.getItem('sessionToken')
+  return token ? { 'Authorization': `Bearer ${token}` } : {}
+}
+
 export async function apiGet<T>(path: string, params?: Record<string, string | number | boolean | undefined | null>): Promise<T> {
   const url = `${getApiBase()}${path}${params ? buildQuery(params) : ''}`
-  const response = await fetch(url)
+  const response = await fetch(url, {
+    headers: getAuthHeaders(),
+  })
   return handleResponse<T>(response)
 }
 
@@ -41,6 +48,7 @@ export async function apiPost<T>(path: string, body?: unknown): Promise<T> {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...getAuthHeaders(),
     },
     body: body ? JSON.stringify(body) : undefined,
   })

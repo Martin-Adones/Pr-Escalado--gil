@@ -1,5 +1,6 @@
 import { ContratosRepository } from '../contratos.repository';
 import { BaseRepository } from '../base-repository';
+import { db } from '../../database/pg-client';
 
 describe('ContratosRepository', () => {
   let repositorio: ContratosRepository;
@@ -32,5 +33,22 @@ describe('ContratosRepository', () => {
     const espia = jest.spyOn(BaseRepository.prototype as any, 'callProcedure').mockResolvedValue([{ id: 1 }]);
     await repositorio.ejecutarActualizarContrato({ id_contracts: '1' } as never);
     expect(espia).toHaveBeenCalledWith('sp_actualizar_contrato', expect.any(Array), undefined);
+  });
+
+  it('registrarCicloDeCobro llama a db.query con los parámetros correctos', async () => {
+    await repositorio.registrarCicloDeCobro('1', 19990, 'completed', 0);
+    expect(db.query).toHaveBeenCalledWith(expect.any(String), ['1', 19990, 'completed', 0]);
+  });
+
+  it('registrarLogAuditoria llama a db.query con los parámetros correctos', async () => {
+    await repositorio.registrarLogAuditoria('1', 'ACTION', 'sistema');
+    expect(db.query).toHaveBeenCalledWith(expect.any(String), ['1', 'ACTION', 'sistema']);
+  });
+
+  it('obtenerContratosExpirados llama a db.query', async () => {
+    (db.query as jest.Mock).mockResolvedValueOnce({ rows: [{ id_contracts: '5' }] });
+    const res = await repositorio.obtenerContratosExpirados();
+    expect(db.query).toHaveBeenCalledWith(expect.any(String));
+    expect(res).toEqual([{ id_contracts: '5' }]);
   });
 });

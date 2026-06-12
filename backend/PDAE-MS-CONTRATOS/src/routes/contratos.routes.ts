@@ -34,4 +34,12 @@ export default async function rutasContratos(fastify: FastifyInstance) {
     { schema: esquemaPostActualizarContrato },
     controlador.manejarActualizarContrato.bind(controlador),
   );
+  fastify.post(
+    '/contratos/webhook-pagos',
+    controlador.manejarWebhookPagos.bind(controlador),
+  );
+  fastify.post(
+    '/contratos/cron-expiracion',
+    controlador.manejarCronExpiracion.bind(controlador),
+  );
 }

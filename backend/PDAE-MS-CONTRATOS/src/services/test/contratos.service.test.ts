@@ -13,6 +13,9 @@ describe('ContratosService', () => {
     repositorioSimulado.ejecutarFinalizarContrato = jest.fn();
     repositorioSimulado.ejecutarListarContratos = jest.fn();
     repositorioSimulado.ejecutarActualizarContrato = jest.fn();
+    repositorioSimulado.registrarCicloDeCobro = jest.fn();
+    repositorioSimulado.registrarLogAuditoria = jest.fn();
+    repositorioSimulado.obtenerContratosExpirados = jest.fn();
     servicio = new ContratosService();
     (servicio as unknown as { repositorio: ContratosRepository }).repositorio = repositorioSimulado;
   });
@@ -44,5 +47,58 @@ describe('ContratosService', () => {
     (repositorioSimulado.ejecutarActualizarContrato as jest.Mock).mockResolvedValue([]);
     await servicio.actualizarContrato({ id_contracts: '1' } as never);
     expect(repositorioSimulado.ejecutarActualizarContrato).toHaveBeenCalled();
+  });
+
+  describe('procesarPagoWebhook', () => {
+    it('procesa pago completado exitosamente', async () => {
+      const dto = { event: 'pago.completado', id_contracts: '1', amount: 19990 };
+      (repositorioSimulado.ejecutarActualizarContrato as jest.Mock).mockResolvedValue([{ id_contracts: '1', status: 'ACTIVE' }]);
+
+      const resultado = await servicio.procesarPagoWebhook(dto as any);
+
+      expect(repositorioSimulado.ejecutarActualizarContrato).toHaveBeenCalledWith({
+        id_contracts: '1',
+        status: 'ACTIVE'
+      });
+      expect(repositorioSimulado.registrarCicloDeCobro).toHaveBeenCalledWith('1', 19990, 'completed', 0);
+      expect(repositorioSimulado.registrarLogAuditoria).toHaveBeenCalledWith('1', 'PAGO_COMPLETADO_WEBHOOK', 'sistema');
+      expect(resultado).toEqual([{ id_contracts: '1', status: 'ACTIVE' }]);
+    });
+
+    it('procesa pago fallido exitosamente', async () => {
+      const dto = { event: 'pago.fallido', id_contracts: '2', amount: 9990 };
+      (repositorioSimulado.ejecutarActualizarContrato as jest.Mock).mockResolvedValue([{ id_contracts: '2', status: 'SUSPENDED' }]);
+
+      const resultado = await servicio.procesarPagoWebhook(dto as any);
+
+      expect(repositorioSimulado.ejecutarActualizarContrato).toHaveBeenCalledWith({
+        id_contracts: '2',
+        status: 'SUSPENDED'
+      });
+      expect(repositorioSimulado.registrarCicloDeCobro).toHaveBeenCalledWith('2', 9990, 'failed', 1);
+      expect(repositorioSimulado.registrarLogAuditoria).toHaveBeenCalledWith('2', 'PAGO_FALLIDO_WEBHOOK', 'sistema');
+      expect(resultado).toEqual([{ id_contracts: '2', status: 'SUSPENDED' }]);
+    });
+  });
+
+  describe('ejecutarProcesoExpiracion', () => {
+    it('finaliza los contratos expirados y registra en auditoria', async () => {
+      const expiredList = [
+        { id_contracts: '10', id_users: '3', status: 'ACTIVE', end_date: '2026-06-01' },
+        { id_contracts: '11', id_users: '4', status: 'SUSPENDED', end_date: '2026-06-02' }
+      ];
+      (repositorioSimulado.obtenerContratosExpirados as jest.Mock).mockResolvedValue(expiredList);
+      (repositorioSimulado.ejecutarFinalizarContrato as jest.Mock).mockResolvedValue([]);
+
+      const resultado = await servicio.ejecutarProcesoExpiracion();
+
+      expect(repositorioSimulado.obtenerContratosExpirados).toHaveBeenCalled();
+      expect(repositorioSimulado.ejecutarFinalizarContrato).toHaveBeenCalledTimes(2);
+      expect(repositorioSimulado.ejecutarFinalizarContrato).toHaveBeenNthCalledWith(1, { id_contracts: '10' });
+      expect(repositorioSimulado.ejecutarFinalizarContrato).toHaveBeenNthCalledWith(2, { id_contracts: '11' });
+      expect(repositorioSimulado.registrarLogAuditoria).toHaveBeenCalledWith('10', 'FINALIZAR_CONTRATO_CRON', 'sistema');
+      expect(repositorioSimulado.registrarLogAuditoria).toHaveBeenCalledWith('11', 'FINALIZAR_CONTRATO_CRON', 'sistema');
+      expect(resultado.procesados).toBe(2);
+    });
   });
 });
