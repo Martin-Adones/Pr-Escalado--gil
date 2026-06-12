@@ -84,14 +84,18 @@ export const createServer = async (): Promise<FastifyInstance> => {
       }
     };
 
+    let intervalId: NodeJS.Timeout;
+
     app.ready(() => {
       // Ejecución inicial ligera diferida
       setTimeout(runExpirationCron, 5000);
-      const intervalId = setInterval(runExpirationCron, intervalTime);
+      intervalId = setInterval(runExpirationCron, intervalTime);
+    });
 
-      app.addHook('onClose', async () => {
+    app.addHook('onClose', async () => {
+      if (intervalId) {
         clearInterval(intervalId);
-      });
+      }
     });
   }
 
