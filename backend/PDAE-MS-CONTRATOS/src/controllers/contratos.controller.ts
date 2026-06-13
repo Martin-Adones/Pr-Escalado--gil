@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { ContratosService } from '../services/contratos.service';
-import { transformAndValidate } from '../utils/validator';
+import { transformAndValidate } from 'shared';
 import {
   CrearContratoEntradaDto,
   FinalizarContratoEntradaDto,

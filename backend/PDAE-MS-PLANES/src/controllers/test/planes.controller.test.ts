@@ -3,9 +3,13 @@ import { PlanesService } from '../../services/planes.service';
 import { FastifyRequest, FastifyReply } from 'fastify';
 
 jest.mock('../../services/planes.service');
-jest.mock('../../utils/validator', () => ({
-  transformAndValidate: jest.fn().mockImplementation((_cls: unknown, data: unknown) => Promise.resolve(data)),
-}));
+jest.mock('shared', () => {
+  const actual = jest.requireActual('shared');
+  return {
+    ...actual,
+    transformAndValidate: jest.fn().mockImplementation((_cls: unknown, data: unknown) => Promise.resolve(data)),
+  };
+});
 
 describe('PlanesController', () => {
   let controlador: PlanesController;
@@ -45,7 +49,7 @@ describe('PlanesController', () => {
     });
 
     it('responde 400 si la validacion falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockRejectedValueOnce(new Error('Error de Validacion: campo'));
 
       await controlador.manejarCrearPlan(
@@ -57,7 +61,7 @@ describe('PlanesController', () => {
     });
 
     it('responde 500 si el servicio lanza error', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockImplementationOnce((_c: unknown, d: unknown) => Promise.resolve(d));
       (servicioSimulado.crearPlan as jest.Mock).mockRejectedValue(new Error('fallo bd'));
 
@@ -84,7 +88,7 @@ describe('PlanesController', () => {
     });
 
     it('responde 400 si validacion falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockRejectedValueOnce(new Error('Error de Validacion: y'));
 
       await controlador.manejarListarPlanes(
@@ -96,7 +100,7 @@ describe('PlanesController', () => {
     });
 
     it('responde 500 si el servicio falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockImplementationOnce((_c: unknown, d: unknown) => Promise.resolve(d));
       (servicioSimulado.listarPlanes as jest.Mock).mockRejectedValue(new Error('bd'));
 
@@ -123,7 +127,7 @@ describe('PlanesController', () => {
     });
 
     it('responde 400 si validacion falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockRejectedValueOnce(new Error('Error de Validacion: z'));
 
       await controlador.manejarActualizarPlan(
@@ -135,7 +139,7 @@ describe('PlanesController', () => {
     });
 
     it('responde 500 si el servicio falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockImplementationOnce((_c: unknown, d: unknown) => Promise.resolve(d));
       (servicioSimulado.actualizarPlan as jest.Mock).mockRejectedValue(new Error('bd'));
 
@@ -163,7 +167,7 @@ describe('PlanesController', () => {
     });
 
     it('responde 400 si validacion falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockRejectedValueOnce(new Error('Error de Validacion: x'));
 
       await controlador.manejarDesactivarPlan(
@@ -175,7 +179,7 @@ describe('PlanesController', () => {
     });
 
     it('responde 500 si el servicio falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockImplementationOnce((_c: unknown, d: unknown) => Promise.resolve(d));
       (servicioSimulado.desactivarPlan as jest.Mock).mockRejectedValue(new Error('bd'));
 
@@ -203,7 +207,7 @@ describe('PlanesController', () => {
     });
 
     it('responde 400 si validacion falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockRejectedValueOnce(new Error('Error de Validacion: x'));
 
       await controlador.manejarRegistrarProductosPlan(
@@ -215,7 +219,7 @@ describe('PlanesController', () => {
     });
 
     it('responde 500 si el servicio falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockImplementationOnce((_c: unknown, d: unknown) => Promise.resolve(d));
       (servicioSimulado.registrarProductosPlan as jest.Mock).mockRejectedValue(new Error('bd'));
 

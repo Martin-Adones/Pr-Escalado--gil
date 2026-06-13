@@ -19,9 +19,12 @@ import {
   ArrayMinSize,
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
-
-const REGEX_ID_BIGINT = /^[0-9]+$/;
-const MENSAJE_ID_BIGINT = 'debe ser un entero positivo en texto (BIGINT), ej. "1"';
+import {
+  REGEX_ID_BIGINT,
+  MENSAJE_ID_BIGINT,
+  TransformVacioAIndefinido,
+  TransformNormalizarBooleano,
+} from 'shared';
 
 const CICLOS_FACTURACION = [
   'daily',
@@ -33,13 +36,6 @@ const CICLOS_FACTURACION = [
   'semiannual',
   'yearly',
 ] as const;
-
-function vacioAIndefinido({ value }: { value: unknown }) {
-  if (value === undefined || value === null || value === '') {
-    return undefined;
-  }
-  return String(value).trim();
-}
 
 function normalizarCicloOpcional({ value }: { value: unknown }) {
   if (value === undefined || value === null || value === '') {
@@ -55,23 +51,6 @@ function normalizarCicloRequerido({ value }: { value: unknown }) {
   return String(value).trim().toLowerCase();
 }
 
-function normalizarBooleano({ value }: { value: unknown }) {
-  if (value === undefined || value === null || value === '') {
-    return undefined;
-  }
-  if (typeof value === 'boolean') {
-    return value;
-  }
-  const raw = String(value).trim().toLowerCase();
-  if (raw === 'true' || raw === '1') {
-    return true;
-  }
-  if (raw === 'false' || raw === '0') {
-    return false;
-  }
-  return value;
-}
-
 function normalizarArrayIds({ value }: { value: unknown }) {
   if (value === undefined || value === null) {
     return value;
@@ -84,7 +63,7 @@ function normalizarArrayIds({ value }: { value: unknown }) {
 
 /** Cuerpo POST -> `sp_crear_plan` */
 export class CrearPlanEntradaDto {
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsString()
   @IsNotEmpty({ message: 'El campo name es requerido' })
   @MinLength(1, { message: 'name no puede estar vacio' })
@@ -104,7 +83,7 @@ export class CrearPlanEntradaDto {
   @Min(0.01, { message: 'amount debe ser mayor que 0' })
   amount!: number;
 
-  @Transform(normalizarBooleano)
+  @TransformNormalizarBooleano
   @IsOptional()
   @IsBoolean({ message: 'isActive debe ser booleano' })
   isActive?: boolean;
@@ -120,13 +99,13 @@ export interface FilaPlan {
 
 /** Query GET -> `sp_listar_planes` */
 export class ListarPlanesConsultaDto {
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsOptional()
   @IsString()
   @Matches(REGEX_ID_BIGINT, { message: `id_plans: ${MENSAJE_ID_BIGINT}` })
   id_plans!: string;
 
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsOptional()
   @IsString()
   @MaxLength(255, { message: 'name: filtro demasiado largo' })
@@ -139,7 +118,7 @@ export class ListarPlanesConsultaDto {
   })
   billing_cycle!: string;
 
-  @Transform(normalizarBooleano)
+  @TransformNormalizarBooleano
   @IsOptional()
   @IsBoolean({ message: 'isActive debe ser booleano' })
   isActive?: boolean;
@@ -161,13 +140,13 @@ export interface FilaPlanListado extends FilaPlan {
 
 /** Cuerpo POST -> `sp_actualizar_plan` */
 export class ActualizarPlanEntradaDto {
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsString()
   @IsNotEmpty({ message: 'El campo id_plans es requerido' })
   @Matches(REGEX_ID_BIGINT, { message: `id_plans: ${MENSAJE_ID_BIGINT}` })
   id_plans!: string;
 
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsOptional()
   @IsString()
   @MinLength(1, { message: 'name no puede estar vacio' })
@@ -190,7 +169,7 @@ export class ActualizarPlanEntradaDto {
 
 /** Cuerpo POST -> `sp_desactivar_plan` */
 export class DesactivarPlanEntradaDto {
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsString()
   @IsNotEmpty({ message: 'El campo id_plans es requerido' })
   @Matches(REGEX_ID_BIGINT, { message: `id_plans: ${MENSAJE_ID_BIGINT}` })
@@ -204,7 +183,7 @@ export interface FilaPlanProducto {
 
 /** Cuerpo POST -> `sp_registrar_productos_plan` */
 export class RegistrarProductosPlanEntradaDto {
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsString()
   @IsNotEmpty({ message: 'El campo id_plans es requerido' })
   @Matches(REGEX_ID_BIGINT, { message: `id_plans: ${MENSAJE_ID_BIGINT}` })

@@ -3,9 +3,13 @@ import { UsuariosService } from '../../services/usuarios.service';
 import { FastifyRequest, FastifyReply } from 'fastify';
 
 jest.mock('../../services/usuarios.service');
-jest.mock('../../utils/validator', () => ({
-  transformAndValidate: jest.fn().mockImplementation((_cls: unknown, data: unknown) => Promise.resolve(data)),
-}));
+jest.mock('shared', () => {
+  const actual = jest.requireActual('shared');
+  return {
+    ...actual,
+    transformAndValidate: jest.fn().mockImplementation((_cls: unknown, data: unknown) => Promise.resolve(data)),
+  };
+});
 
 describe('UsuariosController', () => {
   let controlador: UsuariosController;
@@ -43,7 +47,7 @@ describe('UsuariosController', () => {
     });
 
     it('responde 400 si la validación falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockRejectedValueOnce(new Error('Error de Validación: campo'));
 
       await controlador.manejarCrearUsuario(
@@ -55,7 +59,7 @@ describe('UsuariosController', () => {
     });
 
     it('responde 500 si el servicio lanza error', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockImplementationOnce((_c: unknown, d: unknown) => Promise.resolve(d));
       (servicioSimulado.crearUsuario as jest.Mock).mockRejectedValue(new Error('fallo bd'));
 
@@ -82,7 +86,7 @@ describe('UsuariosController', () => {
     });
 
     it('responde 400 si validación falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockRejectedValueOnce(new Error('Error de Validación: y'));
 
       await controlador.manejarListarUsuarios(
@@ -94,7 +98,7 @@ describe('UsuariosController', () => {
     });
 
     it('responde 500 si el servicio falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockImplementationOnce((_c: unknown, d: unknown) => Promise.resolve(d));
       (servicioSimulado.listarUsuarios as jest.Mock).mockRejectedValue(new Error('bd'));
 
@@ -126,7 +130,7 @@ describe('UsuariosController', () => {
     });
 
     it('responde 400 si validación falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockRejectedValueOnce(new Error('Error de Validación: z'));
 
       await controlador.manejarActualizarUsuario(
@@ -138,7 +142,7 @@ describe('UsuariosController', () => {
     });
 
     it('responde 500 si el servicio falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockImplementationOnce((_c: unknown, d: unknown) => Promise.resolve(d));
       (servicioSimulado.actualizarUsuario as jest.Mock).mockRejectedValue(new Error('bd'));
 

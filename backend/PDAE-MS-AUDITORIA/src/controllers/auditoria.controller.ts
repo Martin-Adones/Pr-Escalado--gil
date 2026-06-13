@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { AuditoriaService } from '../services/auditoria.service';
-import { transformAndValidate } from '../utils/validator';
+import { transformAndValidate } from 'shared';
 import { ListarLogsAuditoriaConsultaDto } from '../models/auditoria.dtos';
 
 export class AuditoriaController {

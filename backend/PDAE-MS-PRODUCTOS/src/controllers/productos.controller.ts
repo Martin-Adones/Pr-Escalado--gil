@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { ProductosService } from '../services/productos.service';
-import { transformAndValidate } from '../utils/validator';
+import { transformAndValidate } from 'shared';
 import {
   CrearProductoEntradaDto,
   ListarProductosConsultaDto,

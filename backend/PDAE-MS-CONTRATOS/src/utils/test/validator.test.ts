@@ -1,4 +1,4 @@
-import { transformAndValidate } from '../validator';
+import { transformAndValidate } from 'shared';
 import { Type } from 'class-transformer';
 import { ValidateNested, IsNotEmpty, IsOptional } from 'class-validator';
 

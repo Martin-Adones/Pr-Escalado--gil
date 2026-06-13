@@ -11,21 +11,15 @@ import {
   Matches,
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
+import {
+  REGEX_ID_BIGINT,
+  MENSAJE_ID_BIGINT,
+  TransformVacioAIndefinido,
+} from 'shared';
 import { CONTRATO_ESTADOS, CONTRATO_ESTADOS_INICIAL } from '../domain/estados-contrato';
 
 const estadosLista = [...CONTRATO_ESTADOS] as [string, ...string[]];
 const estadosInicialLista = [...CONTRATO_ESTADOS_INICIAL] as [string, ...string[]];
-
-/** Patrón BIGINT positivo enviado como texto en JSON (ej. "1"). */
-const REGEX_ID_BIGINT = /^[0-9]+$/;
-const MENSAJE_ID_BIGINT = 'debe ser un entero positivo en texto (BIGINT), ej. "1"';
-
-function vacioAIndefinido({ value }: { value: unknown }) {
-  if (value === undefined || value === null || value === '') {
-    return undefined;
-  }
-  return String(value).trim();
-}
 
 function normalizarEstadoOpcional({ value }: { value: unknown }) {
   if (value === undefined || value === null || value === '') {
@@ -43,13 +37,13 @@ function normalizarEstadoRequerido({ value }: { value: unknown }) {
 
 /** Entrada HTTP → procedimiento `sp_crear_contrato` */
 export class CrearContratoEntradaDto {
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsString()
   @IsNotEmpty({ message: 'El campo id_users es requerido' })
   @Matches(REGEX_ID_BIGINT, { message: `id_users: ${MENSAJE_ID_BIGINT}` })
   id_users!: string;
 
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsString()
   @IsNotEmpty({ message: 'El campo id_plans es requerido' })
   @Matches(REGEX_ID_BIGINT, { message: `id_plans: ${MENSAJE_ID_BIGINT}` })
@@ -85,7 +79,7 @@ export interface FilaContrato {
 
 /** Entrada HTTP → `sp_finalizar_contrato` */
 export class FinalizarContratoEntradaDto {
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsString()
   @IsNotEmpty({ message: 'El campo id_contracts es requerido' })
   @Matches(REGEX_ID_BIGINT, { message: `id_contracts: ${MENSAJE_ID_BIGINT}` })
@@ -94,19 +88,19 @@ export class FinalizarContratoEntradaDto {
 
 /** Query GET → `sp_listar_contratos` */
 export class ListarContratosConsultaDto {
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsOptional()
   @IsString()
   @Matches(REGEX_ID_BIGINT, { message: `id_contracts: ${MENSAJE_ID_BIGINT}` })
   id_contracts!: string;
 
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsOptional()
   @IsString()
   @Matches(REGEX_ID_BIGINT, { message: `id_users: ${MENSAJE_ID_BIGINT}` })
   id_users!: string;
 
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsOptional()
   @IsString()
   @Matches(REGEX_ID_BIGINT, { message: `id_plans: ${MENSAJE_ID_BIGINT}` })
@@ -152,19 +146,19 @@ export interface FilaContratoListado extends FilaContrato {
 
 /** Entrada HTTP → `sp_actualizar_contrato` */
 export class ActualizarContratoEntradaDto {
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsString()
   @IsNotEmpty({ message: 'El campo id_contracts es requerido' })
   @Matches(REGEX_ID_BIGINT, { message: `id_contracts: ${MENSAJE_ID_BIGINT}` })
   id_contracts!: string;
 
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsOptional()
   @IsString()
   @Matches(REGEX_ID_BIGINT, { message: `id_users: ${MENSAJE_ID_BIGINT}` })
   id_users!: string;
 
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsOptional()
   @IsString()
   @Matches(REGEX_ID_BIGINT, { message: `id_plans: ${MENSAJE_ID_BIGINT}` })

@@ -14,50 +14,29 @@ import {
   Min,
   IsBoolean,
 } from 'class-validator';
-import { Type, Transform } from 'class-transformer';
-
-const REGEX_ID_BIGINT = /^[0-9]+$/;
-const MENSAJE_ID_BIGINT = 'debe ser un entero positivo en texto (BIGINT), ej. "1"';
-
-function vacioAIndefinido({ value }: { value: unknown }) {
-  if (value === undefined || value === null || value === '') {
-    return undefined;
-  }
-  return String(value).trim();
-}
-
-function normalizarBooleano({ value }: { value: unknown }) {
-  if (value === undefined || value === null || value === '') {
-    return undefined;
-  }
-  if (typeof value === 'boolean') {
-    return value;
-  }
-  const raw = String(value).trim().toLowerCase();
-  if (raw === 'true' || raw === '1') {
-    return true;
-  }
-  if (raw === 'false' || raw === '0') {
-    return false;
-  }
-  return value;
-}
+import { Type } from 'class-transformer';
+import {
+  REGEX_ID_BIGINT,
+  MENSAJE_ID_BIGINT,
+  TransformVacioAIndefinido,
+  TransformNormalizarBooleano,
+} from 'shared';
 
 /** Cuerpo POST -> `sp_crear_producto` */
 export class CrearProductoEntradaDto {
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsString()
   @IsNotEmpty({ message: 'El campo name es requerido' })
   @MinLength(1, { message: 'name no puede estar vacio' })
   @MaxLength(255, { message: 'name admite como maximo 255 caracteres' })
   name!: string;
 
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsOptional()
   @IsString()
   description?: string;
 
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsString()
   @IsNotEmpty({ message: 'El campo type es requerido' })
   @MinLength(1, { message: 'type no puede estar vacio' })
@@ -75,7 +54,7 @@ export class CrearProductoEntradaDto {
   @Min(0.01, { message: 'price debe ser mayor que 0' })
   price!: number;
 
-  @Transform(normalizarBooleano)
+  @TransformNormalizarBooleano
   @IsOptional()
   @IsBoolean({ message: 'isActive debe ser booleano' })
   isActive?: boolean;
@@ -93,25 +72,25 @@ export interface FilaProducto {
 
 /** Query GET -> `sp_listar_productos` */
 export class ListarProductosConsultaDto {
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsOptional()
   @IsString()
   @Matches(REGEX_ID_BIGINT, { message: `id_products: ${MENSAJE_ID_BIGINT}` })
   id_products!: string;
 
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsOptional()
   @IsString()
   @MaxLength(255, { message: 'name: filtro demasiado largo' })
   name!: string;
 
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsOptional()
   @IsString()
   @MaxLength(255, { message: 'type: filtro demasiado largo' })
   type!: string;
 
-  @Transform(normalizarBooleano)
+  @TransformNormalizarBooleano
   @IsOptional()
   @IsBoolean({ message: 'isActive debe ser booleano' })
   isActive?: boolean;
@@ -133,25 +112,25 @@ export interface FilaProductoListado extends FilaProducto {
 
 /** Cuerpo POST -> `sp_actualizar_producto` */
 export class ActualizarProductoEntradaDto {
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsString()
   @IsNotEmpty({ message: 'El campo id_products es requerido' })
   @Matches(REGEX_ID_BIGINT, { message: `id_products: ${MENSAJE_ID_BIGINT}` })
   id_products!: string;
 
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsOptional()
   @IsString()
   @MinLength(1, { message: 'name no puede estar vacio' })
   @MaxLength(255, { message: 'name admite como maximo 255 caracteres' })
   name?: string;
 
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsOptional()
   @IsString()
   description?: string;
 
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsOptional()
   @IsString()
   @MinLength(1, { message: 'type no puede estar vacio' })
@@ -173,7 +152,7 @@ export class ActualizarProductoEntradaDto {
 
 /** Cuerpo POST -> `sp_desactivar_producto` */
 export class DesactivarProductoEntradaDto {
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsString()
   @IsNotEmpty({ message: 'El campo id_products es requerido' })
   @Matches(REGEX_ID_BIGINT, { message: `id_products: ${MENSAJE_ID_BIGINT}` })

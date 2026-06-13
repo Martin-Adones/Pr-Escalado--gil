@@ -3,9 +3,13 @@ import { ProductosService } from '../../services/productos.service';
 import { FastifyRequest, FastifyReply } from 'fastify';
 
 jest.mock('../../services/productos.service');
-jest.mock('../../utils/validator', () => ({
-  transformAndValidate: jest.fn().mockImplementation((_cls: unknown, data: unknown) => Promise.resolve(data)),
-}));
+jest.mock('shared', () => {
+  const actual = jest.requireActual('shared');
+  return {
+    ...actual,
+    transformAndValidate: jest.fn().mockImplementation((_cls: unknown, data: unknown) => Promise.resolve(data)),
+  };
+});
 
 describe('ProductosController', () => {
   let controlador: ProductosController;
@@ -44,7 +48,7 @@ describe('ProductosController', () => {
     });
 
     it('responde 400 si la validacion falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockRejectedValueOnce(new Error('Error de Validacion: campo'));
 
       await controlador.manejarCrearProducto(
@@ -56,7 +60,7 @@ describe('ProductosController', () => {
     });
 
     it('responde 500 si el servicio lanza error', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockImplementationOnce((_c: unknown, d: unknown) => Promise.resolve(d));
       (servicioSimulado.crearProducto as jest.Mock).mockRejectedValue(new Error('fallo bd'));
 
@@ -83,7 +87,7 @@ describe('ProductosController', () => {
     });
 
     it('responde 400 si validacion falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockRejectedValueOnce(new Error('Error de Validacion: y'));
 
       await controlador.manejarListarProductos(
@@ -95,7 +99,7 @@ describe('ProductosController', () => {
     });
 
     it('responde 500 si el servicio falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockImplementationOnce((_c: unknown, d: unknown) => Promise.resolve(d));
       (servicioSimulado.listarProductos as jest.Mock).mockRejectedValue(new Error('bd'));
 
@@ -122,7 +126,7 @@ describe('ProductosController', () => {
     });
 
     it('responde 400 si validacion falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockRejectedValueOnce(new Error('Error de Validacion: z'));
 
       await controlador.manejarActualizarProducto(
@@ -134,7 +138,7 @@ describe('ProductosController', () => {
     });
 
     it('responde 500 si el servicio falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockImplementationOnce((_c: unknown, d: unknown) => Promise.resolve(d));
       (servicioSimulado.actualizarProducto as jest.Mock).mockRejectedValue(new Error('bd'));
 
@@ -162,7 +166,7 @@ describe('ProductosController', () => {
     });
 
     it('responde 400 si validacion falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockRejectedValueOnce(new Error('Error de Validacion: x'));
 
       await controlador.manejarDesactivarProducto(
@@ -174,7 +178,7 @@ describe('ProductosController', () => {
     });
 
     it('responde 500 si el servicio falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockImplementationOnce((_c: unknown, d: unknown) => Promise.resolve(d));
       (servicioSimulado.desactivarProducto as jest.Mock).mockRejectedValue(new Error('bd'));
 

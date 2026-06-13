@@ -1,12 +1,6 @@
 import { IsString, IsOptional, IsInt } from 'class-validator';
-import { Type, Transform } from 'class-transformer';
-
-function vacioAIndefinido({ value }: { value: unknown }) {
-  if (value === undefined || value === null || value === '') {
-    return undefined;
-  }
-  return String(value).trim();
-}
+import { Type } from 'class-transformer';
+import { TransformVacioAIndefinido } from 'shared';
 
 export interface FilaLogAuditoria {
   id_audit_logs: string;
@@ -21,32 +15,32 @@ export interface FilaLogAuditoriaListado extends FilaLogAuditoria {
 }
 
 export class ListarLogsAuditoriaConsultaDto {
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsOptional()
   @IsString()
   id_audit_logs?: string;
 
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsOptional()
   @IsString()
   id_contracts?: string;
 
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsOptional()
   @IsString()
   action?: string;
 
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsOptional()
   @IsString()
   assignet_to?: string;
 
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsOptional()
   @IsString()
   created_at_from?: string;
 
-  @Transform(vacioAIndefinido)
+  @TransformVacioAIndefinido
   @IsOptional()
   @IsString()
   created_at_to?: string;

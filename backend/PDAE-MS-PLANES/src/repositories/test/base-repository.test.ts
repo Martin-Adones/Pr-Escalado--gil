@@ -1,7 +1,6 @@
 import { BaseRepository } from '../base-repository';
 import { db } from '../../database/pg-client';
 
-// Clase concreta para testear BaseRepository
 class TestRepository extends BaseRepository {
   public async call(proc: string, params: any[] = []) {
     return this.callProcedure<any>(proc, params);
@@ -45,7 +44,6 @@ describe('BaseRepository', () => {
     
     await repository.call('sp_parametros', ['search', 10, 0, 'nombre', 'ASC']);
 
-    // Verifica que se pasaron correctamente
     expect(mockClient.query).toHaveBeenCalledWith(
       expect.stringContaining('sp_parametros($1, $2, $3, $4, $5)'),
       ['search', 10, 0, 'nombre', 'ASC']

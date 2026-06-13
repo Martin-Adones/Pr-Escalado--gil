@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { UsuariosService } from '../services/usuarios.service';
-import { transformAndValidate } from '../utils/validator';
+import { transformAndValidate } from 'shared';
 import {
   CrearUsuarioEntradaDto,
   ListarUsuariosConsultaDto,

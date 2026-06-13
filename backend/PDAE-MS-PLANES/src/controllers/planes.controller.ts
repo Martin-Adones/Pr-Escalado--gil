@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { PlanesService } from '../services/planes.service';
-import { transformAndValidate } from '../utils/validator';
+import { transformAndValidate } from 'shared';
 import {
   CrearPlanEntradaDto,
   ListarPlanesConsultaDto,

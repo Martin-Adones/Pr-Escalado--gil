@@ -3,9 +3,13 @@ import { ContratosService } from '../../services/contratos.service';
 import { FastifyRequest, FastifyReply } from 'fastify';
 
 jest.mock('../../services/contratos.service');
-jest.mock('../../utils/validator', () => ({
-  transformAndValidate: jest.fn().mockImplementation((_cls: unknown, data: unknown) => Promise.resolve(data)),
-}));
+jest.mock('shared', () => {
+  const actual = jest.requireActual('shared');
+  return {
+    ...actual,
+    transformAndValidate: jest.fn().mockImplementation((_cls: unknown, data: unknown) => Promise.resolve(data)),
+  };
+});
 
 describe('ContratosController', () => {
   let controlador: ContratosController;
@@ -50,7 +54,7 @@ describe('ContratosController', () => {
     });
 
     it('responde 400 si la validación falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockRejectedValueOnce(new Error('Error de Validación: campo'));
 
       await controlador.manejarCrearContrato(
@@ -62,7 +66,7 @@ describe('ContratosController', () => {
     });
 
     it('responde 500 si el servicio lanza error', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockImplementationOnce((_c: unknown, d: unknown) => Promise.resolve(d));
       (servicioSimulado.crearContrato as jest.Mock).mockRejectedValue(new Error('fallo bd'));
 
@@ -90,7 +94,7 @@ describe('ContratosController', () => {
     });
 
     it('responde 400 si validación falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockRejectedValueOnce(new Error('Error de Validación: x'));
 
       await controlador.manejarFinalizarContrato(
@@ -102,7 +106,7 @@ describe('ContratosController', () => {
     });
 
     it('responde 500 si el servicio falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockImplementationOnce((_c: unknown, d: unknown) => Promise.resolve(d));
       (servicioSimulado.finalizarContrato as jest.Mock).mockRejectedValue(new Error('bd'));
 
@@ -115,7 +119,7 @@ describe('ContratosController', () => {
     });
 
     it('responde 200 si el cliente finaliza su propio contrato', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockImplementationOnce((_c: unknown, d: unknown) => Promise.resolve(d));
       
       const solicitud = {
@@ -134,7 +138,7 @@ describe('ContratosController', () => {
     });
 
     it('responde 403 si el cliente intenta finalizar un contrato de otro usuario', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockImplementationOnce((_c: unknown, d: unknown) => Promise.resolve(d));
       
       const solicitud = {
@@ -166,7 +170,7 @@ describe('ContratosController', () => {
     });
 
     it('responde 400 si validación falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockRejectedValueOnce(new Error('Error de Validación: y'));
 
       await controlador.manejarListarContratos(
@@ -178,7 +182,7 @@ describe('ContratosController', () => {
     });
 
     it('responde 500 si el servicio falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockImplementationOnce((_c: unknown, d: unknown) => Promise.resolve(d));
       (servicioSimulado.listarContratos as jest.Mock).mockRejectedValue(new Error('bd'));
 
@@ -205,7 +209,7 @@ describe('ContratosController', () => {
     });
 
     it('responde 400 si validación falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockRejectedValueOnce(new Error('Error de Validación: z'));
 
       await controlador.manejarActualizarContrato(
@@ -217,7 +221,7 @@ describe('ContratosController', () => {
     });
 
     it('responde 500 si el servicio falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockImplementationOnce((_c: unknown, d: unknown) => Promise.resolve(d));
       (servicioSimulado.actualizarContrato as jest.Mock).mockRejectedValue(new Error('bd'));
 
@@ -232,7 +236,7 @@ describe('ContratosController', () => {
 
   describe('manejarWebhookPagos', () => {
     it('responde 200 si el procesamiento de webhook es exitoso', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockImplementationOnce((_c: unknown, d: unknown) => Promise.resolve(d));
       
       const datos = [{ id_contracts: '1', status: 'ACTIVE' }];
@@ -252,7 +256,7 @@ describe('ContratosController', () => {
     });
 
     it('responde 400 si la validación falla en webhook', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockRejectedValueOnce(new Error('Error de Validación: event'));
 
       await controlador.manejarWebhookPagos(
@@ -264,7 +268,7 @@ describe('ContratosController', () => {
     });
 
     it('responde 500 si el procesamiento de webhook falla', async () => {
-      const { transformAndValidate } = require('../../utils/validator');
+      const { transformAndValidate } = require('shared');
       transformAndValidate.mockImplementationOnce((_c: unknown, d: unknown) => Promise.resolve(d));
       (servicioSimulado.procesarPagoWebhook as jest.Mock).mockRejectedValue(new Error('bd'));
 
