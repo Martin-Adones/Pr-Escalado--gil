@@ -34,17 +34,17 @@ export default function ContratosPage({ navItems, activeNavLabel }: AdminContrac
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                 <p className="text-sm text-blue-600 font-semibold mb-1">Contratos Activos</p>
-                <p className="text-2xl font-bold text-blue-700">1,240</p>
-                <p className="text-xs text-blue-500 mt-1">24 pendientes de firma</p>
+                <p className="text-2xl font-bold text-blue-700">-</p>
+                <p className="text-xs text-blue-500 mt-1">pendientes de firma</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                 <p className="text-sm text-green-600 font-semibold mb-1">Renovados este mes</p>
-                <p className="text-2xl font-bold text-green-700">89</p>
-                <p className="text-xs text-green-500 mt-1">Tasa: 82.4%</p>
+                <p className="text-2xl font-bold text-green-700">-</p>
+                <p className="text-xs text-green-500 mt-1">Tasa: -</p>
               </div>
               <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
                 <p className="text-sm text-orange-600 font-semibold mb-1">Por vencer</p>
-                <p className="text-2xl font-bold text-orange-700">15</p>
+                <p className="text-2xl font-bold text-orange-700">-</p>
                 <p className="text-xs text-orange-500 mt-1">Próximos 30 días</p>
               </div>
             </div>
@@ -63,39 +63,16 @@ export default function ContratosPage({ navItems, activeNavLabel }: AdminContrac
                 </thead>
                 <tbody className="divide-y divide-gray-100 text-sm">
                   <tr className="hover:bg-gray-50 transition">
-                    <td className="px-4 py-3 font-semibold">Inmobiliaria Los Andes SpA</td>
-                    <td className="px-4 py-3 font-mono text-xs text-gray-600">CT-2026-9901</td>
-                    <td className="px-4 py-3">Premium</td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Activo
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">15 Jun, 2026</td>
+                    <td className="px-4 py-3 font-semibold text-gray-400">-</td>
+                    <td className="px-4 py-3 font-mono text-xs text-gray-400">-</td>
+                    <td className="px-4 py-3 text-gray-400">-</td>
+                    <td className="px-4 py-3 text-gray-400">-</td>
+                    <td className="px-4 py-3 text-gray-400">-</td>
                     <td className="px-4 py-3 flex gap-2">
-                      <button className="text-blue-600 hover:text-blue-800 p-1.5 bg-blue-50 rounded">
+                      <button className="text-gray-400 p-1.5 bg-gray-100 rounded cursor-not-allowed" disabled>
                         <i className="fa-solid fa-eye text-xs"></i>
                       </button>
-                      <button className="text-gray-600 hover:text-gray-800 p-1.5 bg-gray-50 rounded">
-                        <i className="fa-solid fa-edit text-xs"></i>
-                      </button>
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-gray-50 transition">
-                    <td className="px-4 py-3 font-semibold">TechSolutions International</td>
-                    <td className="px-4 py-3 font-mono text-xs text-gray-600">CT-2026-8854</td>
-                    <td className="px-4 py-3">Standard</td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                        Pendiente Firma
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">20 May, 2026</td>
-                    <td className="px-4 py-3 flex gap-2">
-                      <button className="text-blue-600 hover:text-blue-800 p-1.5 bg-blue-50 rounded">
-                        <i className="fa-solid fa-eye text-xs"></i>
-                      </button>
-                      <button className="text-gray-600 hover:text-gray-800 p-1.5 bg-gray-50 rounded">
+                      <button className="text-gray-400 p-1.5 bg-gray-100 rounded cursor-not-allowed" disabled>
                         <i className="fa-solid fa-edit text-xs"></i>
                       </button>
                     </td>

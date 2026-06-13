@@ -38,22 +38,22 @@ export default function Dashboard({ navItems, activeNavLabel }: AdminDashboardPa
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-5">
             <div className="bg-white p-4 rounded-xl shadow-md">
               <p className="text-xs text-gray-500 uppercase font-bold mb-1">Renovación</p>
-              <p className="text-2xl font-bold text-[#284B63]">82.4%</p>
-              <p className="text-[11px] text-[#284B63] mt-1 font-bold">
-                <i className="fa-solid fa-caret-up"></i> 2.1% vs mes anterior
+              <p className="text-2xl font-bold text-[#284B63]">-</p>
+              <p className="text-[11px] text-[#284B63] mt-1 font-bold text-gray-400">
+                vs mes anterior
               </p>
             </div>
             <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100">
               <p className="text-xs text-gray-500 uppercase font-bold mb-1 tracking-tight">MRR Total</p>
-              <p className="text-2xl font-bold text-[#353535]">$12.450</p>
+              <p className="text-2xl font-bold text-[#353535]">-</p>
             </div>
             <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100">
               <p className="text-xs text-gray-500 uppercase font-bold mb-1 tracking-tight">Fallos de Cobro</p>
-              <p className="text-2xl font-bold text-red-600">1.8%</p>
+              <p className="text-2xl font-bold text-red-600">-</p>
             </div>
             <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100">
               <p className="text-xs text-gray-500 uppercase font-bold mb-1 tracking-tight">Contratos Activos</p>
-              <p className="text-2xl font-bold text-[#353535]">1,240</p>
+              <p className="text-2xl font-bold text-[#353535]">-</p>
             </div>
           </div>
 
@@ -72,15 +72,15 @@ export default function Dashboard({ navItems, activeNavLabel }: AdminDashboardPa
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
                 <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
                   <p className="text-sm text-blue-600 font-semibold mb-1">Contratos Activos</p>
-                  <p className="text-2xl font-bold text-blue-700">1,240</p>
+                  <p className="text-2xl font-bold text-blue-700">-</p>
                 </div>
                 <div className="bg-green-50 p-3 rounded-lg border border-green-200">
                   <p className="text-sm text-green-600 font-semibold mb-1">Nuevos este mes</p>
-                  <p className="text-2xl font-bold text-green-700">89</p>
+                  <p className="text-2xl font-bold text-green-700">-</p>
                 </div>
                 <div className="bg-orange-50 p-3 rounded-lg border border-orange-200">
                   <p className="text-sm text-orange-600 font-semibold mb-1">Por vencer</p>
-                  <p className="text-2xl font-bold text-orange-700">15</p>
+                  <p className="text-2xl font-bold text-orange-700">-</p>
                 </div>
               </div>
 
@@ -97,40 +97,16 @@ export default function Dashboard({ navItems, activeNavLabel }: AdminDashboardPa
                   </thead>
                   <tbody className="divide-y divide-gray-100 text-sm">
                     <tr className="hover:bg-gray-50 transition">
-                      <td className="px-3 py-2 font-semibold truncate">Inmobiliaria Los Andes SpA</td>
-                      <td className="px-3 py-2">Premium</td>
-                      <td className="px-3 py-2">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Activo
-                        </span>
-                      </td>
-                      <td className="px-3 py-2">15 Jun, 2026</td>
+                      <td className="px-3 py-2 font-semibold truncate text-gray-400">-</td>
+                      <td className="px-3 py-2 text-gray-400">-</td>
+                      <td className="px-3 py-2 text-gray-400">-</td>
+                      <td className="px-3 py-2 text-gray-400">-</td>
                       <td className="px-3 py-2">
                         <div className="flex justify-center gap-2">
-                        <button className="text-blue-600 hover:text-blue-800 p-1.5 bg-blue-50 rounded">
+                        <button className="text-gray-400 p-1.5 bg-gray-100 rounded cursor-not-allowed" disabled>
                           <i className="fa-solid fa-eye text-xs"></i>
                         </button>
-                        <button className="text-gray-600 hover:text-gray-800 p-1.5 bg-gray-50 rounded">
-                          <i className="fa-solid fa-edit text-xs"></i>
-                        </button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr className="hover:bg-gray-50 transition">
-                      <td className="px-3 py-2 font-semibold truncate">TechSolutions International</td>
-                      <td className="px-3 py-2">Standard</td>
-                      <td className="px-3 py-2">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          Pendiente Firma
-                        </span>
-                      </td>
-                      <td className="px-3 py-2">20 May, 2026</td>
-                      <td className="px-3 py-2">
-                        <div className="flex justify-center gap-2">
-                        <button className="text-blue-600 hover:text-blue-800 p-1.5 bg-blue-50 rounded">
-                          <i className="fa-solid fa-eye text-xs"></i>
-                        </button>
-                        <button className="text-gray-600 hover:text-gray-800 p-1.5 bg-gray-50 rounded">
+                        <button className="text-gray-400 p-1.5 bg-gray-100 rounded cursor-not-allowed" disabled>
                           <i className="fa-solid fa-edit text-xs"></i>
                         </button>
                         </div>
