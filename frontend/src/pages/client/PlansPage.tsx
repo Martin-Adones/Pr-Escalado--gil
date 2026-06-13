@@ -117,7 +117,6 @@ export default function Plans({ navItems, activeNavLabel, userId }: ClientPlansP
   const handleConfirmChange = async () => {
     if (!selectedPlan || !userId) return
     try {
-      // Obtener contrato activo del usuario
       const contratosData = await listarContratos({ status: 'ACTIVE', id_users: userId })
       const activeContractId = contratosData.length > 0 ? contratosData[0].id_contracts : null
       if (!activeContractId) {
@@ -127,10 +126,7 @@ export default function Plans({ navItems, activeNavLabel, userId }: ClientPlansP
         return
       }
 
-      // Llamar al servicio para cambiar el plan
       await cambiarPlanContrato(activeContractId, selectedPlan.id)
-
-      // Notificar a otras vistas (HistoryPage) que hay un nuevo registro de auditoría
       try { window.dispatchEvent(new CustomEvent('auditoria:changed', { detail: { id_contracts: activeContractId } })) } catch (e) { /* noop */ }
 
       setIsModalOpen(false)

@@ -19,7 +19,6 @@ export default function History({ navItems, activeNavLabel, userId }: ClientHist
     let cancelled = false
     async function load() {
       try {
-        // 1. Obtener contratos del usuario para conocer sus IDs
         const contratos = await listarContratos({ id_users: userId || undefined })
         if (cancelled) return
 
@@ -28,7 +27,6 @@ export default function History({ navItems, activeNavLabel, userId }: ClientHist
           return
         }
 
-        // 2. Obtener logs de auditoría FILTRADOS por contratos del usuario (backend filtering)
         const userContractIds = contratos.map((c) => c.id_contracts)
         const logsPromises = userContractIds.map((contractId) =>
           listarAuditoria({ id_contracts: contractId, page_size: 100 })
@@ -37,22 +35,17 @@ export default function History({ navItems, activeNavLabel, userId }: ClientHist
         if (cancelled) return
 
         const logs = logsResponses.flat()
-
-        // 3. Obtener detalles de los planes de los contratos del usuario
         const contractById = new Map(contratos.map((contrato) => [contrato.id_contracts, contrato]))
         const planIds = Array.from(new Set(contratos.map((c) => c.id_plans)))
-        
-        // Usar servicio de caché para planes (reduce repeticiones en sesión)
+
         const planesById = await planesCacheService.obtenerPlanes(planIds)
         if (cancelled) return
 
-        // 4. Ya filtrados en backend, pero validamos por si acaso
         const userContractIdsSet = new Set(contratos.map((c) => c.id_contracts))
         const filteredLogs = logs.filter(
           (log) => log.id_contracts && userContractIdsSet.has(log.id_contracts)
         )
 
-        // 5. Mapear los registros a tipo Transaction para la tabla
         const mapped: Transaction[] = filteredLogs.map((log) => {
           let concepto = `Acción en contrato #${log.id_contracts}: ${log.action}`
           let monto = 0

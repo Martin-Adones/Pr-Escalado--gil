@@ -69,16 +69,13 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Filters
   const [filterStatus, setFilterStatus] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState<string>('')
 
-  // Modals
   const [isNewModalOpen, setIsNewModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
 
-  // Selected ticket for modal
   const [selectedTicket, setSelectedTicket] = useState<(FilaTicketListado & { planName: string; priority: 'Alta' | 'Media' | 'Baja' }) | null>(null)
 
   const loadData = async () => {
@@ -104,7 +101,6 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
     loadData()
   }, [userId])
 
-  // Lock body scroll when any modal is open
   useEffect(() => {
     if (isNewModalOpen || isEditModalOpen || isViewModalOpen) {
       document.body.style.overflow = 'hidden'
@@ -150,8 +146,8 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
       const matchesStatus = filterStatus ? t.status === filterStatus : true
       const matchesSearch = searchQuery
         ? t.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          t.id_support.toString().includes(searchQuery) ||
-          t.id_contracts.toString().includes(searchQuery)
+        t.id_support.toString().includes(searchQuery) ||
+        t.id_contracts.toString().includes(searchQuery)
         : true
       return matchesStatus && matchesSearch
     })
@@ -239,7 +235,6 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
       headerRightValue={loading ? '...' : String(totalCount)}
     >
       <div className="p-8">
-        {/* Stat Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white p-6 rounded-xl shadow-md border-t-4 border-[#3C6E71]">
             <p className="text-xs text-gray-500 uppercase font-bold mb-1 tracking-tight">Tickets Creados</p>
@@ -258,7 +253,6 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
           </div>
         </div>
 
-        {/* Main List and Table */}
         <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
           <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <h3 className="font-bold text-[#353535]">Tus Solicitudes</h3>
@@ -274,14 +268,14 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
                 <option value="resolved">Resuelto</option>
                 <option value="closed">Cerrado</option>
               </select>
-              <input 
-                type="text" 
-                placeholder="Buscar ticket..." 
+              <input
+                type="text"
+                placeholder="Buscar ticket..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="text-sm border border-gray-300 rounded-lg px-4 py-2 w-64 bg-white text-gray-900 focus:outline-[#3C6E71] focus:ring-1 focus:ring-[#3C6E71]" 
+                className="text-sm border border-gray-300 rounded-lg px-4 py-2 w-64 bg-white text-gray-900 focus:outline-[#3C6E71] focus:ring-1 focus:ring-[#3C6E71]"
               />
-              <button 
+              <button
                 onClick={() => setIsNewModalOpen(true)}
                 className="bg-[#284B63] hover:bg-[#284B63]/90 text-white px-4 py-2 rounded text-sm font-bold shadow-lg shadow-[#284B63]/30 transition"
               >
@@ -296,7 +290,7 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
                 <i className="fa-solid fa-circle-exclamation text-lg"></i>
                 <span className="text-sm font-semibold">{error}</span>
               </div>
-              <button 
+              <button
                 onClick={loadData}
                 className="text-xs bg-red-100 text-red-800 hover:bg-red-200 font-bold px-3 py-1.5 rounded transition"
               >
@@ -353,7 +347,7 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
                       <td className="px-6 py-4 text-xs text-gray-600">{formatDate(ticket.created_at)}</td>
                       <td className="px-6 py-4">
                         <div className="flex justify-center gap-2">
-                          <button 
+                          <button
                             onClick={() => handleOpenView(ticket)}
                             title="Ver detalles"
                             className="text-blue-600 hover:text-blue-800 p-1.5 bg-blue-50 rounded transition-colors"
@@ -361,7 +355,7 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
                             <i className="fa-solid fa-eye text-xs"></i>
                           </button>
                           {ticket.status === 'open' && (
-                            <button 
+                            <button
                               onClick={() => handleOpenEdit(ticket)}
                               title="Editar descripción"
                               className="text-green-600 hover:text-green-800 p-1.5 bg-green-50 rounded transition-colors"
@@ -380,13 +374,12 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
         </div>
       </div>
 
-      {/* MODAL: Nueva Solicitud */}
       {isNewModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 transition-opacity">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
             <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50">
               <h2 className="text-lg font-bold text-[#353535]">Nueva Solicitud de Soporte</h2>
-              <button 
+              <button
                 onClick={() => setIsNewModalOpen(false)}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
@@ -398,8 +391,8 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Selecciona tu contrato <span className="text-red-500">*</span>
                 </label>
-                <select 
-                  name="id_contracts" 
+                <select
+                  name="id_contracts"
                   required
                   className="w-full text-sm border border-gray-300 rounded-lg px-4 py-2 bg-white text-gray-900 focus:outline-[#3C6E71] focus:ring-1 focus:ring-[#3C6E71]"
                 >
@@ -425,8 +418,8 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Cuéntanos el inconveniente <span className="text-red-500">*</span>
                 </label>
-                <textarea 
-                  name="description" 
+                <textarea
+                  name="description"
                   required
                   rows={4}
                   placeholder="Escribe detalladamente tu problema..."
@@ -435,14 +428,14 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                <button 
+                <button
                   type="button"
                   onClick={() => setIsNewModalOpen(false)}
                   className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
                 >
                   Cancelar
                 </button>
-                <button 
+                <button
                   type="submit"
                   disabled={contracts.filter(c => c.status === 'ACTIVE').length === 0}
                   className="px-4 py-2 bg-[#284B63] hover:bg-[#284B63]/90 disabled:opacity-50 text-white rounded-lg text-sm font-bold shadow-lg shadow-[#284B63]/30 transition"
@@ -455,13 +448,12 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
         </div>
       )}
 
-      {/* MODAL: Editar descripción de Ticket (Solo si está en estado 'open') */}
       {isEditModalOpen && selectedTicket && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 transition-opacity">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
             <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50">
               <h2 className="text-lg font-bold text-[#353535]">Editar Solicitud #TK-{selectedTicket.id_support}</h2>
-              <button 
+              <button
                 onClick={() => { setIsEditModalOpen(false); setSelectedTicket(null); }}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
@@ -478,8 +470,8 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Descripción del Problema <span className="text-red-500">*</span>
                 </label>
-                <textarea 
-                  name="description" 
+                <textarea
+                  name="description"
                   required
                   rows={4}
                   defaultValue={selectedTicket.description}
@@ -488,14 +480,14 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                <button 
+                <button
                   type="button"
                   onClick={() => { setIsEditModalOpen(false); setSelectedTicket(null); }}
                   className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
                 >
                   Cancelar
                 </button>
-                <button 
+                <button
                   type="submit"
                   className="px-4 py-2 bg-[#284B63] hover:bg-[#284B63]/90 text-white rounded-lg text-sm font-bold shadow-lg shadow-[#284B63]/30 transition"
                 >
@@ -507,13 +499,12 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
         </div>
       )}
 
-      {/* MODAL: Ver Detalles del Ticket */}
       {isViewModalOpen && selectedTicket && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 transition-opacity">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
             <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50">
               <h2 className="text-lg font-bold text-[#353535]">Solicitud de Soporte #TK-{selectedTicket.id_support}</h2>
-              <button 
+              <button
                 onClick={() => { setIsViewModalOpen(false); setSelectedTicket(null); }}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
@@ -561,7 +552,7 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
               </div>
 
               <div className="flex justify-end pt-4 border-t border-gray-200">
-                <button 
+                <button
                   type="button"
                   onClick={() => { setIsViewModalOpen(false); setSelectedTicket(null); }}
                   className="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-bold transition"
