@@ -55,3 +55,18 @@ export interface FilaAuditLog {
   assigned_to: string | null
   created_at: string
 }
+
+export interface FilaTicket {
+  id_support: string
+  id_contracts: string
+  id_users: string
+  description: string
+  status: 'open' | 'in_progress' | 'resolved' | 'closed'
+  created_at: string
+  updated_at: string
+}
+
+export interface FilaTicketListado extends FilaTicket {
+  total_count: string
+}
+

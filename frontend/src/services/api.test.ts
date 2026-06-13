@@ -29,6 +29,7 @@ describe('apiGet', () => {
     const result = await apiGet('/test')
     expect(mockFetch).toHaveBeenCalledWith(
       expect.stringContaining('/api/test'),
+      expect.any(Object),
     )
     expect(result).toEqual([{ id: 1 }])
   })

@@ -4,6 +4,7 @@ import AdminDashboard from './pages/admin/DashboardPage'
 import ContratosPage from './pages/admin/ContratosPage'
 import CiclosDeCobroPage from './pages/admin/CiclosDeCobroPage'
 import ClientesPage from './pages/admin/ClientesPage'
+import AdminTicketsPage from './pages/admin/TicketsPage'
 import ConfiguracionPage from './pages/admin/ConfiguracionPage'
 import Contracts from './pages/client/ContractsPage'
 import ClientDashboard from './pages/client/DashboardPage'
@@ -23,6 +24,7 @@ const adminPathToLabel: Record<string, string> = {
   '/admin/contratos': 'Contratos',
   '/admin/ciclos-de-cobro': 'Ciclos de Cobro',
   '/admin/clientes': 'Clientes',
+  '/admin/tickets': 'Tickets',
   '/admin/configuracion': 'Configuración',
 }
 
@@ -50,6 +52,7 @@ function AdminLayout({ onLogout }: { onLogout: () => void }) {
       { label: 'Contratos', iconClass: 'fa-solid fa-file-contract', onClick: () => navigate('/admin/contratos') },
       { label: 'Ciclos de Cobro', iconClass: 'fa-solid fa-rotate', onClick: () => navigate('/admin/ciclos-de-cobro') },
       { label: 'Clientes', iconClass: 'fa-solid fa-users', onClick: () => navigate('/admin/clientes') },
+      { label: 'Tickets', iconClass: 'fa-solid fa-ticket', onClick: () => navigate('/admin/tickets') },
       { label: 'Configuración', iconClass: 'fa-solid fa-gear', onClick: () => navigate('/admin/configuracion') },
       { label: 'Cambiar perfil', iconClass: 'fa-solid fa-right-left', onClick: handleLogout },
     ],
@@ -62,6 +65,7 @@ function AdminLayout({ onLogout }: { onLogout: () => void }) {
       <Route path="contratos" element={<ContratosPage navItems={navItems} activeNavLabel={activeNavLabel} />} />
       <Route path="ciclos-de-cobro" element={<CiclosDeCobroPage navItems={navItems} activeNavLabel={activeNavLabel} />} />
       <Route path="clientes" element={<ClientesPage navItems={navItems} activeNavLabel={activeNavLabel} />} />
+      <Route path="tickets" element={<AdminTicketsPage navItems={navItems} activeNavLabel={activeNavLabel} />} />
       <Route path="configuracion" element={<ConfiguracionPage navItems={navItems} activeNavLabel={activeNavLabel} />} />
     </Routes>
   )
