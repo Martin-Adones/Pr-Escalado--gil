@@ -28,12 +28,12 @@ export class ContratosRepository extends BaseRepository {
   /**
    * Registra un log de auditoría relacionado con contratos.
    */
-  async registrarLogAuditoria(idContracts: string, action: string, assignetTo: string): Promise<void> {
+  async registrarLogAuditoria(idContracts: string, action: string, assignedTo: string): Promise<void> {
     const query = `
-      INSERT INTO "audit_logs" ("id_contracts", "action", "assignet_to")
+      INSERT INTO "audit_logs" ("id_contracts", "action", "assigned_to")
       VALUES ($1, $2, $3)
     `;
-    await db.query(query, [idContracts, action, assignetTo]);
+    await db.query(query, [idContracts, action, assignedTo]);
   }
 
   /**

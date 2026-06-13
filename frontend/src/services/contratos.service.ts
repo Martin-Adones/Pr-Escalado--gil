@@ -51,7 +51,7 @@ export function crearAuditCambioPlanLocal(id_audit_logs: string, id_contracts: s
     id_audit_logs,
     id_contracts,
     action: 'CAMBIO_PLAN',
-    assignet_to: nuevoPlanId,
+    assigned_to: nuevoPlanId,
     created_at: new Date().toISOString(),
   }
 }

@@ -65,7 +65,7 @@ export default function History({ navItems, activeNavLabel, userId }: ClientHist
           const plan = contrato ? planesById.get(contrato.id_plans) : undefined
           const planName = plan ? plan.name : contrato?.id_plans ?? 'Plan desconocido'
           const planAmount = plan ? plan.amount : 0
-          const actorInfo = log.assignet_to ? ` por ${log.assignet_to}` : ''
+          const actorInfo = log.assigned_to ? ` por ${log.assigned_to}` : ''
           const priceLabel = planAmount > 0 ? ` por ${new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(planAmount)}` : ''
 
           if (log.action === 'CREAR_CONTRATO') {

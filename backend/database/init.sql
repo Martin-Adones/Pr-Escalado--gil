@@ -70,7 +70,7 @@ CREATE TABLE "audit_logs" (
     "id_audit_logs" BIGSERIAL PRIMARY KEY,
     "id_contracts" BIGINT REFERENCES "Contracts"("id_contracts") ON DELETE SET NULL,
     "action" VARCHAR(255) NOT NULL,
-    "assignet_to" VARCHAR(255),
+    "assigned_to" VARCHAR(255),
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

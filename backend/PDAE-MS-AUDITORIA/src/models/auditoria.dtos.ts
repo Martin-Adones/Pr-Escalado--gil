@@ -6,7 +6,7 @@ export interface FilaLogAuditoria {
   id_audit_logs: string;
   id_contracts: string | null;
   action: string;
-  assignet_to: string | null;
+  assigned_to: string | null;
   created_at: string;
 }
 
@@ -33,7 +33,7 @@ export class ListarLogsAuditoriaConsultaDto {
   @TransformVacioAIndefinido
   @IsOptional()
   @IsString()
-  assignet_to?: string;
+  assigned_to?: string;
 
   @TransformVacioAIndefinido
   @IsOptional()

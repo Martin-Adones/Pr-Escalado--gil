@@ -52,6 +52,6 @@ export interface FilaAuditLog {
   id_audit_logs: string
   id_contracts: string | null
   action: string
-  assignet_to: string | null
+  assigned_to: string | null
   created_at: string
 }

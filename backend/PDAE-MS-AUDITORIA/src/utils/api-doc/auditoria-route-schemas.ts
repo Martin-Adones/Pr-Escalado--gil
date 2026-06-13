@@ -8,7 +8,7 @@ export const esquemaGetListarLogsAuditoria = {
   operationId: 'listarLogsAuditoria',
   summary: 'Listar logs de auditoría',
   description:
-    'Filtros opcionales: id_audit_logs, id_contracts, action, assignet_to, rango de fechas created_at. Paginación: page_size, page_number.',
+    'Filtros opcionales: id_audit_logs, id_contracts, action, assigned_to, rango de fechas created_at. Paginación: page_size, page_number.',
   tags: ['Auditoría'],
   querystring: {
     type: 'object',
@@ -27,9 +27,9 @@ export const esquemaGetListarLogsAuditoria = {
         type: 'string',
         description: 'Texto contenido en action (búsqueda parcial)',
       },
-      assignet_to: {
+      assigned_to: {
         type: 'string',
-        description: 'Texto contenido en assignet_to (búsqueda parcial)',
+        description: 'Texto contenido en assigned_to (búsqueda parcial)',
       },
       created_at_from: {
         type: 'string',

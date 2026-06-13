@@ -82,7 +82,7 @@ INSERT INTO "Support" ("id_contracts", "description", "status", "created_at") VA
   (5, 'No recibo los correos de notificación de cobro',                         'in_progress','2026-06-02 08:15:00');
 
 -- 8. audit_logs (5) — referencian Contracts (1-10)
-INSERT INTO "audit_logs" ("id_contracts", "action", "assignet_to", "created_at") VALUES
+INSERT INTO "audit_logs" ("id_contracts", "action", "assigned_to", "created_at") VALUES
   (1,  'CREAR_CONTRATO',        'sistema',     '2026-01-01 10:00:00'),
   (2,  'CREAR_CONTRATO',        'sistema',     '2026-03-15 10:00:00'),
   (6,  'SUSPENDER_CONTRATO',    'admin',       '2026-05-01 09:00:00'),

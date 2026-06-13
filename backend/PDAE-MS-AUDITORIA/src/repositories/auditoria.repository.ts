@@ -10,7 +10,7 @@ export class AuditoriaRepository extends BaseRepository {
       dto.id_audit_logs ?? null,
       dto.id_contracts ?? null,
       dto.action ?? null,
-      dto.assignet_to ?? null,
+      dto.assigned_to ?? null,
       dto.created_at_from ?? null,
       dto.created_at_to ?? null,
       dto.page_size,
