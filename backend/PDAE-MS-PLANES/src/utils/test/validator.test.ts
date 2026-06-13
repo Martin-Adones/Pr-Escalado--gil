@@ -31,7 +31,7 @@ describe('Validator Utils', () => {
 
   it('debe arrojar error si faltan campos obligatorios', async () => {
     const invalidData = { edad: 20 };
-    await expect(transformAndValidate(CustomTestDTO, invalidData)).rejects.toThrow('Error de Validacion: Nombre es requerido');
+    await expect(transformAndValidate(CustomTestDTO, invalidData)).rejects.toThrow('Error de Validación: Nombre es requerido');
   });
 
   it('debe formatear errores anidados recursivamente en propiedades hijas', async () => {

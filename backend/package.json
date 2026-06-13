@@ -10,6 +10,16 @@
   "engines": {
     "node": ">=18.18.0"
   },
+  "workspaces": [
+    "shared",
+    "PDAE-API-GATEWAY",
+    "PDAE-MS-CONTRATOS",
+    "PDAE-MS-USUARIOS",
+    "PDAE-MS-PLANES",
+    "PDAE-MS-PRODUCTOS",
+    "PDAE-MS-SOPORTE",
+    "PDAE-MS-AUDITORIA"
+  ],
   "devDependencies": {
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",

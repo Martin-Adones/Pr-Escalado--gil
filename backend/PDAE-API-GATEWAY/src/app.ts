@@ -33,8 +33,9 @@ export const createServer = async (): Promise<FastifyInstance> => {
   });
 
   // Configurar CORS
+  const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
   await app.register(cors, {
-    origin: true,
+    origin: corsOrigin === '*' ? true : corsOrigin.split(',').map(s => s.trim()),
     credentials: true,
   });
 
