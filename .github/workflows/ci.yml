@@ -1,0 +1,130 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  backend:
+    name: Backend (shared + MS)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - run: cp ../env.example .env
+
+      - run: npm ci
+
+      - name: Build shared
+        run: npm run build --workspace=shared
+
+      - name: Test all MS
+        run: npm run test --workspaces --if-present
+
+      - name: Build all MS (typecheck)
+        run: npm run build --workspaces --if-present
+
+  frontend:
+    name: Frontend (React)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+  docker:
+    name: Docker images
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build MS images (backend context)
+        run: |
+          for ms in PDAE-MS-CONTRATOS PDAE-MS-USUARIOS PDAE-MS-PLANES PDAE-MS-PRODUCTOS PDAE-MS-SOPORTE PDAE-MS-AUDITORIA; do
+            tag=$(echo "$ms" | tr '[:upper:]' '[:lower:]')
+            docker buildx build \
+              --tag $tag:latest \
+              --tag $tag:${{ github.sha }} \
+              -f $ms/Dockerfile \
+              ./backend
+          done
+
+      - name: Build API Gateway
+        run: |
+          docker buildx build \
+            --tag api-gateway:latest \
+            --tag api-gateway:${{ github.sha }} \
+            -f PDAE-API-GATEWAY/Dockerfile \
+            ./backend/PDAE-API-GATEWAY
+
+      - name: Build Frontend
+        run: |
+          docker buildx build \
+            --tag frontend:latest \
+            --tag frontend:${{ github.sha }} \
+            ./frontend
+
+      - name: Log in to Docker Hub
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        if: env.DOCKER_USERNAME != '' && env.DOCKER_PASSWORD != ''
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push images to Docker Hub
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        if: env.DOCKER_USERNAME != '' && env.DOCKER_PASSWORD != ''
+        run: |
+          for img in api-gateway frontend \
+            pdae-ms-contratos pdae-ms-usuarios pdae-ms-planes \
+            pdae-ms-productos pdae-ms-soporte pdae-ms-auditoria; do
+            docker tag $img:latest $DOCKER_USERNAME/$img:latest
+            docker tag $img:${{ github.sha }} $DOCKER_USERNAME/$img:${{ github.sha }}
+            docker push $DOCKER_USERNAME/$img:latest
+            docker push $DOCKER_USERNAME/$img:${{ github.sha }}
+          done
