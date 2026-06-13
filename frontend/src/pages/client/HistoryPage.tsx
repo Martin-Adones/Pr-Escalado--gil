@@ -3,7 +3,7 @@ import PortalTemplate from '../../portal/PortalTemplate'
 import TransactionsTable, { type Transaction } from '../../components/TransactionsTable'
 import { listarContratos } from '../../services/contratos.service'
 import { listarAuditoria } from '../../services/auditoria.service'
-import { listarPlanes } from '../../services/planes.service'
+import { planesCacheService } from '../../services/planes-cache.service'
 
 type ClientHistoryPageProps = {
   navItems: { label: string; iconClass: string; onClick?: () => void }[]
@@ -28,32 +28,28 @@ export default function History({ navItems, activeNavLabel, userId }: ClientHist
           return
         }
 
-        // 2. Obtener todos los logs de auditoría
-        const logs = await listarAuditoria()
+        // 2. Obtener logs de auditoría FILTRADOS por contratos del usuario (backend filtering)
+        const userContractIds = contratos.map((c) => c.id_contracts)
+        const logsPromises = userContractIds.map((contractId) =>
+          listarAuditoria({ id_contracts: contractId, page_size: 100 })
+        )
+        const logsResponses = await Promise.all(logsPromises)
         if (cancelled) return
+
+        const logs = logsResponses.flat()
 
         // 3. Obtener detalles de los planes de los contratos del usuario
         const contractById = new Map(contratos.map((contrato) => [contrato.id_contracts, contrato]))
         const planIds = Array.from(new Set(contratos.map((c) => c.id_plans)))
-        const planesById = new Map<string, { name: string; amount: number }>()
+        
+        // Usar servicio de caché para planes (reduce repeticiones en sesión)
+        const planesById = await planesCacheService.obtenerPlanes(planIds)
+        if (cancelled) return
 
-        if (planIds.length > 0) {
-          const planesResponses = await Promise.all(planIds.map((id) => listarPlanes({ id_plans: id })))
-          if (!cancelled) {
-            planesResponses.flat().forEach((plan) => {
-              const amount = Number(plan.amount || 0)
-              planesById.set(plan.id_plans, {
-                name: plan.name,
-                amount: Number.isNaN(amount) ? 0 : amount,
-              })
-            })
-          }
-        }
-
-        // 4. Filtrar en memoria por los contratos del usuario
-        const userContractIds = new Set(contratos.map((c) => c.id_contracts))
+        // 4. Ya filtrados en backend, pero validamos por si acaso
+        const userContractIdsSet = new Set(contratos.map((c) => c.id_contracts))
         const filteredLogs = logs.filter(
-          (log) => log.id_contracts && userContractIds.has(log.id_contracts)
+          (log) => log.id_contracts && userContractIdsSet.has(log.id_contracts)
         )
 
         // 5. Mapear los registros a tipo Transaction para la tabla
