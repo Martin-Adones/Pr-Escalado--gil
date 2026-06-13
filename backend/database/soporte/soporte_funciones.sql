@@ -41,6 +41,7 @@ RETURNS TABLE (
     created_at TIMESTAMP,
     updated_at TIMESTAMP
 ) AS $$
+#variable_conflict use_column
 DECLARE
   v_existe_contrato BOOLEAN;
   v_id_support BIGINT;
@@ -89,6 +90,7 @@ RETURNS TABLE (
     updated_at TIMESTAMP,
     total_count BIGINT
 ) AS $$
+#variable_conflict use_column
 DECLARE
   v_offset INTEGER;
   v_total BIGINT;
@@ -150,6 +152,7 @@ RETURNS TABLE (
     created_at TIMESTAMP,
     updated_at TIMESTAMP
 ) AS $$
+#variable_conflict use_column
 DECLARE
   v_existe BOOLEAN;
   v_existe_contrato BOOLEAN;
