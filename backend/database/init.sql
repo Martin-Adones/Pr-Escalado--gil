@@ -103,3 +103,4 @@ CREATE TABLE "Plans_Products" (
 \i /docker-entrypoint-initdb.d/productos/productos_funciones.sql
 \i /docker-entrypoint-initdb.d/auditoria/auditoria_funciones.sql
 \i /docker-entrypoint-initdb.d/usuarios/usuarios_funciones.sql
+\i /docker-entrypoint-initdb.d/soporte/soporte_funciones.sql
