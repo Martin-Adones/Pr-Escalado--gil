@@ -86,8 +86,10 @@ export default function Contracts({
             setPlan(planes[0])
           }
         }
-      } catch {
-        // API no disponible
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : 'Error al cargar el contrato',
+        );
       } finally {
         if (!cancelled) setLoading(false)
       }
