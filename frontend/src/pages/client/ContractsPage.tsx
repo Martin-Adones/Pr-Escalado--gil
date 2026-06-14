@@ -36,10 +36,39 @@ function formatCurrencyLabel(value: string) {
   return value.trim() === '' ? '-' : value
 }
 
-export default function Contracts({ navItems, activeNavLabel, userId }: ClientContractsPageProps) {
-  const [contrato, setContrato] = useState<FilaContrato | null>(null)
-  const [plan, setPlan] = useState<FilaPlan | null>(null)
-  const [loading, setLoading] = useState(true)
+function detectPeriodMonths(billingCycle: string): number {
+  const lc = billingCycle.toLowerCase();
+  if (lc.includes('year') || lc.includes('anual') || lc.includes('año'))
+    return 12
+  if (lc.includes('quarter') || lc.includes('trimest')) return 3
+  if (lc.includes('semi') || lc.includes('semest') || lc.includes('bianual'))
+    return 6
+  return 1
+}
+
+function periodSingularLabel(billingCycle: string): string {
+  const lc = billingCycle.toLowerCase();
+  if (lc.includes('year') || lc.includes('anual') || lc.includes('año'))
+    return 'Año'
+  if (lc.includes('quarter') || lc.includes('trimest')) return 'Trimestre'
+  if (lc.includes('semi') || lc.includes('semest') || lc.includes('bianual'))
+    return 'Semestre'
+  return 'Mes'
+}
+
+function formatShortDate(date: Date): string {
+  return date.toLocaleDateString('es-CL', { day: '2-digit', month: 'short' })
+}
+
+export default function Contracts({
+  navItems,
+  activeNavLabel,
+  userId,
+}: ClientContractsPageProps) {
+  const [contrato, setContrato] = useState<FilaContrato | null>(null);
+  const [plan, setPlan] = useState<FilaPlan | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false
@@ -74,45 +103,108 @@ export default function Contracts({ navItems, activeNavLabel, userId }: ClientCo
     return {
       id: contrato.id_contracts,
       planName: plan.name,
+      billingCycle: plan.billing_cycle,
       status: getStatusLabel(contrato.status),
       rawStatus: contrato.status,
       recurringAmount: `$${Number(plan.amount).toLocaleString('es-CL')}`,
-      startDateLabel: formatDateLabel(new Date(contrato.start_date.replace(/-/g, '/'))),
-      renewalDateLabel: formatDateLabel(new Date(contrato.end_date.replace(/-/g, '/'))),
       cycleStartISO: contrato.start_date,
       renewalISO: contrato.end_date,
-      paymentState: 'ok' as const,
-      benefits: [
-        `Ciclo de facturación: ${plan.billing_cycle}`,
-        `Contrato #${contrato.id_contracts}`,
-        `Inicio: ${formatDateLabel(new Date(contrato.start_date.replace(/-/g, '/')))}`,
-        `Término: ${formatDateLabel(new Date(contrato.end_date.replace(/-/g, '/')))}`,
+      paymentState: 'ok' as 'ok' | 'pending' | 'grace',
+      details: [
+        { label: 'Contrato', value: `#${contrato.id_contracts}` },
+        { label: 'Ciclo', value: plan.billing_cycle },
+        {
+          label: 'Inicio',
+          value: formatDateLabel(
+            new Date(contrato.start_date.replace(/-/g, '/')),
+          ),
+        },
+        {
+          label: 'Término',
+          value: formatDateLabel(
+            new Date(contrato.end_date.replace(/-/g, '/')),
+          ),
+        },
       ],
-      keyClauses: [
-        'Renovación automática',
-        'Cancelación con 15 días de anticipación',
-        'Disponibilidad garantizada 99.5%',
-      ],
-    }
+    };
   }, [contrato, plan])
 
-  const plansNavItem = useMemo(() => navItems.find((i) => i.label === 'Planes'), [navItems])
-  const ticketsNavItem = useMemo(() => navItems.find((i) => i.label === 'Tickets'), [navItems])
-  const historyNavItem = useMemo(() => navItems.find((i) => i.label === 'Historial'), [navItems])
+  const plansNavItem = useMemo(
+    () => navItems.find((i) => i.label === 'Planes'),
+    [navItems],
+  );
 
-  const cycleMetrics = useMemo(() => {
+  const billingPeriod = useMemo(() => {
     if (!activeContract) return null
-    const start = new Date(activeContract.cycleStartISO.replace(/-/g, '/'))
-    const renewal = new Date(activeContract.renewalISO.replace(/-/g, '/'))
+
+    const contractStart = new Date(
+      activeContract.cycleStartISO.replace(/-/g, '/'),
+    )
+    const contractEnd = new Date(activeContract.renewalISO.replace(/-/g, '/'))
     const now = new Date()
-    const totalMs = renewal.getTime() - start.getTime()
-    const elapsedMs = now.getTime() - start.getTime()
-    const remainingMs = renewal.getTime() - now.getTime()
-    const totalDays = Math.max(1, Math.ceil(totalMs / (1000 * 60 * 60 * 24)))
-    const elapsedDays = clamp(Math.floor(elapsedMs / (1000 * 60 * 60 * 24)), 0, totalDays)
-    const remainingDays = clamp(Math.ceil(remainingMs / (1000 * 60 * 60 * 24)), 0, totalDays)
-    const progressPct = clamp((elapsedDays / totalDays) * 100, 0, 100)
-    return { totalDays, elapsedDays, remainingDays, progressPct }
+    const DAY_MS = 1000 * 60 * 60 * 24
+
+    const periodMonths = detectPeriodMonths(activeContract.billingCycle)
+    const label = periodSingularLabel(activeContract.billingCycle)
+
+    let totalPeriods = 0
+    const cursor = new Date(contractStart)
+    while (cursor < contractEnd && totalPeriods < 1200) {
+      cursor.setMonth(cursor.getMonth() + periodMonths)
+      totalPeriods++
+    }
+    totalPeriods = Math.max(1, totalPeriods)
+
+    const monthsElapsed =
+      (now.getFullYear() - contractStart.getFullYear()) * 12 +
+      (now.getMonth() - contractStart.getMonth())
+    const currentPeriodIndex = clamp(
+      Math.floor(monthsElapsed / periodMonths),
+      0,
+      totalPeriods - 1,
+    )
+
+    const periodStart = new Date(contractStart)
+    periodStart.setMonth(
+      periodStart.getMonth() + currentPeriodIndex * periodMonths,
+    )
+
+    const periodEndRaw = new Date(periodStart)
+    periodEndRaw.setMonth(periodEndRaw.getMonth() + periodMonths)
+
+    const periodEnd = periodEndRaw > contractEnd ? contractEnd : periodEndRaw
+
+    const periodTotalDays = Math.max(
+      1,
+      Math.ceil((periodEnd.getTime() - periodStart.getTime()) / DAY_MS),
+    )
+    const periodElapsedDays = clamp(
+      Math.floor((now.getTime() - periodStart.getTime()) / DAY_MS),
+      0,
+      periodTotalDays,
+    )
+    const periodRemainingDays = clamp(
+      periodTotalDays - periodElapsedDays,
+      0,
+      periodTotalDays,
+    )
+    const progressPct = clamp(
+      (periodElapsedDays / periodTotalDays) * 100,
+      0,
+      100,
+    )
+
+    return {
+      label,
+      currentPeriod: currentPeriodIndex + 1,
+      totalPeriods,
+      periodStart,
+      periodEnd,
+      periodTotalDays,
+      periodElapsedDays,
+      periodRemainingDays,
+      progressPct,
+    }
   }, [activeContract])
 
   const alertVariant = useMemo(() => {
@@ -121,6 +213,20 @@ export default function Contracts({ navItems, activeNavLabel, userId }: ClientCo
     if (activeContract.paymentState === 'grace') return 'danger'
     return 'normal'
   }, [activeContract])
+
+  const cardClass =
+    alertVariant === 'danger'
+      ? 'rounded-xl border border-red-200 bg-red-50 p-6'
+      : alertVariant === 'warning'
+        ? 'rounded-xl border border-amber-200 bg-amber-50 p-6'
+        : 'rounded-xl border border-gray-200 bg-white p-6 shadow-sm'
+
+  const progressBarClass =
+    alertVariant === 'danger'
+      ? 'h-full bg-red-500 rounded-full transition-all duration-500'
+      : alertVariant === 'warning'
+        ? 'h-full bg-amber-500 rounded-full transition-all duration-500'
+        : 'h-full bg-[#3C6E71] rounded-full transition-all duration-500'
 
   return (
     <PortalTemplate
@@ -137,121 +243,117 @@ export default function Contracts({ navItems, activeNavLabel, userId }: ClientCo
       headerRightLabel="Próximo Cobro"
       headerRightValue={cycle.renewalDateLabel}
     >
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-        {loading ? (
-          <div className="animate-pulse space-y-4">
-            <div className="h-6 w-64 bg-gray-200 rounded" />
-            <div className="h-4 w-48 bg-gray-200 rounded" />
-            <div className="h-2 w-full bg-gray-200 rounded" />
-            <div className="grid grid-cols-3 gap-4">
-              <div className="h-24 bg-gray-200 rounded" />
-              <div className="h-24 bg-gray-200 rounded" />
-              <div className="h-24 bg-gray-200 rounded" />
+      {loading ? (
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm animate-pulse space-y-4">
+          <div className="h-5 w-56 bg-gray-200 rounded" />
+          <div className="h-3 w-36 bg-gray-200 rounded" />
+          <div className="h-2 w-full bg-gray-200 rounded" />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="h-24 bg-gray-200 rounded" />
+            <div className="h-24 bg-gray-200 rounded" />
+          </div>
+        </div>
+      ) : activeContract && billingPeriod ? (
+        <div className={cardClass}>
+          {/* ── Header ── */}
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
+                Plan activo
+              </p>
+              <div className="flex items-center gap-3 mt-1">
+                <h3 className="text-lg font-black text-[#353535]">
+                  {activeContract.planName}
+                </h3>
+                <span
+                  className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${getStatusBadgeClasses(activeContract.rawStatus)}`}
+                >
+                  {activeContract.status}
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={plansNavItem?.onClick}
+              className="shrink-0 px-3 py-2 rounded-lg text-xs font-bold bg-[#284B63] text-white hover:opacity-90 transition"
+            >
+              Cambiar plan
+            </button>
+          </div>
+
+          <div className="mt-6">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-gray-500">
+                Período de facturación
+              </span>
+              <span className="text-[11px] font-black text-[#284B63] bg-[#284B63]/10 px-2.5 py-0.5 rounded-full">
+                {billingPeriod.label} {billingPeriod.currentPeriod} de{" "}
+                {billingPeriod.totalPeriods}
+              </span>
+            </div>
+
+            <div className="h-2 w-full bg-[#D9D9D9] rounded-full overflow-hidden">
+              <div
+                className={progressBarClass}
+                style={{ width: `${billingPeriod.progressPct}%` }}
+              />
+            </div>
+
+            <div className="mt-2 flex items-center justify-between text-[10px] font-semibold text-gray-400">
+              <span>{formatShortDate(billingPeriod.periodStart)}</span>
+              <span>
+                Día {billingPeriod.periodElapsedDays} de{" "}
+                {billingPeriod.periodTotalDays}
+                {" · "}
+                {billingPeriod.periodRemainingDays} días restantes
+              </span>
+              <span>{formatShortDate(billingPeriod.periodEnd)}</span>
             </div>
           </div>
-        ) : activeContract && cycleMetrics ? (
-          <div
-            className={
-              alertVariant === 'danger'
-                ? 'rounded-xl border border-red-200 bg-red-50 p-5'
-                : alertVariant === 'warning'
-                  ? 'rounded-xl border border-amber-200 bg-amber-50 p-5'
-                  : 'rounded-xl border border-gray-200 bg-white p-5'
-            }
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-[10px] font-bold text-gray-400 uppercase">Plan activo</p>
-                <div className="flex items-center gap-3 mt-1">
-                  <h3 className="text-lg font-black text-[#353535]">{activeContract.planName}</h3>
-                  <span
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${getStatusBadgeClasses(activeContract.rawStatus)}`}
+
+          <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="rounded-lg bg-gray-50 p-4">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
+                Total a pagar
+              </p>
+              <p className="text-2xl font-black text-[#284B63] mt-1">
+                {formatCurrencyLabel(activeContract.recurringAmount)}
+              </p>
+              <p className="text-[10px] text-gray-400 mt-1">
+                Próximo cobro: {formatShortDate(billingPeriod.periodEnd)}
+              </p>
+            </div>
+
+            <div className="rounded-lg bg-gray-50 p-4">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
+                Detalles del contrato
+              </p>
+              <dl className="mt-2 space-y-1.5">
+                {activeContract.details.map(({ label, value }) => (
+                  <div
+                    key={label}
+                    className="flex items-center justify-between text-sm"
                   >
-                    {activeContract.status}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={plansNavItem?.onClick}
-                  className="px-3 py-2 rounded-lg text-xs font-bold bg-[#284B63] text-white hover:opacity-95 transition"
-                >
-                  Cambiar plan
-                </button>
-                <button
-                  type="button"
-                  onClick={historyNavItem?.onClick}
-                  className="px-3 py-2 rounded-lg text-xs font-bold border border-gray-200 text-gray-700 hover:bg-gray-50 transition"
-                >
-                  Configurar pagos
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-5">
-              <div className="flex items-center justify-between text-xs font-bold text-gray-600">
-                <span>Ciclo actual</span>
-                <span>{cycleMetrics.remainingDays} días para renovar</span>
-              </div>
-              <div className="mt-2 h-2 w-full bg-[#D9D9D9] rounded-full overflow-hidden">
-                <div
-                  className={
-                    alertVariant === 'danger'
-                      ? 'h-full bg-red-500 rounded-full'
-                      : alertVariant === 'warning'
-                        ? 'h-full bg-amber-500 rounded-full'
-                        : 'h-full bg-[#3C6E71] rounded-full'
-                  }
-                  style={{ width: `${cycleMetrics.progressPct}%` }}
-                />
-              </div>
-              <div className="mt-2 text-[10px] font-semibold text-gray-500">
-                Día {cycleMetrics.elapsedDays} de {cycleMetrics.totalDays}
-              </div>
-            </div>
-
-            <div className="mt-5 grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div className="rounded-lg bg-gray-50 p-4">
-                <p className="text-[10px] font-bold text-gray-400 uppercase">Total a pagar</p>
-                <p className="text-2xl font-black text-[#284B63] mt-1">{formatCurrencyLabel(activeContract.recurringAmount)}</p>
-                <p className="text-[10px] text-gray-500 mt-1">Próxima renovación: {activeContract.renewalDateLabel}</p>
-              </div>
-
-              <div className="rounded-lg bg-gray-50 p-4">
-                <p className="text-[10px] font-bold text-gray-400 uppercase">Desglose</p>
-                <div className="mt-2 space-y-1 text-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600 font-semibold">Suscripción</span>
-                    <span className="text-gray-900 font-bold">{formatCurrencyLabel(activeContract.recurringAmount)}</span>
+                    <dt className="text-gray-500 font-semibold">{label}</dt>
+                    <dd className="text-gray-800 font-bold">{value}</dd>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600 font-semibold">Impuestos</span>
-                    <span className="text-gray-900 font-bold">Incl.</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-lg bg-gray-50 p-4">
-                <p className="text-[10px] font-bold text-gray-400 uppercase">Detalles del contrato</p>
-                <ul className="mt-2 space-y-1 text-sm text-gray-700">
-                  {activeContract.benefits.slice(0, 4).map((b) => (
-                    <li key={b} className="flex gap-2">
-                      <i className="fa-solid fa-circle-check text-[#3C6E71] mt-0.5" />
-                      <span className="font-semibold">{b}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                ))}
+              </dl>
             </div>
           </div>
-        ) : (
-          <div className="text-center py-8 text-gray-500">
-            No hay contratos activos en este momento.
-          </div>
-        )}
-      </div>
+        </div>
+      ) : error ? (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-10 text-center">
+          <p className="text-sm font-bold text-red-600">
+            No se pudo cargar el contrato
+          </p>
+          <p className="text-xs text-red-400 mt-1">{error}</p>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-gray-200 bg-white p-10 shadow-sm text-center text-gray-400 text-sm">
+          No hay contratos activos en este momento.
+        </div>
+      )}
     </PortalTemplate>
-  )
+  );
 }

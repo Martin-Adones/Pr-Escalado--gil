@@ -11,6 +11,8 @@ type ClientTicketsPageProps = {
   userId: string | null
 }
 
+const TICKETS_PER_PAGE = 5
+
 const PLAN_PRIORITY: Record<string, 'Alta' | 'Media' | 'Baja'> = {
   'Básico': 'Baja',
   'Profesional': 'Media',
@@ -71,6 +73,8 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
 
   const [filterStatus, setFilterStatus] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState<string>('')
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc')
+  const [currentPage, setCurrentPage] = useState(1)
 
   const [isNewModalOpen, setIsNewModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -90,8 +94,8 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
       setTickets(ticketsData)
       setContracts(contractsData)
       setPlanes(planesData)
-    } catch (err: any) {
-      setError(err.message || 'Error al conectar con el servidor')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al conectar con el servidor')
     } finally {
       setLoading(false)
     }
@@ -153,7 +157,17 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
     })
   }, [resolvedTickets, filterStatus, searchQuery])
 
-  // Stats specific to the user
+  const sortedAndPagedTickets = useMemo(() => {
+    const sorted = [...filteredTickets].sort((a, b) => {
+      const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      return sortOrder === 'desc' ? -diff : diff
+    })
+    const totalPages = Math.max(1, Math.ceil(sorted.length / TICKETS_PER_PAGE))
+    const safePage = Math.min(currentPage, totalPages)
+    const paged = sorted.slice((safePage - 1) * TICKETS_PER_PAGE, safePage * TICKETS_PER_PAGE)
+    return { sorted, paged, totalPages, safePage }
+  }, [filteredTickets, sortOrder, currentPage])
+
   const totalCount = tickets.length
   const pendingCount = tickets.filter(t => t.status === 'open' || t.status === 'in_progress').length
   const resolvedCount = tickets.filter(t => t.status === 'resolved' || t.status === 'closed').length
@@ -170,8 +184,8 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
       await crearTicket({ id_contracts, description, status: 'open' })
       setIsNewModalOpen(false)
       loadData()
-    } catch (err: any) {
-      alert(err.message || 'Error al crear tu ticket')
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error al crear tu ticket')
     }
   }
 
@@ -189,8 +203,8 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
       setIsEditModalOpen(false)
       setSelectedTicket(null)
       loadData()
-    } catch (err: any) {
-      alert(err.message || 'Error al actualizar el ticket')
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error al actualizar el ticket')
     }
   }
 
@@ -234,33 +248,33 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
       headerRightLabel="Tickets Totales"
       headerRightValue={loading ? '...' : String(totalCount)}
     >
-      <div className="p-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-xl shadow-md border-t-4 border-[#3C6E71]">
-            <p className="text-xs text-gray-500 uppercase font-bold mb-1 tracking-tight">Tickets Creados</p>
-            <p className="text-2xl font-bold text-[#3C6E71]">{loading ? '...' : totalCount}</p>
-            <p className="text-[11px] text-[#3C6E71] mt-1 font-bold">Historial de solicitudes</p>
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Tickets Creados</p>
+            <p className="text-2xl font-black text-[#3C6E71] mt-1">{loading ? '—' : totalCount}</p>
+            <p className="text-[10px] text-gray-400 mt-1">Historial de solicitudes</p>
           </div>
-          <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
-            <p className="text-xs text-gray-500 uppercase font-bold mb-1 tracking-tight">En curso / Pendientes</p>
-            <p className="text-2xl font-bold text-orange-600">{loading ? '...' : pendingCount}</p>
-            <p className="text-[11px] text-gray-400 mt-1">Siendo revisados por el equipo</p>
+          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Pendientes</p>
+            <p className="text-2xl font-black text-orange-500 mt-1">{loading ? '—' : pendingCount}</p>
+            <p className="text-[10px] text-gray-400 mt-1">Siendo revisados por el equipo</p>
           </div>
-          <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
-            <p className="text-xs text-gray-500 uppercase font-bold mb-1 tracking-tight">Resueltos / Cerrados</p>
-            <p className="text-2xl font-bold text-green-600">{loading ? '...' : resolvedCount}</p>
-            <p className="text-[11px] text-gray-400 mt-1">Casos cerrados con éxito</p>
+          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Resueltos</p>
+            <p className="text-2xl font-black text-[#3C6E71] mt-1">{loading ? '—' : resolvedCount}</p>
+            <p className="text-[10px] text-gray-400 mt-1">Casos cerrados con éxito</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
-          <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <h3 className="font-bold text-[#353535]">Tus Solicitudes</h3>
-            <div className="flex flex-wrap gap-4 w-full md:w-auto">
+        <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <h3 className="text-sm font-black text-[#353535]">Tus Solicitudes</h3>
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
               <select
                 value={filterStatus}
                 onChange={e => setFilterStatus(e.target.value)}
-                className="text-sm border border-gray-300 rounded-lg px-4 py-2 bg-white text-gray-900 focus:outline-[#3C6E71] focus:ring-1 focus:ring-[#3C6E71]"
+                className="text-xs border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#3C6E71]"
               >
                 <option value="">Todos los estados</option>
                 <option value="open">Abierto</option>
@@ -273,11 +287,19 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
                 placeholder="Buscar ticket..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="text-sm border border-gray-300 rounded-lg px-4 py-2 w-64 bg-white text-gray-900 focus:outline-[#3C6E71] focus:ring-1 focus:ring-[#3C6E71]"
+                className="text-xs border border-gray-200 rounded-lg px-3 py-2 w-44 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#3C6E71]"
               />
               <button
+                onClick={() => setSortOrder(o => o === 'desc' ? 'asc' : 'desc')}
+                title={sortOrder === 'desc' ? 'Ver más antiguos primero' : 'Ver más recientes primero'}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+              >
+                <i className={`fa-solid fa-arrow-${sortOrder === 'desc' ? 'down' : 'up'} text-[10px]`}></i>
+                {sortOrder === 'desc' ? 'Recientes' : 'Antiguos'}
+              </button>
+              <button
                 onClick={() => setIsNewModalOpen(true)}
-                className="bg-[#284B63] hover:bg-[#284B63]/90 text-white px-4 py-2 rounded text-sm font-bold shadow-lg shadow-[#284B63]/30 transition"
+                className="px-3 py-2 rounded-lg text-xs font-bold bg-[#284B63] text-white hover:opacity-90 transition"
               >
                 Crear Solicitud
               </button>
@@ -285,14 +307,14 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
           </div>
 
           {error && (
-            <div className="bg-red-50 text-red-700 p-6 border-b border-gray-100 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <i className="fa-solid fa-circle-exclamation text-lg"></i>
-                <span className="text-sm font-semibold">{error}</span>
+            <div className="bg-red-50 border-b border-red-100 px-6 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-red-600">
+                <i className="fa-solid fa-circle-exclamation"></i>
+                <span className="font-semibold">{error}</span>
               </div>
               <button
                 onClick={loadData}
-                className="text-xs bg-red-100 text-red-800 hover:bg-red-200 font-bold px-3 py-1.5 rounded transition"
+                className="text-xs bg-red-100 text-red-700 hover:bg-red-200 font-bold px-3 py-1.5 rounded-lg transition"
               >
                 Reintentar
               </button>
@@ -301,56 +323,56 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
 
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="bg-gray-50 text-xs text-gray-600 uppercase border-b border-gray-200">
+              <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
-                  <th className="px-6 py-4">ID Ticket</th>
-                  <th className="px-6 py-4">Contrato</th>
-                  <th className="px-6 py-4">Descripción del problema</th>
-                  <th className="px-6 py-4 text-center">Prioridad Plan</th>
-                  <th className="px-6 py-4 text-center">Estado</th>
-                  <th className="px-6 py-4">Creado el</th>
-                  <th className="px-6 py-4 text-center">Acciones</th>
+                  <th className="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wide">ID</th>
+                  <th className="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wide">Contrato</th>
+                  <th className="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wide">Descripción</th>
+                  <th className="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wide text-center">Prioridad</th>
+                  <th className="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wide text-center">Estado</th>
+                  <th className="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wide">Creado</th>
+                  <th className="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wide text-center">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 text-sm text-[#353535]">
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                      <div className="flex items-center justify-center gap-3">
-                        <i className="fa-solid fa-spinner animate-spin text-lg text-[#3C6E71]"></i>
-                        <span>Cargando tus solicitudes...</span>
+                    <td colSpan={7} className="px-6 py-10 text-center">
+                      <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
+                        <i className="fa-solid fa-spinner animate-spin text-[#3C6E71]"></i>
+                        <span>Cargando solicitudes...</span>
                       </div>
                     </td>
                   </tr>
                 ) : filteredTickets.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                      No tienes tickets registrados que coincidan con la búsqueda.
+                    <td colSpan={7} className="px-6 py-10 text-center text-sm text-gray-400">
+                      No hay tickets que coincidan con la búsqueda.
                     </td>
                   </tr>
                 ) : (
-                  filteredTickets.map(ticket => (
+                  sortedAndPagedTickets.paged.map(ticket => (
                     <tr key={ticket.id_support} className="hover:bg-gray-50 transition">
-                      <td className="px-6 py-4 font-mono text-xs text-gray-600 font-bold">#TK-{ticket.id_support}</td>
-                      <td className="px-6 py-4 font-mono text-xs text-gray-600">CT-{ticket.id_contracts}</td>
-                      <td className="px-6 py-4 max-w-xs truncate">{ticket.description}</td>
-                      <td className="px-6 py-4 text-center">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${getPriorityBadgeClasses(ticket.priority)}`}>
+                      <td className="px-5 py-3 font-mono text-xs text-gray-500 font-bold">#TK-{ticket.id_support}</td>
+                      <td className="px-5 py-3 font-mono text-xs text-gray-500">CT-{ticket.id_contracts}</td>
+                      <td className="px-5 py-3 max-w-xs truncate text-sm">{ticket.description}</td>
+                      <td className="px-5 py-3 text-center">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold ${getPriorityBadgeClasses(ticket.priority)}`}>
                           {ticket.priority}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${getStatusBadgeClasses(ticket.status)}`}>
+                      <td className="px-5 py-3 text-center">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold ${getStatusBadgeClasses(ticket.status)}`}>
                           {getStatusLabel(ticket.status)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-xs text-gray-600">{formatDate(ticket.created_at)}</td>
-                      <td className="px-6 py-4">
-                        <div className="flex justify-center gap-2">
+                      <td className="px-5 py-3 text-xs text-gray-400">{formatDate(ticket.created_at)}</td>
+                      <td className="px-5 py-3">
+                        <div className="flex justify-center gap-1.5">
                           <button
                             onClick={() => handleOpenView(ticket)}
                             title="Ver detalles"
-                            className="text-blue-600 hover:text-blue-800 p-1.5 bg-blue-50 rounded transition-colors"
+                            className="p-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-[#284B63]/10 hover:text-[#284B63] transition-colors"
                           >
                             <i className="fa-solid fa-eye text-xs"></i>
                           </button>
@@ -358,7 +380,7 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
                             <button
                               onClick={() => handleOpenEdit(ticket)}
                               title="Editar descripción"
-                              className="text-green-600 hover:text-green-800 p-1.5 bg-green-50 rounded transition-colors"
+                              className="p-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-[#3C6E71]/10 hover:text-[#3C6E71] transition-colors"
                             >
                               <i className="fa-solid fa-edit text-xs"></i>
                             </button>
@@ -371,30 +393,67 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
               </tbody>
             </table>
           </div>
+
+          {sortedAndPagedTickets.totalPages > 1 && (
+            <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-between">
+              <p className="text-[10px] font-semibold text-gray-400">
+                {((sortedAndPagedTickets.safePage - 1) * TICKETS_PER_PAGE) + 1}–{Math.min(sortedAndPagedTickets.safePage * TICKETS_PER_PAGE, sortedAndPagedTickets.sorted.length)} de {sortedAndPagedTickets.sorted.length} tickets
+              </p>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={sortedAndPagedTickets.safePage === 1}
+                  className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 disabled:opacity-30 transition"
+                >
+                  <i className="fa-solid fa-chevron-left text-xs"></i>
+                </button>
+                {Array.from({ length: sortedAndPagedTickets.totalPages }, (_, i) => i + 1).map(page => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-7 h-7 rounded-lg text-xs font-bold transition ${
+                      page === sortedAndPagedTickets.safePage
+                        ? 'bg-[#284B63] text-white'
+                        : 'text-gray-500 hover:bg-gray-100'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(sortedAndPagedTickets.totalPages, p + 1))}
+                  disabled={sortedAndPagedTickets.safePage === sortedAndPagedTickets.totalPages}
+                  className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 disabled:opacity-30 transition"
+                >
+                  <i className="fa-solid fa-chevron-right text-xs"></i>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {isNewModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 transition-opacity">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50">
-              <h2 className="text-lg font-bold text-[#353535]">Nueva Solicitud de Soporte</h2>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h2 className="text-sm font-black text-[#353535]">Nueva Solicitud de Soporte</h2>
               <button
                 onClick={() => setIsNewModalOpen(false)}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
-                <i className="fa-solid fa-times text-xl"></i>
+                <i className="fa-solid fa-times"></i>
               </button>
             </div>
             <form onSubmit={handleCreateTicket} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Selecciona tu contrato <span className="text-red-500">*</span>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1.5">
+                  Contrato <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="id_contracts"
                   required
-                  className="w-full text-sm border border-gray-300 rounded-lg px-4 py-2 bg-white text-gray-900 focus:outline-[#3C6E71] focus:ring-1 focus:ring-[#3C6E71]"
+                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#3C6E71]"
                 >
                   <option value="">Selecciona un contrato activo...</option>
                   {contracts.filter(c => c.status === 'ACTIVE').map(c => {
@@ -409,36 +468,34 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
                 {contracts.filter(c => c.status === 'ACTIVE').length === 0 && (
                   <p className="text-xs text-red-500 mt-1.5 font-semibold">
                     <i className="fa-solid fa-circle-exclamation mr-1"></i>
-                    Debes tener al menos un contrato activo para crear un ticket de soporte.
+                    Necesitas un contrato activo para abrir un ticket.
                   </p>
                 )}
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Cuéntanos el inconveniente <span className="text-red-500">*</span>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1.5">
+                  Descripción del problema <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   name="description"
                   required
                   rows={4}
-                  placeholder="Escribe detalladamente tu problema..."
-                  className="w-full resize-none text-sm border border-gray-300 rounded-lg px-4 py-2 bg-white text-gray-900 focus:outline-[#3C6E71] focus:ring-1 focus:ring-[#3C6E71]"
+                  placeholder="Describe el inconveniente con el mayor detalle posible..."
+                  className="w-full resize-none text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#3C6E71]"
                 />
               </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
                 <button
                   type="button"
                   onClick={() => setIsNewModalOpen(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+                  className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 transition"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={contracts.filter(c => c.status === 'ACTIVE').length === 0}
-                  className="px-4 py-2 bg-[#284B63] hover:bg-[#284B63]/90 disabled:opacity-50 text-white rounded-lg text-sm font-bold shadow-lg shadow-[#284B63]/30 transition"
+                  className="px-4 py-2 bg-[#284B63] hover:opacity-90 disabled:opacity-40 text-white rounded-lg text-xs font-bold transition"
                 >
                   Enviar Solicitud
                 </button>
@@ -449,47 +506,45 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
       )}
 
       {isEditModalOpen && selectedTicket && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 transition-opacity">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50">
-              <h2 className="text-lg font-bold text-[#353535]">Editar Solicitud #TK-{selectedTicket.id_support}</h2>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h2 className="text-sm font-black text-[#353535]">Editar #TK-{selectedTicket.id_support}</h2>
               <button
-                onClick={() => { setIsEditModalOpen(false); setSelectedTicket(null); }}
+                onClick={() => { setIsEditModalOpen(false); setSelectedTicket(null) }}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
-                <i className="fa-solid fa-times text-xl"></i>
+                <i className="fa-solid fa-times"></i>
               </button>
             </div>
             <form onSubmit={handleUpdateTicket} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-500">Contrato asociado</label>
-                <p className="text-sm font-mono text-gray-700 mt-1">CT-{selectedTicket.id_contracts} ({selectedTicket.planName})</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Contrato asociado</p>
+                <p className="text-sm font-mono text-gray-700 mt-1">CT-{selectedTicket.id_contracts} · {selectedTicket.planName}</p>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Descripción del Problema <span className="text-red-500">*</span>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1.5">
+                  Descripción <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   name="description"
                   required
                   rows={4}
                   defaultValue={selectedTicket.description}
-                  className="w-full resize-none text-sm border border-gray-300 rounded-lg px-4 py-2 bg-white text-gray-900 focus:outline-[#3C6E71] focus:ring-1 focus:ring-[#3C6E71]"
+                  className="w-full resize-none text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#3C6E71]"
                 />
               </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
                 <button
                   type="button"
-                  onClick={() => { setIsEditModalOpen(false); setSelectedTicket(null); }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+                  onClick={() => { setIsEditModalOpen(false); setSelectedTicket(null) }}
+                  className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 transition"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#284B63] hover:bg-[#284B63]/90 text-white rounded-lg text-sm font-bold shadow-lg shadow-[#284B63]/30 transition"
+                  className="px-4 py-2 bg-[#284B63] hover:opacity-90 text-white rounded-lg text-xs font-bold transition"
                 >
                   Guardar Cambios
                 </button>
@@ -500,62 +555,57 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
       )}
 
       {isViewModalOpen && selectedTicket && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 transition-opacity">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50">
-              <h2 className="text-lg font-bold text-[#353535]">Solicitud de Soporte #TK-{selectedTicket.id_support}</h2>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h2 className="text-sm font-black text-[#353535]">Solicitud #TK-{selectedTicket.id_support}</h2>
               <button
-                onClick={() => { setIsViewModalOpen(false); setSelectedTicket(null); }}
+                onClick={() => { setIsViewModalOpen(false); setSelectedTicket(null) }}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
-                <i className="fa-solid fa-times text-xl"></i>
+                <i className="fa-solid fa-times"></i>
               </button>
             </div>
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="block text-xs text-gray-400 font-bold uppercase">Estado</span>
-                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold mt-1 ${getStatusBadgeClasses(selectedTicket.status)}`}>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Estado</p>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold mt-1.5 ${getStatusBadgeClasses(selectedTicket.status)}`}>
                     {getStatusLabel(selectedTicket.status)}
                   </span>
                 </div>
                 <div>
-                  <span className="block text-xs text-gray-400 font-bold uppercase">Prioridad</span>
-                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold mt-1 ${getPriorityBadgeClasses(selectedTicket.priority)}`}>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Prioridad</p>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold mt-1.5 ${getPriorityBadgeClasses(selectedTicket.priority)}`}>
                     {selectedTicket.priority}
                   </span>
                 </div>
               </div>
-
-              <div>
-                <span className="block text-xs text-gray-400 font-bold uppercase">Contrato / Plan</span>
-                <span className="text-sm text-gray-800 font-semibold">CT-{selectedTicket.id_contracts} — Plan {selectedTicket.planName}</span>
-              </div>
-
-              <div>
-                <span className="block text-xs text-gray-400 font-bold uppercase">Creado el</span>
-                <span className="text-sm text-gray-800">{formatDate(selectedTicket.created_at)}</span>
-              </div>
-
-              {selectedTicket.updated_at && selectedTicket.updated_at !== selectedTicket.created_at && (
+              <dl className="space-y-3">
                 <div>
-                  <span className="block text-xs text-gray-400 font-bold uppercase">Última actualización</span>
-                  <span className="text-sm text-gray-800">{formatDate(selectedTicket.updated_at)}</span>
+                  <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Contrato / Plan</dt>
+                  <dd className="text-sm font-semibold text-gray-800 mt-0.5">CT-{selectedTicket.id_contracts} · Plan {selectedTicket.planName}</dd>
                 </div>
-              )}
-
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                <span className="block text-xs text-gray-400 font-bold uppercase mb-2">Descripción del problema</span>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed font-semibold">
-                  {selectedTicket.description}
-                </p>
+                <div>
+                  <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Creado el</dt>
+                  <dd className="text-sm text-gray-700 mt-0.5">{formatDate(selectedTicket.created_at)}</dd>
+                </div>
+                {selectedTicket.updated_at && selectedTicket.updated_at !== selectedTicket.created_at && (
+                  <div>
+                    <dt className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Última actualización</dt>
+                    <dd className="text-sm text-gray-700 mt-0.5">{formatDate(selectedTicket.updated_at)}</dd>
+                  </div>
+                )}
+              </dl>
+              <div className="rounded-lg bg-gray-50 border border-gray-100 p-4">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-2">Descripción del problema</p>
+                <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{selectedTicket.description}</p>
               </div>
-
-              <div className="flex justify-end pt-4 border-t border-gray-200">
+              <div className="flex justify-end pt-2 border-t border-gray-100">
                 <button
                   type="button"
-                  onClick={() => { setIsViewModalOpen(false); setSelectedTicket(null); }}
-                  className="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-bold transition"
+                  onClick={() => { setIsViewModalOpen(false); setSelectedTicket(null) }}
+                  className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 transition"
                 >
                   Cerrar
                 </button>
