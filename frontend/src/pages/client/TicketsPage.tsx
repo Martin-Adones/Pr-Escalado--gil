@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useCallback, useEffect, useState, useMemo } from 'react'
 import PortalTemplate from '../../portal/PortalTemplate'
 import { listarTickets, crearTicket, actualizarTicket } from '../../services/tickets.service'
 import { listarContratos } from '../../services/contratos.service'
@@ -82,15 +82,15 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
 
   const [selectedTicket, setSelectedTicket] = useState<(FilaTicketListado & { planName: string; priority: 'Alta' | 'Media' | 'Baja' }) | null>(null)
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!userId) return
-    setLoading(true)
-    setError(null)
     try {
-      const ticketsData = await listarTickets({ id_users: userId, page_size: 100 })
-      const contractsData = await listarContratos({ id_users: userId, page_size: 100 })
-      const planesData = await listarPlanes({ page_size: 100 })
-
+      const [ticketsData, contractsData, planesData] = await Promise.all([
+        listarTickets({ id_users: userId, page_size: 100 }),
+        listarContratos({ id_users: userId, page_size: 100 }),
+        listarPlanes({ page_size: 100 }),
+      ])
+      setError(null)
       setTickets(ticketsData)
       setContracts(contractsData)
       setPlanes(planesData)
@@ -99,10 +99,37 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
     } finally {
       setLoading(false)
     }
-  }
+  }, [userId])
+
+  const handleRefresh = useCallback(() => {
+    setLoading(true)
+    setError(null)
+    loadData()
+  }, [loadData])
 
   useEffect(() => {
-    loadData()
+    if (!userId) return
+    let cancelled = false
+    Promise.all([
+      listarTickets({ id_users: userId, page_size: 100 }),
+      listarContratos({ id_users: userId, page_size: 100 }),
+      listarPlanes({ page_size: 100 }),
+    ])
+      .then(([ticketsData, contractsData, planesData]) => {
+        if (cancelled) return
+        setError(null)
+        setTickets(ticketsData)
+        setContracts(contractsData)
+        setPlanes(planesData)
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+        setError(err instanceof Error ? err.message : 'Error al conectar con el servidor')
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => { cancelled = true }
   }, [userId])
 
   useEffect(() => {
@@ -313,7 +340,7 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
                 <span className="font-semibold">{error}</span>
               </div>
               <button
-                onClick={loadData}
+                onClick={handleRefresh}
                 className="text-xs bg-red-100 text-red-700 hover:bg-red-200 font-bold px-3 py-1.5 rounded-lg transition"
               >
                 Reintentar
