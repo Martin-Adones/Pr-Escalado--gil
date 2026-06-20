@@ -1,99 +1,178 @@
-import { useEffect, useState, useCallback, useMemo } from 'react'
-import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import AdminDashboard from './pages/admin/DashboardPage'
-import ContratosPage from './pages/admin/ContratosPage'
-import CiclosDeCobroPage from './pages/admin/CiclosDeCobroPage'
-import ClientesPage from './pages/admin/ClientesPage'
-import AdminTicketsPage from './pages/admin/TicketsPage'
-import ConfiguracionPage from './pages/admin/ConfiguracionPage'
-import Contracts from './pages/client/ContractsPage'
-import ClientDashboard from './pages/client/DashboardPage'
-import History from './pages/client/HistoryPage'
-import Plans from './pages/client/PlansPage'
-import Tickets from './pages/client/TicketsPage'
-import RoleSelectionPage, { type UserRole } from './portal/RoleSelectionPage'
+import { useCallback, useMemo } from "react";
+import {
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
+import AdminDashboard from "./pages/admin/DashboardPage";
+import ContratosPage from "./pages/admin/ContratosPage";
+import CiclosDeCobroPage from "./pages/admin/CiclosDeCobroPage";
+import ClientesPage from "./pages/admin/ClientesPage";
+import ConfiguracionPage from "./pages/admin/ConfiguracionPage";
+import Contracts from "./pages/client/ContractsPage";
+import ClientDashboard from "./pages/client/DashboardPage";
+import History from "./pages/client/HistoryPage";
+import Plans from "./pages/client/PlansPage";
+import Tickets from "./pages/client/TicketsPage";
+import { useAuth } from "./auth/useAuth";
+import { resolveRole } from "./auth/roles";
+import { getAppUser } from "./auth/appUser";
 
 type PageProps = {
-  navItems: { label: string; iconClass: string; onClick?: () => void }[]
-  activeNavLabel: string
-  userId: string | null
-}
+  navItems: { label: string; iconClass: string; onClick?: () => void }[];
+  activeNavLabel: string;
+  userId: string | null;
+};
 
 const adminPathToLabel: Record<string, string> = {
-  '/admin': 'Inicio',
-  '/admin/contratos': 'Contratos',
-  '/admin/ciclos-de-cobro': 'Ciclos de Cobro',
-  '/admin/clientes': 'Clientes',
-  '/admin/tickets': 'Tickets',
-  '/admin/configuracion': 'Configuración',
-}
+  "/admin": "Inicio",
+  "/admin/contratos": "Contratos",
+  "/admin/ciclos-de-cobro": "Ciclos de Cobro",
+  "/admin/clientes": "Clientes",
+  "/admin/configuracion": "Configuración",
+};
 
 const clientPathToLabel: Record<string, string> = {
-  '/client': 'Inicio',
-  '/client/contratos': 'Mis Contratos',
-  '/client/historial': 'Historial',
-  '/client/planes': 'Planes',
-  '/client/tickets': 'Tickets',
-}
+  "/client": "Inicio",
+  "/client/contratos": "Mis Contratos",
+  "/client/historial": "Historial",
+  "/client/planes": "Planes",
+  "/client/tickets": "Tickets",
+};
 
 function AdminLayout({ onLogout }: { onLogout: () => void }) {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const activeNavLabel = adminPathToLabel[location.pathname] || 'Inicio'
-
-  const handleLogout = useCallback(() => {
-    onLogout()
-    navigate('/')
-  }, [navigate, onLogout])
+  const navigate = useNavigate();
+  const location = useLocation();
+  const activeNavLabel = adminPathToLabel[location.pathname] || "Inicio";
 
   const navItems = useMemo(
     () => [
-      { label: 'Inicio', iconClass: 'fa-solid fa-house', onClick: () => navigate('/admin') },
-      { label: 'Contratos', iconClass: 'fa-solid fa-file-contract', onClick: () => navigate('/admin/contratos') },
-      { label: 'Ciclos de Cobro', iconClass: 'fa-solid fa-rotate', onClick: () => navigate('/admin/ciclos-de-cobro') },
-      { label: 'Clientes', iconClass: 'fa-solid fa-users', onClick: () => navigate('/admin/clientes') },
-      { label: 'Tickets', iconClass: 'fa-solid fa-ticket', onClick: () => navigate('/admin/tickets') },
-      { label: 'Configuración', iconClass: 'fa-solid fa-gear', onClick: () => navigate('/admin/configuracion') },
-      { label: 'Cambiar perfil', iconClass: 'fa-solid fa-right-left', onClick: handleLogout },
+      {
+        label: "Inicio",
+        iconClass: "fa-solid fa-house",
+        onClick: () => navigate("/admin"),
+      },
+      {
+        label: "Contratos",
+        iconClass: "fa-solid fa-file-contract",
+        onClick: () => navigate("/admin/contratos"),
+      },
+      {
+        label: "Ciclos de Cobro",
+        iconClass: "fa-solid fa-rotate",
+        onClick: () => navigate("/admin/ciclos-de-cobro"),
+      },
+      {
+        label: "Clientes",
+        iconClass: "fa-solid fa-users",
+        onClick: () => navigate("/admin/clientes"),
+      },
+      {
+        label: "Configuración",
+        iconClass: "fa-solid fa-gear",
+        onClick: () => navigate("/admin/configuracion"),
+      },
+      {
+        label: "Cerrar sesión",
+        iconClass: "fa-solid fa-right-from-bracket",
+        onClick: onLogout,
+      },
     ],
-    [navigate, handleLogout],
-  )
+    [navigate, onLogout],
+  );
 
   return (
     <Routes>
-      <Route index element={<AdminDashboard navItems={navItems} activeNavLabel={activeNavLabel} />} />
-      <Route path="contratos" element={<ContratosPage navItems={navItems} activeNavLabel={activeNavLabel} />} />
-      <Route path="ciclos-de-cobro" element={<CiclosDeCobroPage navItems={navItems} activeNavLabel={activeNavLabel} />} />
-      <Route path="clientes" element={<ClientesPage navItems={navItems} activeNavLabel={activeNavLabel} />} />
-      <Route path="tickets" element={<AdminTicketsPage navItems={navItems} activeNavLabel={activeNavLabel} />} />
-      <Route path="configuracion" element={<ConfiguracionPage navItems={navItems} activeNavLabel={activeNavLabel} />} />
+      <Route
+        index
+        element={
+          <AdminDashboard navItems={navItems} activeNavLabel={activeNavLabel} />
+        }
+      />
+      <Route
+        path="contratos"
+        element={
+          <ContratosPage navItems={navItems} activeNavLabel={activeNavLabel} />
+        }
+      />
+      <Route
+        path="ciclos-de-cobro"
+        element={
+          <CiclosDeCobroPage
+            navItems={navItems}
+            activeNavLabel={activeNavLabel}
+          />
+        }
+      />
+      <Route
+        path="clientes"
+        element={
+          <ClientesPage navItems={navItems} activeNavLabel={activeNavLabel} />
+        }
+      />
+      <Route
+        path="configuracion"
+        element={
+          <ConfiguracionPage
+            navItems={navItems}
+            activeNavLabel={activeNavLabel}
+          />
+        }
+      />
     </Routes>
-  )
+  );
 }
 
-function ClientLayout({ userId, onLogout }: { userId: string; onLogout: () => void }) {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const activeNavLabel = clientPathToLabel[location.pathname] || 'Inicio'
-
-  const handleLogout = useCallback(() => {
-    onLogout()
-    navigate('/')
-  }, [navigate, onLogout])
+function ClientLayout({
+  userId,
+  onLogout,
+}: {
+  userId: string;
+  onLogout: () => void;
+}) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const activeNavLabel = clientPathToLabel[location.pathname] || "Inicio";
 
   const navItems = useMemo(
     () => [
-      { label: 'Inicio', iconClass: 'fa-solid fa-house', onClick: () => navigate('/client') },
-      { label: 'Mis Contratos', iconClass: 'fa-solid fa-file-invoice-dollar', onClick: () => navigate('/client/contratos') },
-      { label: 'Historial', iconClass: 'fa-solid fa-clock-rotate-left', onClick: () => navigate('/client/historial') },
-      { label: 'Planes', iconClass: 'fa-solid fa-box-open', onClick: () => navigate('/client/planes') },
-      { label: 'Tickets', iconClass: 'fa-solid fa-ticket', onClick: () => navigate('/client/tickets') },
-      { label: 'Cambiar perfil', iconClass: 'fa-solid fa-right-left', onClick: handleLogout },
+      {
+        label: "Inicio",
+        iconClass: "fa-solid fa-house",
+        onClick: () => navigate("/client"),
+      },
+      {
+        label: "Mis Contratos",
+        iconClass: "fa-solid fa-file-invoice-dollar",
+        onClick: () => navigate("/client/contratos"),
+      },
+      {
+        label: "Historial",
+        iconClass: "fa-solid fa-clock-rotate-left",
+        onClick: () => navigate("/client/historial"),
+      },
+      {
+        label: "Planes",
+        iconClass: "fa-solid fa-box-open",
+        onClick: () => navigate("/client/planes"),
+      },
+      {
+        label: "Tickets",
+        iconClass: "fa-solid fa-ticket",
+        onClick: () => navigate("/client/tickets"),
+      },
+      {
+        label: "Cerrar sesión",
+        iconClass: "fa-solid fa-right-from-bracket",
+        onClick: onLogout,
+      },
     ],
-    [navigate, handleLogout],
-  )
+    [navigate, onLogout],
+  );
 
-  const pageProps: PageProps = { navItems, activeNavLabel, userId }
+  const pageProps: PageProps = { navItems, activeNavLabel, userId };
 
   return (
     <Routes>
@@ -103,102 +182,75 @@ function ClientLayout({ userId, onLogout }: { userId: string; onLogout: () => vo
       <Route path="planes" element={<Plans {...pageProps} />} />
       <Route path="tickets" element={<Tickets {...pageProps} />} />
     </Routes>
-  )
+  );
+}
+
+function AccesoDenegado({ onLogout }: { onLogout: () => void }) {
+  return (
+    <div className="min-h-screen bg-[#D9D9D9] font-sans text-[#353535] flex items-center justify-center p-6">
+      <div className="w-full max-w-md text-center bg-white rounded-2xl p-8 shadow-sm border border-gray-200">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-500">
+          <i className="fa-solid fa-ban text-2xl" />
+        </div>
+        <h1 className="text-2xl font-black text-[#284B63]">
+          Acceso no autorizado
+        </h1>
+        <p className="mt-2 text-sm font-semibold text-gray-500">
+          Tu usuario no tiene un rol asignado para esta aplicación. Contacta al
+          administrador del sistema.
+        </p>
+        <button
+          type="button"
+          onClick={onLogout}
+          className="mt-6 w-full rounded-xl bg-[#284B63] px-4 py-3 text-sm font-black text-white transition hover:bg-[#3C6E71]"
+        >
+          Cerrar sesión
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export default function App() {
-  const [selectedRole, setSelectedRole] = useState<UserRole | null>(() => {
-    const saved = localStorage.getItem('selectedRole')
-    return saved ? (saved as UserRole) : null
-  })
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(() => {
-    const saved = localStorage.getItem('selectedUserId')
-    return saved || '1'
-  })
-
-  useEffect(() => {
-    if (selectedRole) {
-      localStorage.setItem('selectedRole', selectedRole)
-    } else {
-      localStorage.removeItem('selectedRole')
-    }
-  }, [selectedRole])
-
-  useEffect(() => {
-    if (selectedUserId) {
-      localStorage.setItem('selectedUserId', selectedUserId)
-    } else {
-      localStorage.removeItem('selectedUserId')
-    }
-  }, [selectedUserId])
-
-  useEffect(() => {
-    if (selectedRole) {
-      const payload = { id_users: selectedUserId, type: selectedRole }
-      const token = btoa(JSON.stringify(payload))
-      localStorage.setItem('sessionToken', token)
-    } else {
-      localStorage.removeItem('sessionToken')
-    }
-  }, [selectedRole, selectedUserId])
-
-  const handleSelectRole = useCallback((role: UserRole) => {
-    setSelectedRole(role)
-    if (role === 'admin') {
-      setSelectedUserId(null)
-    }
-  }, [])
-
-  const handleSelectUserId = useCallback((userId: string) => {
-    setSelectedUserId(userId)
-  }, [])
+  const keycloak = useAuth();
+  const role = resolveRole(keycloak);
+  const appUserId = getAppUser()?.id_users ?? null;
 
   const handleLogout = useCallback(() => {
-    setSelectedRole(null)
-    setSelectedUserId(null)
-  }, [])
+    keycloak.logout({ redirectUri: window.location.origin });
+  }, [keycloak]);
 
-  if (!selectedRole) {
+  if (!role) {
     return (
       <Routes>
-        <Route path="*" element={
-          <RoleSelectionPage
-            onSelectRole={handleSelectRole}
-            onSelectUserId={handleSelectUserId}
-          />
-        } />
+        <Route path="*" element={<AccesoDenegado onLogout={handleLogout} />} />
       </Routes>
-    )
+    );
   }
 
-  if (selectedRole === 'admin') {
+  if (role === "admin") {
     return (
       <Routes>
         <Route path="/" element={<Navigate to="/admin" replace />} />
-        <Route path="/admin/*" element={<AdminLayout onLogout={handleLogout} />} />
+        <Route
+          path="/admin/*"
+          element={<AdminLayout onLogout={handleLogout} />}
+        />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>
-    )
-  }
-
-  if (!selectedUserId) {
-    return (
-      <Routes>
-        <Route path="*" element={
-          <RoleSelectionPage
-            onSelectRole={handleSelectRole}
-            onSelectUserId={handleSelectUserId}
-          />
-        } />
-      </Routes>
-    )
+    );
   }
 
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/client" replace />} />
-      <Route path="/client/*" element={<ClientLayout userId={selectedUserId} onLogout={handleLogout} />} />
+      <Route
+        path="/client/*"
+        element={
+          <ClientLayout userId={appUserId ?? ""} onLogout={handleLogout} />
+        }
+      />
       <Route path="*" element={<Navigate to="/client" replace />} />
     </Routes>
-  )
+  );
 }

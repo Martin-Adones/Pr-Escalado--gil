@@ -1,12 +1,16 @@
 # Stage de desarrollo
 FROM node:20-alpine AS dev
 
-WORKDIR /app
-
-COPY package*.json ./
+WORKDIR /shared
+COPY shared/package*.json ./
 RUN npm install
+COPY shared/ ./
+RUN npm run build
 
-COPY . .
+WORKDIR /app
+COPY PDAE-API-GATEWAY/package*.json ./
+RUN npm install
+COPY PDAE-API-GATEWAY/ ./
 
 ENV NODE_ENV=development
 
@@ -15,39 +19,33 @@ CMD ["npm", "run", "dev"]
 # STAGE 1: Build y compilación limpia con TypeScript
 FROM node:20-alpine AS builder
 
-WORKDIR /app
-
-# Copiar configuración de módulos
-COPY package*.json ./
-
-# Instalar todas las dependencias
+WORKDIR /shared
+COPY shared/package*.json ./
 RUN npm install
-
-# Copiar el código fuente
-COPY . .
-
-# Compilar proyecto de TypeScript a JavaScript dist/
+COPY shared/ ./
 RUN npm run build
 
-# ==========================================
+WORKDIR /app
+COPY PDAE-API-GATEWAY/package*.json ./
+RUN npm install
+COPY PDAE-API-GATEWAY/ ./
+RUN npm run build
 
 # STAGE 2: Imagen productiva (Únicamente lo necesario para el runtime)
 FROM node:20-alpine
 
+WORKDIR /shared
+COPY --from=builder /shared/lib ./lib
+COPY shared/package*.json ./
+
 WORKDIR /app
-
-# Instalar sólamente las dependencias de producción
-COPY package*.json ./
-RUN npm install --omit=dev
-
-# Mover los archivos compilados del Stage de construcción
 COPY --from=builder /app/dist ./dist
+COPY PDAE-API-GATEWAY/package*.json ./
+RUN npm install --omit=dev
 
 ENV NODE_ENV=production
 ENV PORT=3001
 
-# Exponer el puerto
 EXPOSE 3001
 
-# Punto de inicio nativo de Javascript
 CMD ["node", "dist/server.js"]

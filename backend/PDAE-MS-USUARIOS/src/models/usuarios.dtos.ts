@@ -2,26 +2,35 @@
  * DTOs del dominio Usuarios (tabla `Users`: id_users, type, isActive).
  * Los procedimientos en PostgreSQL están en `database/usuarios/usuarios_funciones.sql`.
  */
-import { IsString, IsOptional, IsInt, IsNotEmpty, MinLength, MaxLength, Matches, IsBoolean } from 'class-validator';
-import { Type } from 'class-transformer';
+import {
+  IsString,
+  IsOptional,
+  IsInt,
+  IsNotEmpty,
+  MinLength,
+  MaxLength,
+  Matches,
+  IsBoolean,
+} from "class-validator";
+import { Type } from "class-transformer";
 import {
   REGEX_ID_BIGINT,
   MENSAJE_ID_BIGINT,
   TransformVacioAIndefinido,
   TransformNormalizarBooleano,
-} from 'shared';
+} from "shared";
 
 /** Cuerpo POST - `sp_crear_usuario` */
 export class CrearUsuarioEntradaDto {
   @IsString()
-  @IsNotEmpty({ message: 'El campo type es requerido' })
-  @MinLength(1, { message: 'type no puede estar vacío' })
-  @MaxLength(255, { message: 'type admite como máximo 255 caracteres' })
+  @IsNotEmpty({ message: "El campo type es requerido" })
+  @MinLength(1, { message: "type no puede estar vacío" })
+  @MaxLength(255, { message: "type admite como máximo 255 caracteres" })
   type!: string;
 
   @TransformNormalizarBooleano
   @IsOptional()
-  @IsBoolean({ message: 'isActive debe ser booleano' })
+  @IsBoolean({ message: "isActive debe ser booleano" })
   isActive?: boolean;
 }
 
@@ -42,12 +51,12 @@ export class ListarUsuariosConsultaDto {
   @TransformVacioAIndefinido
   @IsOptional()
   @IsString()
-  @MaxLength(255, { message: 'type: filtro demasiado largo' })
+  @MaxLength(255, { message: "type: filtro demasiado largo" })
   type!: string;
 
   @TransformNormalizarBooleano
   @IsOptional()
-  @IsBoolean({ message: 'isActive debe ser booleano' })
+  @IsBoolean({ message: "isActive debe ser booleano" })
   isActive?: boolean;
 
   @IsInt()
@@ -69,18 +78,25 @@ export interface FilaUsuarioListado extends FilaUsuario {
 export class ActualizarUsuarioEntradaDto {
   @TransformVacioAIndefinido
   @IsString()
-  @IsNotEmpty({ message: 'El campo id_users es requerido' })
+  @IsNotEmpty({ message: "El campo id_users es requerido" })
   @Matches(REGEX_ID_BIGINT, { message: `id_users: ${MENSAJE_ID_BIGINT}` })
   id_users!: string;
 
   @IsString()
-  @IsNotEmpty({ message: 'El campo type es requerido' })
-  @MinLength(1, { message: 'type no puede estar vacío' })
-  @MaxLength(255, { message: 'type admite como máximo 255 caracteres' })
+  @IsNotEmpty({ message: "El campo type es requerido" })
+  @MinLength(1, { message: "type no puede estar vacío" })
+  @MaxLength(255, { message: "type admite como máximo 255 caracteres" })
   type!: string;
 
   @TransformNormalizarBooleano
   @IsOptional()
-  @IsBoolean({ message: 'isActive debe ser booleano' })
+  @IsBoolean({ message: "isActive debe ser booleano" })
   isActive?: boolean;
+}
+
+/** Resultado de sp_buscar_usuario_por_keycloak_id */
+export interface FilaUsuarioPorKeycloakId {
+  id_users: string;
+  type: string;
+  isActive: boolean;
 }

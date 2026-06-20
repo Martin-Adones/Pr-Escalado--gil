@@ -1,29 +1,39 @@
-import { apiGet, apiPost } from './api'
-import type { FilaUsuario, FilaUsuarioListado } from './interfaces'
+import { apiGet, apiPost } from "./api";
+import type { FilaUsuario, FilaUsuarioListado } from "./interfaces";
 
 export interface ListarUsuariosParams {
-  id_users?: string
-  type?: string
-  isActive?: boolean
-  page_size?: number
-  page_number?: number
+  id_users?: string;
+  type?: string;
+  isActive?: boolean;
+  page_size?: number;
+  page_number?: number;
 }
 
-export async function listarUsuarios(params?: ListarUsuariosParams): Promise<FilaUsuarioListado[]> {
-  return apiGet<FilaUsuarioListado[]>('/usuarios/listar', params as Record<string, string | number | boolean | undefined | null>)
+export async function listarUsuarios(
+  params?: ListarUsuariosParams,
+): Promise<FilaUsuarioListado[]> {
+  return apiGet<FilaUsuarioListado[]>(
+    "/usuarios/listar",
+    params as Record<string, string | number | boolean | undefined | null>,
+  );
 }
 
 export async function crearUsuario(data: {
-  type: string
-  isActive?: boolean
+  type: string;
+  isActive?: boolean;
 }): Promise<FilaUsuario[]> {
-  return apiPost<FilaUsuario[]>('/usuarios/crear', data)
+  return apiPost<FilaUsuario[]>("/usuarios/crear", data);
 }
 
 export async function actualizarUsuario(data: {
-  id_users: string
-  type: string
-  isActive?: boolean
+  id_users: string;
+  type: string;
+  isActive?: boolean;
 }): Promise<FilaUsuario[]> {
-  return apiPost<FilaUsuario[]>('/usuarios/actualizar', data)
+  return apiPost<FilaUsuario[]>("/usuarios/actualizar", data);
+}
+
+/** Resuelve el usuario de la app (id_users numérico) a partir del JWT de Keycloak. */
+export async function obtenerUsuarioActual(): Promise<FilaUsuario> {
+  return apiGet<FilaUsuario>("/usuarios/me");
 }

@@ -19,6 +19,7 @@ BEGIN
         'sp_crear_usuario',
         'sp_listar_usuarios',
         'sp_actualizar_usuario',
+        'sp_buscar_usuario_por_keycloak_id',
         'fn_normalizar_tipo_usuario',
         'fn_es_tipo_usuario_valido'
       )
@@ -163,6 +164,29 @@ BEGIN
       "isActive" = COALESCE(p_is_active, u."isActive")
   WHERE u."id_users" = p_id_usuario
   RETURNING u."id_users", u."type", u."isActive";
+
+  RETURN;
+END;
+$$ LANGUAGE plpgsql;
+
+-- -----------------------------------------------------------------------------
+-- sp_buscar_usuario_por_keycloak_id — resuelve id_users a partir del sub de Keycloak
+-- -----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION sp_buscar_usuario_por_keycloak_id(p_keycloak_id UUID)
+RETURNS TABLE (
+  id_users BIGINT,
+  type VARCHAR(255),
+  "isActive" BOOLEAN
+) AS $$
+BEGIN
+  IF p_keycloak_id IS NULL THEN
+    RAISE EXCEPTION 'keycloak_id es obligatorio';
+  END IF;
+
+  RETURN QUERY
+  SELECT u."id_users", u."type", u."isActive"
+  FROM "Users" u
+  WHERE u."keycloak_id" = p_keycloak_id;
 
   RETURN;
 END;
