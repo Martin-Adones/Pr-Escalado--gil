@@ -7,8 +7,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: process.env.API_URL || 'http://localhost:3001',
+        target: process.env.API_URL || 'https://fiftieth-aging-siberian.ngrok-free.dev',
         changeOrigin: true,
+        headers: {
+          'ngrok-skip-browser-warning': 'true',
+        },
       },
     },
   },

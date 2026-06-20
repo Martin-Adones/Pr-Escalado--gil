@@ -9,7 +9,7 @@ import { setAppUser } from "./auth/appUser.ts";
 import { obtenerUsuarioActual } from "./services/usuarios.service.ts";
 
 keycloak
-  .init({ onLoad: "login-required", pkceMethod: "S256" })
+  .init({ onLoad: "login-required", pkceMethod: "S256", checkLoginIframe: false })
   .then((authenticated) => {
     if (!authenticated) return;
 
