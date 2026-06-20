@@ -18,6 +18,7 @@ import Plans from "./pages/client/PlansPage";
 import Tickets from "./pages/client/TicketsPage";
 import { useAuth } from "./auth/useAuth";
 import { resolveRole } from "./auth/roles";
+import { getAppUser } from "./auth/appUser";
 
 type PageProps = {
   navItems: { label: string; iconClass: string; onClick?: () => void }[];
@@ -213,7 +214,7 @@ function AccesoDenegado({ onLogout }: { onLogout: () => void }) {
 export default function App() {
   const keycloak = useAuth();
   const role = resolveRole(keycloak);
-  const userId = keycloak.tokenParsed?.sub ?? null;
+  const appUserId = getAppUser()?.id_users ?? null;
 
   const handleLogout = useCallback(() => {
     keycloak.logout({ redirectUri: window.location.origin });
@@ -245,7 +246,9 @@ export default function App() {
       <Route path="/" element={<Navigate to="/client" replace />} />
       <Route
         path="/client/*"
-        element={<ClientLayout userId={userId ?? ""} onLogout={handleLogout} />}
+        element={
+          <ClientLayout userId={appUserId ?? ""} onLogout={handleLogout} />
+        }
       />
       <Route path="*" element={<Navigate to="/client" replace />} />
     </Routes>

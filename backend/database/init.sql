@@ -17,7 +17,7 @@ CREATE TABLE "Users" (
     "id_users" BIGSERIAL PRIMARY KEY,   
     "type" VARCHAR(255) NOT NULL,
     "isActive" BOOLEAN NOT NULL,
-    "keycloak_id" UUID UNIQUE
+    "keycloak_id" UUID UNIQUE NOT NULL
 );
 
 CREATE TABLE "Plans" (

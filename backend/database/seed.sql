@@ -6,17 +6,17 @@
 -- =============================================================================
 
 -- 1. USERS (10)
-INSERT INTO "Users" ("type", "isActive") VALUES
-  ('client', TRUE),
-  ('client', TRUE),
-  ('client', TRUE),
-  ('client', TRUE),
-  ('client', TRUE),
-  ('client', TRUE),
-  ('admin', TRUE),
-  ('admin', TRUE),
-  ('client', TRUE),
-  ('client', TRUE);
+INSERT INTO "Users" ("type", "isActive", "keycloak_id") VALUES
+  ('client', TRUE, '2d4ddcb1-e822-46ad-b4ee-6016f8ce8633'),
+  ('client', TRUE, 'f4e18dcd-e3e2-47c2-8e2d-a346cd60b043'),
+  ('client', TRUE, 'c93a4ca9-7a25-47d2-8272-12130d2843d7'),
+  ('client', TRUE, 'eda5c8c2-dafd-451d-b860-34e592ece123'),
+  ('client', TRUE, 'a15b2f00-26a5-474c-b530-d0f6824558b2'),
+  ('client', TRUE, '4a487811-6f23-417c-8951-b1ad2e8bacce'),
+  ('client', TRUE, 'b717bc0e-bead-470e-b086-f28aadb51179'),
+  ('client', TRUE, 'd81750d2-a656-4f3c-aaf5-2c1a4f022982'),
+  ('admin', TRUE, 'a065ba72-be8c-4116-be9c-590ce708b784'),
+  ('admin', TRUE, '4d63a0df-e7a1-4c3c-9fab-89ed5c7ca10d');
 
 -- 2. PLANS (5)
 INSERT INTO "Plans" ("name", "billing_cycle", "amount", "isActive") VALUES

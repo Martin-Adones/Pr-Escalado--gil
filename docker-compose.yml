@@ -269,8 +269,8 @@ services:
 
   api-gateway:
     build:
-      context: ./backend/PDAE-API-GATEWAY
-      dockerfile: Dockerfile
+      context: ./backend
+      dockerfile: PDAE-API-GATEWAY/Dockerfile
       target: dev
     env_file:
       - ./.env
