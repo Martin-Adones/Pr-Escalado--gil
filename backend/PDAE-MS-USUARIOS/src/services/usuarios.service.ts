@@ -1,11 +1,12 @@
-import { UsuariosRepository } from '../repositories/usuarios.repository';
+import { UsuariosRepository } from "../repositories/usuarios.repository";
 import {
   CrearUsuarioEntradaDto,
   ListarUsuariosConsultaDto,
   ActualizarUsuarioEntradaDto,
   FilaUsuario,
   FilaUsuarioListado,
-} from '../models/usuarios.dtos';
+  FilaUsuarioPorKeycloakId,
+} from "../models/usuarios.dtos";
 
 /** Casos de uso de usuarios (sin dependencia de HTTP). */
 export class UsuariosService {
@@ -19,11 +20,23 @@ export class UsuariosService {
     return await this.repositorio.ejecutarCrearUsuario(dto);
   }
 
-  async listarUsuarios(dto: ListarUsuariosConsultaDto): Promise<FilaUsuarioListado[]> {
+  async listarUsuarios(
+    dto: ListarUsuariosConsultaDto,
+  ): Promise<FilaUsuarioListado[]> {
     return await this.repositorio.ejecutarListarUsuarios(dto);
   }
 
-  async actualizarUsuario(dto: ActualizarUsuarioEntradaDto): Promise<FilaUsuario[]> {
+  async actualizarUsuario(
+    dto: ActualizarUsuarioEntradaDto,
+  ): Promise<FilaUsuario[]> {
     return await this.repositorio.ejecutarActualizarUsuario(dto);
+  }
+
+  async buscarUsuarioActual(
+    keycloak_id: string,
+  ): Promise<FilaUsuarioPorKeycloakId | null> {
+    const filas =
+      await this.repositorio.ejecutarBuscarPorKeycloakId(keycloak_id);
+    return filas[0] ?? null;
   }
 }

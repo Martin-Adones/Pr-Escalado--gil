@@ -16,7 +16,8 @@ DROP TABLE IF EXISTS "Products" CASCADE;
 CREATE TABLE "Users" (
     "id_users" BIGSERIAL PRIMARY KEY,   
     "type" VARCHAR(255) NOT NULL,
-    "isActive" BOOLEAN NOT NULL
+    "isActive" BOOLEAN NOT NULL,
+    "keycloak_id" UUID UNIQUE
 );
 
 CREATE TABLE "Plans" (
