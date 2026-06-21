@@ -1,5 +1,9 @@
 import { ContratosRepository } from '../repositories/contratos.repository';
 import {
+  notificarSubscriptionCreated,
+  notificarRenewalSuccess,
+} from '../utils/analytics.client';
+import {
   CrearContratoEntradaDto,
   FinalizarContratoEntradaDto,
   ListarContratosConsultaDto,
@@ -20,7 +24,21 @@ export class ContratosService {
   }
 
   async crearContrato(dto: CrearContratoEntradaDto): Promise<FilaContrato[]> {
-    return await this.repositorio.ejecutarCrearContrato(dto);
+    const resultado = await this.repositorio.ejecutarCrearContrato(dto);
+
+    if (resultado && resultado.length > 0) {
+      const contrato = resultado[0];
+      notificarSubscriptionCreated({
+        contract_id: String(contrato.id_contracts),
+        user_id: Number(contrato.id_users),
+        plan_id: Number(contrato.id_plans),
+        start_date: contrato.start_date ?? null,
+        status: contrato.status ?? null,
+        end_date: contrato.end_date ?? null,
+      });
+    }
+
+    return resultado;
   }
 
   async finalizarContrato(dto: FinalizarContratoEntradaDto): Promise<FilaContrato[]> {
@@ -64,6 +82,16 @@ export class ContratosService {
       esCompletado ? 'PAGO_COMPLETADO_WEBHOOK' : 'PAGO_FALLIDO_WEBHOOK',
       'sistema'
     );
+
+    // 4. Notificar a analítica si el pago fue exitoso (= renovación de la suscripción)
+    if (esCompletado && contratoActualizado && contratoActualizado.length > 0) {
+      const contrato = contratoActualizado[0];
+      notificarRenewalSuccess({
+        contract_id: String(contrato.id_contracts),
+        user_id: Number(contrato.id_users),
+        plan_id: Number(contrato.id_plans),
+      });
+    }
 
     return contratoActualizado;
   }
