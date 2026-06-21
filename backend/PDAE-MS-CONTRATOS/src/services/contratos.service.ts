@@ -2,6 +2,7 @@ import { ContratosRepository } from '../repositories/contratos.repository';
 import {
   notificarSubscriptionCreated,
   notificarRenewalSuccess,
+  notificarRenewalFailed,
 } from '../utils/analytics.client';
 import {
   CrearContratoEntradaDto,
@@ -28,14 +29,16 @@ export class ContratosService {
 
     if (resultado && resultado.length > 0) {
       const contrato = resultado[0];
-      notificarSubscriptionCreated({
+      const payload = {
         contract_id: String(contrato.id_contracts),
         user_id: Number(contrato.id_users),
         plan_id: Number(contrato.id_plans),
         start_date: contrato.start_date ?? null,
         status: contrato.status ?? null,
         end_date: contrato.end_date ?? null,
-      });
+      };
+      console.log('[analytics] Enviando subscription_created:', JSON.stringify(payload));
+      notificarSubscriptionCreated(payload);
     }
 
     return resultado;
@@ -83,14 +86,19 @@ export class ContratosService {
       'sistema'
     );
 
-    // 4. Notificar a analítica si el pago fue exitoso (= renovación de la suscripción)
-    if (esCompletado && contratoActualizado && contratoActualizado.length > 0) {
+    // 4. Notificar a analítica
+    if (contratoActualizado && contratoActualizado.length > 0) {
       const contrato = contratoActualizado[0];
-      notificarRenewalSuccess({
+      const payload = {
         contract_id: String(contrato.id_contracts),
         user_id: Number(contrato.id_users),
         plan_id: Number(contrato.id_plans),
-      });
+      };
+      if (esCompletado) {
+        notificarRenewalSuccess(payload);
+      } else {
+        notificarRenewalFailed(payload);
+      }
     }
 
     return contratoActualizado;

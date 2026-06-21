@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import PortalTemplate from '../../portal/PortalTemplate'
 import PlanChangeModal from '../../components/PlanChangeModal'
 import { listarPlanes } from '../../services/planes.service'
-import { listarContratos, cambiarPlanContrato } from '../../services/contratos.service'
+import { listarContratos, crearContrato, cambiarPlanContrato } from '../../services/contratos.service'
 
 type ClientPlansPageProps = {
   navItems: { label: string; iconClass: string; onClick?: () => void }[]
@@ -119,15 +119,19 @@ export default function Plans({ navItems, activeNavLabel, userId }: ClientPlansP
     try {
       const contratosData = await listarContratos({ status: 'ACTIVE', id_users: userId })
       const activeContractId = contratosData.length > 0 ? contratosData[0].id_contracts : null
-      if (!activeContractId) {
-        console.error('No se encontró contrato activo para el usuario')
-        setIsModalOpen(false)
-        setSelectedPlan(null)
-        return
-      }
 
-      await cambiarPlanContrato(activeContractId, selectedPlan.id)
-      try { window.dispatchEvent(new CustomEvent('auditoria:changed', { detail: { id_contracts: activeContractId } })) } catch (e) { /* noop */ }
+      if (activeContractId) {
+        await cambiarPlanContrato(activeContractId, selectedPlan.id)
+      } else {
+        const [nuevo] = await crearContrato({
+          id_users: userId,
+          id_plans: selectedPlan.id,
+          status: 'ACTIVE',
+        })
+        try {
+          window.dispatchEvent(new CustomEvent('auditoria:changed', { detail: { id_contracts: nuevo.id_contracts } }))
+        } catch (e) { /* noop */ }
+      }
 
       setIsModalOpen(false)
       setSelectedPlan(null)
@@ -287,16 +291,16 @@ export default function Plans({ navItems, activeNavLabel, userId }: ClientPlansP
         </section>
       </div>
 
-      {selectedPlan && currentPlan && (
+      {selectedPlan && (
         <PlanChangeModal
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           onConfirm={handleConfirmChange}
-          currentPlanName={currentPlan.name}
+          currentPlanName={currentPlan?.name || 'Sin plan activo'}
           newPlanName={selectedPlan.name}
           newPlanPrice={billingPeriod === 'monthly' ? selectedPlan.monthlyPrice : selectedPlan.yearlyPrice}
           billingPeriod={billingPeriod}
-          isUpgrade={isUpgrade}
+          isUpgrade={!!currentPlan && (isUpgrade ?? false)}
         />
       )}
     </PortalTemplate>

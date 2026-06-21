@@ -30,9 +30,16 @@ interface RenewalSuccessPayload {
   plan_id: number;
 }
 
+interface RenewalFailedPayload {
+  contract_id: string;
+  user_id: number;
+  plan_id: number;
+}
+
 type AnalyticsEvent =
   | { source: typeof SOURCE; event_type: 'subscription_created'; payload: SubscriptionCreatedPayload }
-  | { source: typeof SOURCE; event_type: 'renewal_success'; payload: RenewalSuccessPayload };
+  | { source: typeof SOURCE; event_type: 'renewal_success'; payload: RenewalSuccessPayload }
+  | { source: typeof SOURCE; event_type: 'renewal_failed'; payload: RenewalFailedPayload };
 
 // ─── Envío interno ───────────────────────────────────────────────────────────
 
@@ -73,4 +80,8 @@ export function notificarSubscriptionCreated(payload: SubscriptionCreatedPayload
  */
 export function notificarRenewalSuccess(payload: RenewalSuccessPayload): void {
   enviarEvento({ source: SOURCE, event_type: 'renewal_success', payload });
+}
+
+export function notificarRenewalFailed(payload: RenewalFailedPayload): void {
+  enviarEvento({ source: SOURCE, event_type: 'renewal_failed', payload });
 }
