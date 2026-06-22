@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import PortalTemplate from '../../portal/PortalTemplate'
+import NuevoContratoModal from '../../components/NuevoContratoModal'
 import { listarContratos } from '../../services/contratos.service'
 import { listarPlanes } from '../../services/planes.service'
 import type { FilaContratoListado, FilaPlan } from '../../services/interfaces'
@@ -22,6 +23,7 @@ function formatFecha(fecha: string) {
 }
 
 export default function ContratosPage({ navItems, activeNavLabel }: AdminContractsPageProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [contratos, setContratos] = useState<FilaContratoListado[]>([])
   const [planes, setPlanes] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
@@ -30,7 +32,8 @@ export default function ContratosPage({ navItems, activeNavLabel }: AdminContrac
   const [paginaActual, setPaginaActual] = useState(1)
   const PAGE_SIZE = 10
 
-  useEffect(() => {
+  const cargarDatos = useCallback(() => {
+    setLoading(true)
     Promise.all([
       listarContratos({ page_size: 200, page_number: 1 }),
       listarPlanes({ page_size: 100, page_number: 1 }),
@@ -44,6 +47,15 @@ export default function ContratosPage({ navItems, activeNavLabel }: AdminContrac
       .catch(() => setError('No se pudieron cargar los contratos.'))
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => { cargarDatos() }, [cargarDatos])
+
+  const handleOpenModal = () => setIsModalOpen(true)
+  const handleCloseModal = () => setIsModalOpen(false)
+  const handleSaveContrato = () => {
+    cargarDatos()
+    setIsModalOpen(false)
+  }
 
   const hoy = new Date()
   const en30dias = new Date(hoy)
@@ -110,7 +122,7 @@ export default function ContratosPage({ navItems, activeNavLabel }: AdminContrac
 
           {/* Tabla de contratos */}
           <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100">
+            <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
               <div className="relative w-64">
                 <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
                 <input
@@ -121,6 +133,12 @@ export default function ContratosPage({ navItems, activeNavLabel }: AdminContrac
                   className="w-full text-sm border border-gray-200 rounded-lg pl-8 pr-4 py-2 focus:outline-none focus:ring-1 focus:ring-[#284B63] focus:border-[#284B63] bg-gray-50"
                 />
               </div>
+              <button
+                onClick={handleOpenModal}
+                className="inline-flex items-center justify-center bg-[#284B63] hover:bg-[#284B63]/90 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-[#284B63]/30"
+              >
+                <i className="fa-solid fa-plus mr-2"></i>Nuevo Contrato
+              </button>
             </div>
 
             <div className="p-5">
@@ -193,6 +211,12 @@ export default function ContratosPage({ navItems, activeNavLabel }: AdminContrac
           </div>
         </main>
       </div>
+
+      <NuevoContratoModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onSave={handleSaveContrato}
+      />
     </PortalTemplate>
   )
 }
