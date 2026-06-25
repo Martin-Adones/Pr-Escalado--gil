@@ -4,7 +4,8 @@ services:
     container_name: postgres_db_ms
     restart: always
     env_file:
-      - ../.env
+      - path: ../.env
+        required: false
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -27,10 +28,15 @@ services:
       dockerfile: PDAE-MS-CONTRATOS/Dockerfile
       target: dev
     env_file:
-      - ../.env
+      - path: ../.env
+        required: false
     environment:
       DB_HOST: db
       DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DATABASE_URL: ${DATABASE_URL}
       PORT: "${CONTRATOS_PORT}"
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
@@ -68,10 +74,15 @@ services:
       dockerfile: PDAE-MS-USUARIOS/Dockerfile
       target: dev
     env_file:
-      - ../.env
+      - path: ../.env
+        required: false
     environment:
       DB_HOST: db
       DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DATABASE_URL: ${DATABASE_URL}
       PORT: "${USUARIOS_PORT}"
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
@@ -109,10 +120,15 @@ services:
       dockerfile: PDAE-MS-PLANES/Dockerfile
       target: dev
     env_file:
-      - ../.env
+      - path: ../.env
+        required: false
     environment:
       DB_HOST: db
       DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DATABASE_URL: ${DATABASE_URL}
       PORT: "${PLANES_PORT}"
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
@@ -150,10 +166,15 @@ services:
       dockerfile: PDAE-MS-PRODUCTOS/Dockerfile
       target: dev
     env_file:
-      - ../.env
+      - path: ../.env
+        required: false
     environment:
       DB_HOST: db
       DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DATABASE_URL: ${DATABASE_URL}
       PORT: "${PRODUCTOS_PORT}"
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
@@ -191,10 +212,15 @@ services:
       dockerfile: PDAE-MS-SOPORTE/Dockerfile
       target: dev
     env_file:
-      - ../.env
+      - path: ../.env
+        required: false
     environment:
       DB_HOST: db
       DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DATABASE_URL: ${DATABASE_URL}
       PORT: "${SOPORTE_PORT}"
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
@@ -232,10 +258,15 @@ services:
       dockerfile: PDAE-MS-AUDITORIA/Dockerfile
       target: dev
     env_file:
-      - ../.env
+      - path: ../.env
+        required: false
     environment:
       DB_HOST: db
       DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DATABASE_URL: ${DATABASE_URL}
       PORT: "${AUDITORIA_PORT}"
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
@@ -273,10 +304,15 @@ services:
       dockerfile: PDAE-MS-PAGOS/Dockerfile
       target: dev
     env_file:
-      - ../.env
+      - path: ../.env
+        required: false
     environment:
       DB_HOST: db
       DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DATABASE_URL: ${DATABASE_URL}
       PORT: "${PAGOS_PORT}"
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
@@ -316,7 +352,8 @@ services:
       dockerfile: PDAE-API-GATEWAY/Dockerfile
       target: dev
     env_file:
-      - ../.env
+      - path: ../.env
+        required: false
     environment:
       PORT: "${GATEWAY_PORT}"
       NODE_ENV: development
