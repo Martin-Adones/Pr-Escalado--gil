@@ -18,7 +18,8 @@
     "PDAE-MS-PLANES",
     "PDAE-MS-PRODUCTOS",
     "PDAE-MS-SOPORTE",
-    "PDAE-MS-AUDITORIA"
+    "PDAE-MS-AUDITORIA",
+    "PDAE-MS-PAGOS"
   ],
   "devDependencies": {
     "@commitlint/cli": "^20.5.0",

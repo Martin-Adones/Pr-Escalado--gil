@@ -3,6 +3,7 @@ DROP TABLE IF EXISTS "Plans_Products" CASCADE;
 DROP TABLE IF EXISTS "Contracts_Products" CASCADE;
 DROP TABLE IF EXISTS "Support" CASCADE;
 DROP TABLE IF EXISTS "audit_logs" CASCADE;
+DROP TABLE IF EXISTS "Payments" CASCADE;
 DROP TABLE IF EXISTS "billing_cycles" CASCADE;
 DROP TABLE IF EXISTS "Discount" CASCADE;
 DROP TABLE IF EXISTS "Contracts" CASCADE;
@@ -63,6 +64,18 @@ CREATE TABLE "billing_cycles" (
     "amount" DECIMAL(12, 2) NOT NULL,
     "status" VARCHAR(50) NOT NULL,
     "retry_attempts" INTEGER DEFAULT 0 NOT NULL,
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "Payments" (
+    "id_payments" BIGSERIAL PRIMARY KEY,
+    "id_users" BIGINT NOT NULL REFERENCES "Users"("id_users") ON DELETE CASCADE,
+    "id_billing_cycles" BIGINT REFERENCES "billing_cycles"("id_billing_cycles") ON DELETE SET NULL,
+    "amount" DECIMAL(12, 2) NOT NULL,
+    "concept" VARCHAR(255) NOT NULL,
+    "status" VARCHAR(50) NOT NULL DEFAULT 'PENDIENTE',
+    "external_tx_id" VARCHAR(255),
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

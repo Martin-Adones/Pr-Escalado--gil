@@ -106,3 +106,9 @@ INSERT INTO "Contracts_Products" ("id_contracts", "id_products", "quantity") VAL
   (3, 5,  1),   -- Contrato 3 → Automatización de pagos x1
   (10, 8, 2),   -- Contrato 10 → Almacenamiento 10GB x2
   (10, 7, 1);   -- Contrato 10 → API REST privada x1
+
+-- 11. Payments (3)
+INSERT INTO "Payments" ("id_users", "id_billing_cycles", "amount", "concept", "status", "external_tx_id") VALUES
+  (1, 8, 9990, 'Cobro Ciclo de Facturación Contrato #5', 'PENDIENTE', NULL),
+  (1, 1, 45990, 'Adquisición de Plan Pyme', 'APROBADO', 'mock_tx_12345'),
+  (4, 6, 19990, 'Cobro Ciclo de Facturación Contrato #4', 'RECHAZADO', 'mock_tx_54321');

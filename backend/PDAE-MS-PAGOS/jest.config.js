@@ -1,0 +1,31 @@
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  testMatch: ['**/test/**/*.test.ts', '**/*.spec.ts'],
+  testTimeout: 30000,
+  verbose: true,
+  forceExit: true,
+  clearMocks: true,
+  resetMocks: true,
+  restoreMocks: true,
+  setupFilesAfterEnv: ['<rootDir>/test/jest.setup.ts'],
+  collectCoverage: true,
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'lcov'],
+  collectCoverageFrom: [
+    'src/**/*.{ts,js}',
+    '!src/**/*.d.ts',
+    '!src/server.ts',
+    '!src/database/**',
+    '!src/utils/api-doc/**',
+    '!src/models/**/*.dtos.ts',
+  ],
+  coverageThreshold: {
+    global: {
+      branches: 50,
+      functions: 60,
+      lines: 70,
+      statements: 70,
+    },
+  },
+};
