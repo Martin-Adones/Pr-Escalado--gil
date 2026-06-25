@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { PagosService } from '../services/pagos.service';
 import { transformAndValidate } from 'shared';
-import { CrearPagoEntradaDto, WebhookProveedorEntradaDto } from '../models/pagos.dtos';
+import { CrearPagoEntradaDto, UcnpayWebhookEntradaDto, RegistrarTarjetaEntradaDto } from '../models/pagos.dtos';
 
 export class PagosController {
   private servicio: PagosService;
@@ -9,6 +9,8 @@ export class PagosController {
   constructor() {
     this.servicio = new PagosService();
   }
+
+  // --- Endpoints de Pagos ---
 
   async manejarCrearPago(solicitud: FastifyRequest, respuesta: FastifyReply) {
     try {
@@ -91,10 +93,92 @@ export class PagosController {
     }
   }
 
+  // --- Endpoints de Gestión de Tarjetas (UCNPAY) ---
+
+  async manejarRegistrarTarjeta(solicitud: FastifyRequest, respuesta: FastifyReply) {
+    try {
+      const datos = solicitud.body as any;
+
+      // Prevención de IDOR
+      const userRole = solicitud.headers?.['x-user-role'];
+      const userId = solicitud.headers?.['x-user-id'];
+      if (userRole === 'client') {
+        if (!userId) {
+          return respuesta.status(401).send({ success: false, message: 'No autenticado' });
+        }
+        datos.id_users = String(userId);
+      }
+
+      const entrada = await transformAndValidate(RegistrarTarjetaEntradaDto, datos);
+      const resultado = await this.servicio.registrarTarjeta(entrada);
+
+      return respuesta.status(200).send({
+        success: true,
+        data: resultado,
+      });
+    } catch (error: any) {
+      console.error('ERROR EN registrarTarjeta CONTROLLER:', error);
+      if (error.message?.startsWith('Error de Validación:')) {
+        return respuesta.status(400).send({ success: false, message: error.message });
+      }
+      return respuesta.status(500).send({ success: false, message: error.message || 'Error interno del servidor' });
+    }
+  }
+
+  async manejarObtenerTarjetasUsuario(solicitud: FastifyRequest, respuesta: FastifyReply) {
+    try {
+      const { id_users } = solicitud.params as any;
+
+      // Prevención de IDOR
+      const userRole = solicitud.headers?.['x-user-role'];
+      const userId = solicitud.headers?.['x-user-id'];
+      let targetUserId = id_users;
+      if (userRole === 'client') {
+        if (!userId) {
+          return respuesta.status(401).send({ success: false, message: 'No autenticado' });
+        }
+        targetUserId = String(userId);
+      }
+
+      const tarjetas = await this.servicio.obtenerTarjetasUsuario(targetUserId);
+
+      return respuesta.status(200).send({
+        success: true,
+        data: tarjetas,
+      });
+    } catch (error: any) {
+      return respuesta.status(500).send({ success: false, message: 'Error interno del servidor' });
+    }
+  }
+
+  async manejarEliminarTarjeta(solicitud: FastifyRequest, respuesta: FastifyReply) {
+    try {
+      const { token } = solicitud.params as any;
+
+      // Prevención de IDOR
+      const userRole = solicitud.headers?.['x-user-role'];
+      const userId = solicitud.headers?.['x-user-id'];
+      if (userRole === 'client' && !userId) {
+        return respuesta.status(401).send({ success: false, message: 'No autenticado' });
+      }
+
+      const exitoso = await this.servicio.eliminarTarjeta(String(userId), token);
+
+      return respuesta.status(200).send({
+        success: exitoso,
+        message: exitoso ? 'Tarjeta eliminada con éxito' : 'No se pudo eliminar la tarjeta',
+      });
+    } catch (error: any) {
+      return respuesta.status(500).send({ success: false, message: 'Error interno del servidor' });
+    }
+  }
+
+  // --- Webhook Pasarela UCNPAY ---
+
   async manejarWebhookPagos(solicitud: FastifyRequest, respuesta: FastifyReply) {
     try {
       const datos = solicitud.body;
-      const entrada = await transformAndValidate(WebhookProveedorEntradaDto, datos as any);
+      const entrada = await transformAndValidate(UcnpayWebhookEntradaDto, datos as any);
       const resultado = await this.servicio.procesarPagoWebhook(entrada);
 
       return respuesta.status(200).send({
@@ -111,13 +195,13 @@ export class PagosController {
     }
   }
 
-  /**
-   * Sirve la página HTML de la pasarela de pagos simulada del equipo externo ("pagos").
-   */
+  // --- Simulación Pasarela Externa (Checkout Page) ---
+
   async manejarMockCheckoutPage(solicitud: FastifyRequest, respuesta: FastifyReply) {
     const query = solicitud.query as any;
     const paymentId = query.paymentId || '---';
     const amount = Number(query.amount || 0);
+    const idUsers = query.id_users || '';
     const concept = query.concept ? decodeURIComponent(query.concept) : 'Pago de servicio';
 
     const formattedAmount = new Intl.NumberFormat('es-CL', {
@@ -131,7 +215,7 @@ export class PagosController {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Pasarela de Pago Segura — Proyecto Pagos</title>
+        <title>UCNPAY Pasarela de Pago Segura — Proyecto Pagos</title>
         <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <style>
@@ -290,66 +374,60 @@ export class PagosController {
             color: #888;
             border-top: 1px solid var(--border-color);
           }
-          .success-screen {
-            display: none;
-            padding: 40px 30px;
-            text-align: center;
-          }
-          .success-screen i {
-            font-size: 64px;
-            color: var(--success);
-            margin-bottom: 20px;
-          }
         </style>
       </head>
       <body>
         <div class="container" id="main-container">
           <div class="header">
-            <h2>PROYECTO PAGOS</h2>
-            <p>Pasarela externa de pago simulada</p>
+            <h2>UCNPAY GATEWAY</h2>
+            <p>Mandato de pagos periódicos (MIT)</p>
           </div>
           <div class="payment-summary">
             <p style="font-size:12px; color:#888;">Monto a pagar</p>
             <div class="amount">${formattedAmount}</div>
             <div class="concept">${concept}</div>
-            <p style="font-size:11px; color:#aaa; margin-top:5px;">ID Transacción: #${paymentId}</p>
+            <p style="font-size:11px; color:#aaa; margin-top:5px;">Orden ID: #PAG-${paymentId}</p>
           </div>
           <div class="form-container">
             <div class="form-group">
+              <label>Titular de la Tarjeta</label>
+              <input type="text" id="holderName" value="Juan Perez">
+            </div>
+            <div class="form-group">
               <label>Número de Tarjeta</label>
-              <input type="text" value="4575 •••• •••• 9812" readonly>
+              <input type="text" id="cardNumber" value="1111222233334444">
             </div>
             <div class="card-details-grid">
               <div class="form-group">
-                <label>Vencimiento</label>
-                <input type="text" value="12/29" readonly>
+                <label>Mes (MM)</label>
+                <input type="text" id="expMonth" value="12">
               </div>
               <div class="form-group">
-                <label>CVV</label>
-                <input type="text" value="•••" readonly>
+                <label>Año (AAAA)</label>
+                <input type="text" id="expYear" value="2029">
               </div>
             </div>
             <div class="actions">
-              <button class="btn btn-success" onclick="procesarPago('APROBADO')">
-                <i class="fa-solid fa-lock"></i> APROBAR Y PAGAR
+              <button class="btn btn-success" onclick="procesarPago(true)">
+                <i class="fa-solid fa-lock"></i> REGISTRAR Y PAGAR
               </button>
-              <button class="btn btn-danger" onclick="procesarPago('RECHAZADO')">
-                <i class="fa-solid fa-times-circle"></i> RECHAZAR PAGO
+              <button class="btn btn-danger" onclick="procesarPago(false)">
+                <i class="fa-solid fa-times-circle"></i> RECHAZAR TRANSACCIÓN
               </button>
             </div>
           </div>
           <div class="footer">
-            <i class="fa-solid fa-shield-halved"></i> Conexión Encriptada SSL de Prueba
+            <i class="fa-solid fa-shield-halved"></i> Conexión Encriptada SSL de UCNPAY
           </div>
         </div>
 
         <script>
-          async function procesarPago(status) {
+          async function procesarPago(approve) {
             const container = document.getElementById('main-container');
             container.innerHTML = \`
               <div style="padding: 60px 30px; text-align: center;">
                 <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 48px; color: var(--primary); margin-bottom: 20px;"></i>
-                <h3 style="font-weight: 800; margin-bottom: 10px;">Procesando transacción...</h3>
+                <h3 style="font-weight: 800; margin-bottom: 10px;">Procesando transacción segura...</h3>
                 <p style="font-size: 14px; color: #888;">Por favor, no cierres esta ventana.</p>
               </div>
             \`;
@@ -362,7 +440,15 @@ export class PagosController {
                 },
                 body: JSON.stringify({
                   id_payments: '${paymentId}',
-                  approve: status === 'APROBADO'
+                  approve: approve,
+                  id_users: '${idUsers}',
+                  titular: document.getElementById('holderName')?.value || 'Juan Perez',
+                  tarjeta: {
+                    numero: document.getElementById('cardNumber')?.value || '1111222233334444',
+                    exp_mes: document.getElementById('expMonth')?.value || '12',
+                    exp_ano: document.getElementById('expYear')?.value || '2029',
+                    cvc: '123'
+                  }
                 })
               });
               const data = await res.json();
@@ -370,10 +456,10 @@ export class PagosController {
               if (data.success) {
                 container.innerHTML = \`
                   <div style="padding: 60px 30px; text-align: center; animation: fadeIn 0.5s ease-out;">
-                    <i class="fa-solid \${status === 'APROBADO' ? 'fa-circle-check' : 'fa-circle-xmark'}" style="font-size: 64px; color: \${status === 'APROBADO' ? 'var(--success)' : 'var(--danger)'}; margin-bottom: 20px;"></i>
-                    <h3 style="font-weight: 800; margin-bottom: 10px;">\${status === 'APROBADO' ? '¡Pago Aprobado!' : 'Pago Rechazado'}</h3>
+                    <i class="fa-solid \${approve ? 'fa-circle-check' : 'fa-circle-xmark'}" style="font-size: 64px; color: \${approve ? 'var(--success)' : 'var(--danger)'}; margin-bottom: 20px;"></i>
+                    <h3 style="font-weight: 800; margin-bottom: 10px;">\${approve ? '¡Tarjeta Guardada y Pago Aprobado!' : 'Pago Cancelado'}</h3>
                     <p style="font-size: 14px; color: #555; margin-bottom: 30px;">
-                      \${status === 'APROBADO' ? 'El pago se ha procesado con éxito y se ha notificado a tu sistema.' : 'La transacción fue rechazada por la pasarela de pagos.'}
+                      \${approve ? 'Tu tarjeta ha sido tokenizada en UCNPAY y se ha activado tu suscripción periódica.' : 'La transacción fue rechazada voluntariamente.'}
                     </p>
                     <button class="btn btn-success" style="background-color: var(--primary);" onclick="window.close()">Cerrar Ventana</button>
                   </div>
@@ -385,7 +471,7 @@ export class PagosController {
               container.innerHTML = \`
                 <div style="padding: 60px 30px; text-align: center; animation: fadeIn 0.5s ease-out;">
                   <i class="fa-solid fa-circle-exclamation" style="font-size: 64px; color: var(--danger); margin-bottom: 20px;"></i>
-                  <h3 style="font-weight: 800; margin-bottom: 10px;">Error del Servidor</h3>
+                  <h3 style="font-weight: 800; margin-bottom: 10px;">Error al Procesar</h3>
                   <p style="font-size: 14px; color: #555; margin-bottom: 30px;">\${err.message}</p>
                   <button class="btn btn-success" style="background-color: var(--primary);" onclick="location.reload()">Reintentar</button>
                 </div>
@@ -400,29 +486,65 @@ export class PagosController {
     respuesta.type('text/html').send(html);
   }
 
-  /**
-   * Procesa el resultado de la pasarela simulada, gatillando el webhook asíncrono.
-   */
   async manejarMockProcesar(solicitud: FastifyRequest, respuesta: FastifyReply) {
     try {
-      const { id_payments, approve } = solicitud.body as any;
+      const { id_payments, approve, id_users, tarjeta, titular } = solicitud.body as any;
 
       if (!id_payments) {
         return respuesta.status(400).send({ success: false, message: 'Falta el id_payments' });
       }
 
-      // Simular que el proveedor de pagos notifica a nuestro webhook de forma asíncrona
-      const webhookPayload = {
-        external_tx_id: `ext_tx_${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
-        status: approve ? 'APROBADO' : 'RECHAZADO',
-        id_payments: String(id_payments)
-      };
+      const pago = await this.servicio.obtenerPagoPorId(id_payments);
+      if (!pago) {
+        return respuesta.status(404).send({ success: false, message: 'Pago no encontrado' });
+      }
 
-      // Disparar la llamada al webhook local asíncronamente
+      let webhookPayload: UcnpayWebhookEntradaDto;
+
+      if (approve) {
+        // Registrar la tarjeta en UCNPAY a través de nuestro servicio (esto simula la pasarela llamando al init/suscription)
+        const tarjetaRegistrada = await this.servicio.registrarTarjeta({
+          id_users: id_users || pago.id_users,
+          titular: titular || 'Cliente Demo UCNPAY',
+          tarjeta: {
+            numero: tarjeta?.numero || '1111222233334444',
+            exp_mes: tarjeta?.exp_mes || '12',
+            exp_ano: tarjeta?.exp_ano || '2029',
+            cvc: tarjeta?.cvc || '123'
+          }
+        });
+
+        // Crear la estructura de webhook que enviaría UCNPAY
+        webhookPayload = {
+          event: 'transaction.approved',
+          transactionId: `trx_approved_${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
+          idOrden: `PAG-${id_payments}`,
+          status: 'APROBADO',
+          monto: Number(pago.amount),
+          paymentMethodToken: tarjetaRegistrada.payment_method_token,
+          mandateId: `mandate_${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+          card: {
+            brand: tarjetaRegistrada.card_brand,
+            last4: tarjetaRegistrada.card_last4,
+            expMonth: 12,
+            expYear: 2029
+          }
+        };
+      } else {
+        webhookPayload = {
+          event: 'transaction.rejected',
+          transactionId: `trx_rejected_${Date.now()}`,
+          idOrden: `PAG-${id_payments}`,
+          status: 'RECHAZADO',
+          monto: Number(pago.amount),
+          reason: 'Transacción rechazada por el usuario'
+        };
+      }
+
+      // Invocar webhook local asíncronamente
       const port = process.env.PORT || '3008';
-      console.log(`[MockProveedor] Llamando a webhook local en: http://localhost:${port}/api/pagos/webhook`);
+      console.log(`[MockProveedor] Invocando webhook en: http://localhost:${port}/api/pagos/webhook`);
       
-      // Ejecutar fetch asíncronamente (sin bloquear la respuesta de la interfaz)
       fetch(`http://localhost:${port}/api/pagos/webhook`, {
         method: 'POST',
         headers: {
@@ -430,15 +552,16 @@ export class PagosController {
         },
         body: JSON.stringify(webhookPayload),
       }).catch(err => {
-        console.error('[MockProveedor] Error en llamada asíncrona al webhook de pagos:', err);
+        console.error('[MockProveedor] Error al invocar webhook de pagos:', err);
       });
 
       return respuesta.status(200).send({
         success: true,
-        message: 'Procesamiento en pasarela simulado. Se ha gatillado el webhook asíncrono.',
+        message: 'Webhook gatillado correctamente',
       });
     } catch (error: any) {
-      return respuesta.status(500).send({ success: false, message: 'Error interno del servidor' });
+      console.error('Error en mock-procesar:', error);
+      return respuesta.status(500).send({ success: false, message: error.message || 'Error interno del servidor' });
     }
   }
 }

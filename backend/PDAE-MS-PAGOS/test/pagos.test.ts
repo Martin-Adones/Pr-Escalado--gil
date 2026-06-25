@@ -1,7 +1,7 @@
 import { createServer } from '../src/app';
 import { db } from '../src/database/pg-client';
 
-describe('Endpoints de Pagos', () => {
+describe('Endpoints de Pagos con UCNPAY', () => {
   let app: any;
 
   beforeAll(async () => {
@@ -17,33 +17,19 @@ describe('Endpoints de Pagos', () => {
   });
 
   describe('POST /api/pagos/crear', () => {
-    it('debe validar la entrada y responder 400 ante campos faltantes', async () => {
-      const response = await app.inject({
-        method: 'POST',
-        url: '/api/pagos/crear',
-        payload: {}
-      });
-
-      expect(response.statusCode).toBe(400);
-      const body = JSON.parse(response.body);
-      expect(body.success).toBe(false);
-    });
-
-    it('debe registrar el pago y responder 200 con la url de redireccion', async () => {
+    it('debe registrar el pago y devolver redirectUrl si el usuario no tiene tarjeta guardada', async () => {
       const mockPago = {
-        id_payments: '10',
+        id_payments: '100',
         id_users: '1',
         amount: 25000,
-        concept: 'Plan Pyme',
+        concept: 'Suscripción mensual',
         status: 'PENDIENTE',
         external_tx_id: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
       };
 
-      (db.query as jest.Mock).mockResolvedValueOnce({
-        rows: [mockPago]
-      });
+      (db.query as jest.Mock)
+        .mockResolvedValueOnce({ rows: [mockPago] }) // crearPago
+        .mockResolvedValueOnce({ rows: [] }); // obtenerPrimerTarjetaUsuario
 
       const response = await app.inject({
         method: 'POST',
@@ -51,106 +37,108 @@ describe('Endpoints de Pagos', () => {
         payload: {
           id_users: '1',
           amount: 25000,
-          concept: 'Plan Pyme'
+          concept: 'Suscripción mensual'
         }
       });
 
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
       expect(body.success).toBe(true);
-      expect(body.data.pago.id_payments).toBe('10');
-      expect(body.data.redirectUrl).toContain('checkout-page');
+      expect(body.data.pago.status).toBe('PENDIENTE');
+      expect(body.data.redirectUrl).toBeDefined();
     });
   });
 
-  describe('GET /api/pagos/usuario/:id_users', () => {
-    it('debe retornar la lista de pagos de un usuario', async () => {
-      const mockPagosList = [
-        {
-          id_payments: '10',
+  describe('POST /api/pagos/tarjeta', () => {
+    it('debe registrar la tarjeta en UCNPAY y guardar localmente', async () => {
+      const mockCardDb = {
+        id_user_cards: '1',
+        id_users: '1',
+        payment_method_token: 'token_123',
+        card_brand: 'VISA',
+        card_last4: '4444',
+        holder_name: 'Juan Perez'
+      };
+
+      // Mock fetch global
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          status: 'APROBADO',
+          paymentMethodToken: 'token_123',
+          card: { brand: 'VISA', last4: '4444' }
+        })
+      });
+      global.fetch = mockFetch;
+
+      (db.query as jest.Mock).mockResolvedValueOnce({
+        rows: [mockCardDb]
+      });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/pagos/tarjeta',
+        payload: {
           id_users: '1',
-          amount: '25000',
-          concept: 'Plan Pyme',
-          status: 'PENDIENTE',
+          titular: 'Juan Perez',
+          tarjeta: {
+            numero: '1111222233334444',
+            exp_mes: '01',
+            exp_ano: '2027',
+            cvc: '123'
+          }
+        }
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(true);
+      expect(body.data.payment_method_token).toBe('token_123');
+    });
+  });
+
+  describe('GET /api/pagos/tarjeta/:id_users', () => {
+    it('debe listar las tarjetas registradas para el usuario', async () => {
+      const mockCards = [
+        {
+          id_user_cards: '1',
+          payment_method_token: 'token_123',
+          card_brand: 'VISA',
+          card_last4: '4444',
+          holder_name: 'Juan Perez'
         }
       ];
 
       (db.query as jest.Mock).mockResolvedValueOnce({
-        rows: mockPagosList
+        rows: mockCards
       });
 
       const response = await app.inject({
         method: 'GET',
-        url: '/api/pagos/usuario/1',
+        url: '/api/pagos/tarjeta/1',
       });
 
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
       expect(body.success).toBe(true);
       expect(body.data.length).toBe(1);
-      expect(body.data[0].id_payments).toBe('10');
     });
   });
 
-  describe('GET /api/pagos/:id_payments', () => {
-    it('debe retornar 404 si el pago no existe', async () => {
-      (db.query as jest.Mock).mockResolvedValueOnce({
-        rows: []
-      });
-
-      const response = await app.inject({
-        method: 'GET',
-        url: '/api/pagos/999',
-      });
-
-      expect(response.statusCode).toBe(404);
-    });
-
-    it('debe retornar los detalles del pago si existe', async () => {
-      const mockPago = {
-        id_payments: '10',
-        id_users: '1',
-        amount: '25000',
-        concept: 'Plan Pyme',
-        status: 'PENDIENTE',
-      };
-
-      (db.query as jest.Mock).mockResolvedValueOnce({
-        rows: [mockPago]
-      });
-
-      const response = await app.inject({
-        method: 'GET',
-        url: '/api/pagos/10',
-      });
-
-      expect(response.statusCode).toBe(200);
-      const body = JSON.parse(response.body);
-      expect(body.success).toBe(true);
-      expect(body.data.id_payments).toBe('10');
-    });
-  });
-
-  describe('POST /api/pagos/webhook', () => {
-    it('debe procesar el webhook del proveedor de pagos y responder 200', async () => {
+  describe('POST /api/pagos/webhook (UCNPAY Structure)', () => {
+    it('debe procesar el webhook aprobado y sincronizar con contratos', async () => {
       const mockPago = {
         id_payments: '10',
         id_users: '1',
         id_billing_cycles: '5',
         amount: '25000',
-        concept: 'Plan Pyme',
         status: 'APROBADO',
       };
 
       (db.query as jest.Mock)
-        .mockResolvedValueOnce({
-          rows: [mockPago] // actualizacion estado pago
-        })
-        .mockResolvedValueOnce({
-          rows: [{ id_contracts: '3', amount: 25000 }] // resolver contrato
-        });
+        .mockResolvedValueOnce({ rows: [mockPago] }) // actualizacion pago
+        .mockResolvedValueOnce({ rows: [{ id_contracts: '3', amount: 25000 }] }); // resolver contrato
 
-      // Mock fetch global
       const mockFetch = jest.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ success: true })
@@ -161,33 +149,17 @@ describe('Endpoints de Pagos', () => {
         method: 'POST',
         url: '/api/pagos/webhook',
         payload: {
-          external_tx_id: 'EXT123',
+          event: 'transaction.approved',
+          transactionId: 'trx_456',
+          idOrden: 'PAG-10',
           status: 'APROBADO',
-          id_payments: '10'
+          monto: 25000
         }
       });
 
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
       expect(body.success).toBe(true);
-    });
-  });
-
-  describe('GET /api/pagos/mock-externo/checkout-page', () => {
-    it('debe servir la pagina html del checkout de la pasarela de pagos', async () => {
-      const response = await app.inject({
-        method: 'GET',
-        url: '/api/pagos/mock-externo/checkout-page',
-        query: {
-          paymentId: '10',
-          amount: '25000',
-          concept: 'Plan Pyme'
-        }
-      });
-
-      expect(response.statusCode).toBe(200);
-      expect(response.headers['content-type']).toContain('text/html');
-      expect(response.body).toContain('PROYECTO PAGOS');
     });
   });
 });

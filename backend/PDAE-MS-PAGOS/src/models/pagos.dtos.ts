@@ -6,6 +6,7 @@ import {
   Matches,
   IsNumber,
   Min,
+  ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import {
@@ -13,6 +14,40 @@ import {
   MENSAJE_ID_BIGINT,
   TransformVacioAIndefinido,
 } from 'shared';
+
+export class TarjetaSubDto {
+  @IsNotEmpty({ message: 'El número de tarjeta es requerido' })
+  @IsString()
+  numero!: string;
+
+  @IsNotEmpty({ message: 'El mes de vencimiento es requerido' })
+  @IsString()
+  exp_mes!: string;
+
+  @IsNotEmpty({ message: 'El año de vencimiento es requerido' })
+  @IsString()
+  exp_ano!: string;
+
+  @IsNotEmpty({ message: 'El código CVC es requerido' })
+  @IsString()
+  cvc!: string;
+}
+
+export class RegistrarTarjetaEntradaDto {
+  @TransformVacioAIndefinido
+  @IsString()
+  @IsNotEmpty({ message: 'El campo id_users es requerido' })
+  @Matches(REGEX_ID_BIGINT, { message: `id_users: ${MENSAJE_ID_BIGINT}` })
+  id_users!: string;
+
+  @IsNotEmpty({ message: 'El titular de la tarjeta es requerido' })
+  @IsString()
+  titular!: string;
+
+  @ValidateNested()
+  @Type(() => TarjetaSubDto)
+  tarjeta!: TarjetaSubDto;
+}
 
 export class CrearPagoEntradaDto {
   @TransformVacioAIndefinido
@@ -37,22 +72,63 @@ export class CrearPagoEntradaDto {
   id_billing_cycles?: string;
 }
 
-export class WebhookProveedorEntradaDto {
-  @IsNotEmpty({ message: 'El campo external_tx_id es requerido' })
+export class CardWebhookDetailDto {
   @IsString()
-  external_tx_id!: string;
+  brand!: string;
+
+  @IsString()
+  last4!: string;
+
+  @IsNumber()
+  expMonth!: number;
+
+  @IsNumber()
+  expYear!: number;
+}
+
+export class UcnpayWebhookEntradaDto {
+  @IsNotEmpty({ message: 'El campo event es requerido' })
+  @IsString()
+  @IsIn(['transaction.approved', 'transaction.rejected'], {
+    message: 'event debe ser transaction.approved o transaction.rejected',
+  })
+  event!: string;
+
+  @IsNotEmpty({ message: 'El campo transactionId es requerido' })
+  @IsString()
+  transactionId!: string;
+
+  @IsNotEmpty({ message: 'El campo idOrden es requerido' })
+  @IsString()
+  idOrden!: string;
 
   @IsNotEmpty({ message: 'El campo status es requerido' })
   @IsString()
-  @IsIn(['APROBADO', 'RECHAZADO', 'completed', 'failed'], {
+  @IsIn(['APROBADO', 'RECHAZADO'], {
     message: 'status debe ser APROBADO o RECHAZADO',
   })
   status!: string;
 
-  @IsNotEmpty({ message: 'El campo id_payments es requerido' })
+  @IsNotEmpty({ message: 'El campo monto es requerido' })
+  @IsNumber()
+  monto!: number;
+
+  @IsOptional()
   @IsString()
-  @Matches(REGEX_ID_BIGINT, { message: `id_payments: ${MENSAJE_ID_BIGINT}` })
-  id_payments!: string;
+  reason?: string;
+
+  @IsOptional()
+  @IsString()
+  paymentMethodToken?: string;
+  
+  @IsOptional()
+  @IsString()
+  mandateId?: string;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CardWebhookDetailDto)
+  card?: CardWebhookDetailDto;
 }
 
 export interface FilaPago {
@@ -65,4 +141,14 @@ export interface FilaPago {
   external_tx_id: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface FilaUserCard {
+  id_user_cards: string;
+  id_users: string;
+  payment_method_token: string;
+  card_brand: string;
+  card_last4: string;
+  holder_name: string;
+  created_at: string;
 }

@@ -3,6 +3,7 @@ DROP TABLE IF EXISTS "Plans_Products" CASCADE;
 DROP TABLE IF EXISTS "Contracts_Products" CASCADE;
 DROP TABLE IF EXISTS "Support" CASCADE;
 DROP TABLE IF EXISTS "audit_logs" CASCADE;
+DROP TABLE IF EXISTS "UserCards" CASCADE;
 DROP TABLE IF EXISTS "Payments" CASCADE;
 DROP TABLE IF EXISTS "billing_cycles" CASCADE;
 DROP TABLE IF EXISTS "Discount" CASCADE;
@@ -66,6 +67,16 @@ CREATE TABLE "billing_cycles" (
     "retry_attempts" INTEGER DEFAULT 0 NOT NULL,
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "UserCards" (
+    "id_user_cards" BIGSERIAL PRIMARY KEY,
+    "id_users" BIGINT NOT NULL REFERENCES "Users"("id_users") ON DELETE CASCADE,
+    "payment_method_token" VARCHAR(255) NOT NULL,
+    "card_brand" VARCHAR(50) NOT NULL,
+    "card_last4" VARCHAR(4) NOT NULL,
+    "holder_name" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE "Payments" (
