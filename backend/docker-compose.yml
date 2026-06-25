@@ -399,3 +399,9 @@ services:
 
 volumes:
   postgres_data:
+
+networks:
+  default:
+    name: dokploy-network
+    external: true
+
