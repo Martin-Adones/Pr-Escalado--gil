@@ -1,0 +1,364 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: postgres_db_ms
+    restart: always
+    env_file:
+      - ../.env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  ms-contratos:
+    build:
+      context: .
+      dockerfile: PDAE-MS-CONTRATOS/Dockerfile
+      target: dev
+    env_file:
+      - ../.env
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      PORT: "${CONTRATOS_PORT}"
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: npm run dev
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "require(''http'').get(''http://localhost:''+(process.env.PORT||''3002'')+''/api/health'',r=>{process.exit(r.statusCode===200?0:1)}).on(''error'',()=>process.exit(1))"',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    develop:
+      watch:
+        - action: sync
+          path: ./PDAE-MS-CONTRATOS/src
+          target: /app/src
+        - action: sync
+          path: ./shared/src
+          target: /shared/src
+        - action: rebuild
+          path: ./PDAE-MS-CONTRATOS/package.json
+        - action: rebuild
+          path: ./shared/package.json
+
+  ms-usuarios:
+    build:
+      context: .
+      dockerfile: PDAE-MS-USUARIOS/Dockerfile
+      target: dev
+    env_file:
+      - ../.env
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      PORT: "${USUARIOS_PORT}"
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: npm run dev
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "require(''http'').get(''http://localhost:''+(process.env.PORT||''3003'')+''/api/health'',r=>{process.exit(r.statusCode===200?0:1)}).on(''error'',()=>process.exit(1))"',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    develop:
+      watch:
+        - action: sync
+          path: ./PDAE-MS-USUARIOS/src
+          target: /app/src
+        - action: sync
+          path: ./shared/src
+          target: /shared/src
+        - action: rebuild
+          path: ./PDAE-MS-USUARIOS/package.json
+        - action: rebuild
+          path: ./shared/package.json
+
+  ms-planes:
+    build:
+      context: .
+      dockerfile: PDAE-MS-PLANES/Dockerfile
+      target: dev
+    env_file:
+      - ../.env
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      PORT: "${PLANES_PORT}"
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: npm run dev
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "require(''http'').get(''http://localhost:''+(process.env.PORT||''3004'')+''/api/health'',r=>{process.exit(r.statusCode===200?0:1)}).on(''error'',()=>process.exit(1))"',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    develop:
+      watch:
+        - action: sync
+          path: ./PDAE-MS-PLANES/src
+          target: /app/src
+        - action: sync
+          path: ./shared/src
+          target: /shared/src
+        - action: rebuild
+          path: ./PDAE-MS-PLANES/package.json
+        - action: rebuild
+          path: ./shared/package.json
+
+  ms-productos:
+    build:
+      context: .
+      dockerfile: PDAE-MS-PRODUCTOS/Dockerfile
+      target: dev
+    env_file:
+      - ../.env
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      PORT: "${PRODUCTOS_PORT}"
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: npm run dev
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "require(''http'').get(''http://localhost:''+(process.env.PORT||''3005'')+''/api/health'',r=>{process.exit(r.statusCode===200?0:1)}).on(''error'',()=>process.exit(1))"',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    develop:
+      watch:
+        - action: sync
+          path: ./PDAE-MS-PRODUCTOS/src
+          target: /app/src
+        - action: sync
+          path: ./shared/src
+          target: /shared/src
+        - action: rebuild
+          path: ./PDAE-MS-PRODUCTOS/package.json
+        - action: rebuild
+          path: ./shared/package.json
+
+  ms-soporte:
+    build:
+      context: .
+      dockerfile: PDAE-MS-SOPORTE/Dockerfile
+      target: dev
+    env_file:
+      - ../.env
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      PORT: "${SOPORTE_PORT}"
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: npm run dev
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "require(''http'').get(''http://localhost:''+(process.env.PORT||''3006'')+''/api/health'',r=>{process.exit(r.statusCode===200?0:1)}).on(''error'',()=>process.exit(1))"',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    develop:
+      watch:
+        - action: sync
+          path: ./PDAE-MS-SOPORTE/src
+          target: /app/src
+        - action: sync
+          path: ./shared/src
+          target: /shared/src
+        - action: rebuild
+          path: ./PDAE-MS-SOPORTE/package.json
+        - action: rebuild
+          path: ./shared/package.json
+
+  ms-auditoria:
+    build:
+      context: .
+      dockerfile: PDAE-MS-AUDITORIA/Dockerfile
+      target: dev
+    env_file:
+      - ../.env
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      PORT: "${AUDITORIA_PORT}"
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: npm run dev
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "require(''http'').get(''http://localhost:''+(process.env.PORT||''3007'')+''/api/health'',r=>{process.exit(r.statusCode===200?0:1)}).on(''error'',()=>process.exit(1))"',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    develop:
+      watch:
+        - action: sync
+          path: ./PDAE-MS-AUDITORIA/src
+          target: /app/src
+        - action: sync
+          path: ./shared/src
+          target: /shared/src
+        - action: rebuild
+          path: ./PDAE-MS-AUDITORIA/package.json
+        - action: rebuild
+          path: ./shared/package.json
+
+  ms-pagos:
+    build:
+      context: .
+      dockerfile: PDAE-MS-PAGOS/Dockerfile
+      target: dev
+    env_file:
+      - ../.env
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      PORT: "${PAGOS_PORT}"
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+      EXTERNAL_PAGOS_URL: "http://localhost:${PAGOS_PORT}"
+      MS_CONTRATOS_URL: "http://ms-contratos:3002"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: npm run dev
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "require(''http'').get(''http://localhost:''+(process.env.PORT||''3008'')+''/api/health'',r=>{process.exit(r.statusCode===200?0:1)}).on(''error'',()=>process.exit(1))"',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    develop:
+      watch:
+        - action: sync
+          path: ./PDAE-MS-PAGOS/src
+          target: /app/src
+        - action: sync
+          path: ./shared/src
+          target: /shared/src
+        - action: rebuild
+          path: ./PDAE-MS-PAGOS/package.json
+        - action: rebuild
+          path: ./shared/package.json
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: PDAE-API-GATEWAY/Dockerfile
+      target: dev
+    env_file:
+      - ../.env
+    environment:
+      PORT: "${GATEWAY_PORT}"
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+      MS_RUTAS_URL: "${MS_RUTAS_URL}"
+      CORS_ORIGIN: "http://localhost:${FRONTEND_PORT}"
+    ports:
+      - "${GATEWAY_PORT}:${GATEWAY_PORT}"
+    depends_on:
+      ms-contratos:
+        condition: service_healthy
+      ms-usuarios:
+        condition: service_healthy
+      ms-planes:
+        condition: service_healthy
+      ms-productos:
+        condition: service_healthy
+      ms-soporte:
+        condition: service_healthy
+      ms-auditoria:
+        condition: service_healthy
+      ms-pagos:
+        condition: service_healthy
+    command: npm run dev
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "require(''http'').get(''http://localhost:''+(process.env.PORT||''3001'')+''/api/health'',r=>{process.exit(r.statusCode===200?0:1)}).on(''error'',()=>process.exit(1))"',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    develop:
+      watch:
+        - action: sync
+          path: ./PDAE-API-GATEWAY/src
+          target: /app/src
+        - action: rebuild
+          path: ./PDAE-API-GATEWAY/package.json
+
+volumes:
+  postgres_data:
