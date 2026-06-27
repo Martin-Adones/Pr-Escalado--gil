@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: process.env.API_URL || 'https://fiftieth-aging-siberian.ngrok-free.dev',
+        target: process.env.API_URL || process.env.VITE_API_URL || 'https://api.cenitdigital.cl',
         changeOrigin: true,
         headers: {
           'ngrok-skip-browser-warning': 'true',

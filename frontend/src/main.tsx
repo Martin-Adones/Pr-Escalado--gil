@@ -10,8 +10,15 @@ import { obtenerUsuarioActual } from "./services/usuarios.service.ts";
 
 keycloak
   .init({ onLoad: "login-required", pkceMethod: "S256", checkLoginIframe: false })
-  .then((authenticated) => {
+  .then(async (authenticated) => {
     if (!authenticated) return;
+
+    try {
+      await keycloak.updateToken(-1);
+    } catch {
+      keycloak.login();
+      return;
+    }
 
     obtenerUsuarioActual()
       .then((usuario) => setAppUser(usuario))

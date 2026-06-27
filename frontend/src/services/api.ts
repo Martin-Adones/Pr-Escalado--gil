@@ -17,6 +17,9 @@ export class ApiError extends Error {
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
+    if (response.status === 401) {
+      console.warn("[API 401] URL:", response.url, "| Body:", body);
+    }
     throw new ApiError(
       response.status,
       body?.message || `Error ${response.status}`,
@@ -46,9 +49,16 @@ function buildQuery(
   );
 }
 
-function getAuthHeaders(): Record<string, string> {
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  try {
+    await keycloak.updateToken(10);
+  } catch {
+    return {};
+  }
   const token = keycloak.token;
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  const parsed = keycloak.tokenParsed as Record<string, unknown> | null;
+  console.log("[AUTH] Token existe?", !!token, "| iss:", parsed?.iss, "| sub:", parsed?.sub, "| exp:", parsed?.exp ? new Date((parsed.exp as number) * 1000).toISOString() : "N/A");
+  return { Authorization: `Bearer ${token}` };
 }
 
 export async function apiGet<T>(
@@ -57,7 +67,7 @@ export async function apiGet<T>(
 ): Promise<T> {
   const url = `${getApiBase()}${path}${params ? buildQuery(params) : ""}`;
   const response = await fetch(url, {
-    headers: getAuthHeaders(),
+    headers: await getAuthHeaders(),
   });
   return handleResponse<T>(response);
 }
@@ -67,7 +77,7 @@ export async function apiPost<T>(path: string, body?: unknown): Promise<T> {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...getAuthHeaders(),
+      ...(await getAuthHeaders()),
     },
     body: body ? JSON.stringify(body) : undefined,
   });

@@ -22,7 +22,12 @@ export class PagosService {
 
   async registrarTarjeta(dto: RegistrarTarjetaEntradaDto): Promise<FilaUserCard> {
     try {
-      console.log(`[UCNPAY] Registrando tarjeta para usuario: ${dto.id_users} en ${this.ucnpayUrl}/ucnpay/init/suscription`);
+      const keycloakId = await this.repository.obtenerKeycloakIdUsuario(dto.id_users);
+      if (!keycloakId) {
+        throw new Error(`Usuario con id_users ${dto.id_users} no encontrado`);
+      }
+
+      console.log(`[UCNPAY] Registrando tarjeta para usuario: ${dto.id_users} (Keycloak: ${keycloakId}) en ${this.ucnpayUrl}/ucnpay/init/suscription`);
       
       const response = await fetch(`${this.ucnpayUrl}/ucnpay/init/suscription`, {
         method: 'POST',
@@ -31,7 +36,7 @@ export class PagosService {
           'x-private-key': this.privateKey,
         },
         body: JSON.stringify({
-          userId: `usr_${dto.id_users}`,
+          userId: keycloakId,
           tarjeta: {
             numero: dto.tarjeta.numero,
             exp_mes: dto.tarjeta.exp_mes,
@@ -75,7 +80,12 @@ export class PagosService {
 
   async eliminarTarjeta(idUsers: string, token: string): Promise<boolean> {
     try {
-      console.log(`[UCNPAY] Eliminando tarjeta para usuario: ${idUsers} en ${this.ucnpayUrl}/ucnpay/tarjeta`);
+      const keycloakId = await this.repository.obtenerKeycloakIdUsuario(idUsers);
+      if (!keycloakId) {
+        throw new Error(`Usuario con id_users ${idUsers} no encontrado`);
+      }
+
+      console.log(`[UCNPAY] Eliminando tarjeta para usuario: ${idUsers} (Keycloak: ${keycloakId}) en ${this.ucnpayUrl}/ucnpay/tarjeta`);
 
       const response = await fetch(`${this.ucnpayUrl}/ucnpay/tarjeta`, {
         method: 'DELETE',
@@ -84,7 +94,7 @@ export class PagosService {
           'x-private-key': this.privateKey,
         },
         body: JSON.stringify({
-          userId: `usr_${idUsers}`,
+          userId: keycloakId,
           token: token
         })
       });

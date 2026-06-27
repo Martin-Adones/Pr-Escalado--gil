@@ -112,6 +112,17 @@ export class PagosRepository extends BaseRepository {
     return result.rows[0];
   }
 
+  async obtenerKeycloakIdUsuario(idUsers: string): Promise<string | null> {
+    const query = `
+      SELECT "keycloak_id"
+      FROM "Users"
+      WHERE "id_users" = $1
+    `;
+    const result = await db.query(query, [idUsers]);
+    if (result.rows.length === 0) return null;
+    return String(result.rows[0].keycloak_id);
+  }
+
   async eliminarTarjeta(idUsers: string, token: string): Promise<boolean> {
     const query = `
       DELETE FROM "UserCards"
