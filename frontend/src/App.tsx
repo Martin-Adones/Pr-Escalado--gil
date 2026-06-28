@@ -194,25 +194,28 @@ function ClientLayout({
 }
 
 function AccesoDenegado({ onLogout }: { onLogout: () => void }) {
+  const isMockLoggedOut = localStorage.getItem("mock_logout") === "true";
+
   return (
     <div className="min-h-screen bg-[#D9D9D9] font-sans text-[#353535] flex items-center justify-center p-6">
       <div className="w-full max-w-md text-center bg-white rounded-2xl p-8 shadow-sm border border-gray-200">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-500">
-          <i className="fa-solid fa-ban text-2xl" />
+        <div className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl ${isMockLoggedOut ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-500'}`}>
+          <i className={isMockLoggedOut ? "fa-solid fa-circle-check text-2xl" : "fa-solid fa-ban text-2xl"} />
         </div>
         <h1 className="text-2xl font-black text-[#284B63]">
-          Acceso no autorizado
+          {isMockLoggedOut ? "Sesión cerrada" : "Acceso no autorizado"}
         </h1>
-        <p className="mt-2 text-sm font-semibold text-gray-500">
-          Tu usuario no tiene un rol asignado para esta aplicación. Contacta al
-          administrador del sistema.
+        <p className="mt-2 text-sm font-semibold text-gray-500 font-sans">
+          {isMockLoggedOut 
+            ? "Has cerrado tu sesión de prueba correctamente." 
+            : "Tu usuario no tiene un rol asignado para esta aplicación. Contacta al administrador del sistema."}
         </p>
         <button
           type="button"
           onClick={onLogout}
           className="mt-6 w-full rounded-xl bg-[#284B63] px-4 py-3 text-sm font-black text-white transition hover:bg-[#3C6E71]"
         >
-          Cerrar sesión
+          {isMockLoggedOut ? "Iniciar sesión" : "Cerrar sesión"}
         </button>
       </div>
     </div>
@@ -225,7 +228,18 @@ export default function App() {
   const appUserId = getAppUser()?.id_users ?? null;
 
   const handleLogout = useCallback(() => {
-    keycloak.logout({ redirectUri: window.location.origin });
+    if (localStorage.getItem("mock_logout") === "true") {
+      localStorage.removeItem("mock_logout");
+      window.location.reload();
+      return;
+    }
+
+    if (!keycloak.authenticated) {
+      localStorage.setItem("mock_logout", "true");
+      window.location.reload();
+    } else {
+      keycloak.logout({ redirectUri: window.location.origin });
+    }
   }, [keycloak]);
 
   if (!role) {
