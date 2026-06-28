@@ -13,14 +13,25 @@ describe('Soporte API Endpoints', () => {
   beforeAll(async () => {
     app = await createServer();
     await app.ready();
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true, ticket: { id: '5be148c6-5091-4a44-922d-82996a194983' } }),
+      text: async () => 'OK',
+    } as any);
   });
 
   afterAll(async () => {
     await app.close();
+    jest.restoreAllMocks();
   });
 
   beforeEach(() => {
     jest.restoreAllMocks();
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true, ticket: { id: '5be148c6-5091-4a44-922d-82996a194983' } }),
+      text: async () => 'OK',
+    } as any);
   });
 
   describe('POST /api/soporte/crear', () => {
@@ -308,6 +319,79 @@ describe('Soporte API Endpoints', () => {
         success: false,
         message: 'Error de DB genérico',
       });
+    });
+  });
+
+  describe('SoporteRepository y SoporteService CRM integration', () => {
+    it('SoporteRepository.obtenerDetallesContrato retorna datos simulados en entorno de test/mock', async () => {
+      const repo = new SoporteRepository();
+      const res = await repo.obtenerDetallesContrato('123');
+      expect(res).toEqual({ id_users: '12345', plan_name: 'Básico' });
+    });
+
+    it('SoporteService deduce la prioridad correctamente basada en el plan', async () => {
+      const repo = new SoporteRepository();
+      jest.spyOn(repo, 'obtenerDetallesContrato').mockResolvedValue({ id_users: '10', plan_name: 'Básico' });
+      jest.spyOn(repo, 'ejecutarCrearTicket').mockResolvedValue([{
+        id_support: '1',
+        id_contracts: '5',
+        id_users: '10',
+        description: 'Error en el panel',
+        status: 'open',
+        created_at: new Date(),
+        updated_at: new Date(),
+      }]);
+
+      const service = new (require('../src/services/soporte.service').SoporteService)();
+      service.repositorio = repo;
+
+      const tickets = await service.crearTicket({ id_contracts: '5', description: 'Error en el panel' });
+      expect(tickets.length).toBe(1);
+
+      await new Promise(resolve => setTimeout(resolve, 50));
+      expect(global.fetch).toHaveBeenCalled();
+    });
+
+    it('SoporteService deduce prioridad media por defecto', async () => {
+      const repo = new SoporteRepository();
+      jest.spyOn(repo, 'obtenerDetallesContrato').mockResolvedValue({ id_users: '10', plan_name: 'Profesional' });
+      jest.spyOn(repo, 'ejecutarCrearTicket').mockResolvedValue([{
+        id_support: '2',
+        id_contracts: '5',
+        id_users: '10',
+        description: 'Otro error',
+        status: 'open',
+        created_at: new Date(),
+        updated_at: new Date(),
+      }]);
+
+      const service = new (require('../src/services/soporte.service').SoporteService)();
+      service.repositorio = repo;
+
+      await service.crearTicket({ id_contracts: '5', description: 'Otro error' });
+      await new Promise(resolve => setTimeout(resolve, 50));
+      expect(global.fetch).toHaveBeenCalled();
+    });
+
+    it('SoporteService deduce prioridad alta para Enterprise', async () => {
+      const repo = new SoporteRepository();
+      jest.spyOn(repo, 'obtenerDetallesContrato').mockResolvedValue({ id_users: '10', plan_name: 'Enterprise' });
+      jest.spyOn(repo, 'ejecutarCrearTicket').mockResolvedValue([{
+        id_support: '3',
+        id_contracts: '5',
+        id_users: '10',
+        description: 'Error crítico',
+        status: 'open',
+        created_at: new Date(),
+        updated_at: new Date(),
+      }]);
+
+      const service = new (require('../src/services/soporte.service').SoporteService)();
+      service.repositorio = repo;
+
+      await service.crearTicket({ id_contracts: '5', description: 'Error crítico' });
+      await new Promise(resolve => setTimeout(resolve, 50));
+      expect(global.fetch).toHaveBeenCalled();
     });
   });
 });

@@ -26,3 +26,10 @@ jest.mock('../src/database/pg-client', () => ({
     }),
   },
 }));
+
+// 3. Mock del módulo 'jose' para evitar errores de parseo ESM en Jest
+jest.mock('jose', () => ({
+  createRemoteJWKSet: jest.fn(),
+  jwtVerify: jest.fn(),
+}));
+

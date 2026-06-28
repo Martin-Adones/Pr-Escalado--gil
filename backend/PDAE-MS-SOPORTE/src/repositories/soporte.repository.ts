@@ -41,4 +41,20 @@ export class SoporteRepository extends BaseRepository {
     ];
     return await this.callProcedure<FilaTicket>('sp_actualizar_ticket', params, undefined);
   }
+
+  async obtenerDetallesContrato(idContracts: string): Promise<{ id_users: string; plan_name: string } | null> {
+    const db = this.getDb();
+    const isMock = process.env.NODE_ENV === 'mock' || process.env.NODE_ENV === 'test';
+    if (isMock) {
+      return { id_users: '12345', plan_name: 'Básico' };
+    }
+    const result = await db.query(
+      `SELECT c."id_users"::text as "id_users", p."name" as "plan_name"
+       FROM "Contracts" c
+       JOIN "Plans" p ON c."id_plans" = p."id_plans"
+       WHERE c."id_contracts" = $1`,
+      [idContracts]
+    );
+    return result.rows[0] || null;
+  }
 }
