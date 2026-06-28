@@ -9,8 +9,8 @@ services:
       - "${FRONTEND_PORT:-5173}:5173"
     environment:
       - FRONTEND_PORT=${FRONTEND_PORT:-5173}
-      - API_URL=${API_URL:-http://api-gateway:4000}
-      - VITE_API_URL=${VITE_API_URL:-http://api-gateway:4000}
+      - API_URL=${API_URL:-https://api.cenitdigital.cl}
+      - VITE_API_URL=${VITE_API_URL:-https://api.cenitdigital.cl}
       - VITE_KEYCLOAK_URL=${VITE_KEYCLOAK_URL}
       - VITE_KEYCLOAK_REALM=${VITE_KEYCLOAK_REALM}
       - VITE_KEYCLOAK_CLIENT_ID=${VITE_KEYCLOAK_CLIENT_ID}
