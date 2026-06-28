@@ -71,8 +71,14 @@ describe('Endpoints de Pagos con UCNPAY', () => {
       });
       global.fetch = mockFetch;
 
-      (db.query as jest.Mock).mockResolvedValueOnce({
-        rows: [mockCardDb]
+      (db.query as jest.Mock).mockImplementation(async (sql: string) => {
+        if (sql.includes('keycloak_id')) {
+          return { rows: [{ keycloak_id: 'e4b2d3a1-7c9f-4b1a-8c3d-2e1f0a9b8c7d' }] };
+        }
+        if (sql.includes('UserCards')) {
+          return { rows: [mockCardDb] };
+        }
+        return { rows: [] };
       });
 
       const response = await app.inject({
@@ -109,9 +115,30 @@ describe('Endpoints de Pagos con UCNPAY', () => {
         }
       ];
 
-      (db.query as jest.Mock).mockResolvedValueOnce({
-        rows: mockCards
+      (db.query as jest.Mock).mockImplementation(async (sql: string) => {
+        if (sql.includes('keycloak_id')) {
+          return { rows: [{ keycloak_id: 'e4b2d3a1-7c9f-4b1a-8c3d-2e1f0a9b8c7d' }] };
+        }
+        if (sql.includes('UserCards')) {
+          return { rows: mockCards };
+        }
+        return { rows: [] };
       });
+
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => [
+          {
+            id: 'token_123',
+            last4: '4444',
+            brand: 'VISA',
+            expMonth: 12,
+            expYear: 2029,
+            holderName: 'Juan Perez'
+          }
+        ]
+      });
+      global.fetch = mockFetch;
 
       const response = await app.inject({
         method: 'GET',
@@ -122,6 +149,7 @@ describe('Endpoints de Pagos con UCNPAY', () => {
       const body = JSON.parse(response.body);
       expect(body.success).toBe(true);
       expect(body.data.length).toBe(1);
+      expect(mockFetch).toHaveBeenCalled();
     });
   });
 

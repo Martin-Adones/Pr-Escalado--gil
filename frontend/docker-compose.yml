@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    environment:
+      - FRONTEND_PORT=${FRONTEND_PORT:-5173}
+      - API_URL=${API_URL:-http://api-gateway:4000}
+      - VITE_API_URL=${VITE_API_URL:-http://api-gateway:4000}
+      - VITE_KEYCLOAK_URL=${VITE_KEYCLOAK_URL}
+      - VITE_KEYCLOAK_REALM=${VITE_KEYCLOAK_REALM}
+      - VITE_KEYCLOAK_CLIENT_ID=${VITE_KEYCLOAK_CLIENT_ID}
+    restart: unless-stopped
+    networks:
+      - default
+
+networks:
+  default:
+    name: dokploy-network
+    external: true

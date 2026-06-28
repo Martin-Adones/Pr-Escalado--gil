@@ -83,3 +83,12 @@ export async function apiPost<T>(path: string, body?: unknown): Promise<T> {
   });
   return handleResponse<T>(response);
 }
+
+export async function apiDelete<T>(path: string): Promise<T> {
+  const response = await fetch(`${getApiBase()}${path}`, {
+    method: "DELETE",
+    headers: await getAuthHeaders(),
+  });
+  return handleResponse<T>(response);
+}
+

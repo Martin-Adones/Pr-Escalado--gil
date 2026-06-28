@@ -16,6 +16,7 @@ import ClientDashboard from "./pages/client/DashboardPage";
 import History from "./pages/client/HistoryPage";
 import Plans from "./pages/client/PlansPage";
 import Tickets from "./pages/client/TicketsPage";
+import PaymentMethods from "./pages/client/PaymentMethodsPage";
 import { useAuth } from "./auth/useAuth";
 import { resolveRole } from "./auth/roles";
 import { getAppUser } from "./auth/appUser";
@@ -39,6 +40,7 @@ const clientPathToLabel: Record<string, string> = {
   "/client/contratos": "Mis Contratos",
   "/client/historial": "Historial",
   "/client/planes": "Planes",
+  "/client/metodos-pago": "Métodos de Pago",
   "/client/tickets": "Tickets",
 };
 
@@ -159,6 +161,11 @@ function ClientLayout({
         onClick: () => navigate("/client/planes"),
       },
       {
+        label: "Métodos de Pago",
+        iconClass: "fa-solid fa-credit-card",
+        onClick: () => navigate("/client/metodos-pago"),
+      },
+      {
         label: "Tickets",
         iconClass: "fa-solid fa-ticket",
         onClick: () => navigate("/client/tickets"),
@@ -180,6 +187,7 @@ function ClientLayout({
       <Route path="contratos" element={<Contracts {...pageProps} />} />
       <Route path="historial" element={<History {...pageProps} />} />
       <Route path="planes" element={<Plans {...pageProps} />} />
+      <Route path="metodos-pago" element={<PaymentMethods {...pageProps} />} />
       <Route path="tickets" element={<Tickets {...pageProps} />} />
     </Routes>
   );

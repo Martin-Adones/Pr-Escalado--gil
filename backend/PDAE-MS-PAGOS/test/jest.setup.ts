@@ -1,5 +1,11 @@
 import 'reflect-metadata';
 
+// Mock de jose para evitar errores con sintaxis ESM (export) en Jest
+jest.mock('jose', () => ({
+  createRemoteJWKSet: jest.fn(),
+  jwtVerify: jest.fn(),
+}));
+
 // Mock de pg
 jest.mock('pg', () => {
   const mPool = {

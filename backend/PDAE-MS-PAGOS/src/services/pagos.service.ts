@@ -15,7 +15,7 @@ export class PagosService {
   constructor() {
     this.repository = new PagosRepository();
     this.ucnpayUrl = process.env.UCNPAY_BASE_URL || 'https://proyectogestionti.onrender.com/api';
-    this.privateKey = process.env.UCNPAY_PRIVATE_KEY || 'mock_private_key_proyecto_10';
+    this.privateKey = process.env.UCNPAY_PRIVATE_KEY || 'sk_135865fd689444a98430bb6c550703d7';
   }
 
   // --- Integración con UCNPAY Pasarela ---
@@ -75,7 +75,58 @@ export class PagosService {
   }
 
   async obtenerTarjetasUsuario(idUsers: string): Promise<FilaUserCard[]> {
-    return await this.repository.obtenerTarjetasUsuario(idUsers);
+    try {
+      const keycloakId = await this.repository.obtenerKeycloakIdUsuario(idUsers);
+      if (!keycloakId) {
+        return await this.repository.obtenerTarjetasUsuario(idUsers);
+      }
+
+      console.log(`[UCNPAY] Obteniendo tarjetas para usuario: ${idUsers} (Keycloak: ${keycloakId}) en ${this.ucnpayUrl}/ucnpay/tarjeta/${keycloakId}`);
+      
+      const response = await fetch(`${this.ucnpayUrl}/ucnpay/tarjeta/${keycloakId}`, {
+        method: 'GET',
+        headers: {
+          'x-private-key': this.privateKey,
+        }
+      });
+
+      if (!response.ok) {
+        const bodyText = await response.text();
+        console.error(`[UCNPAY] Error al obtener tarjetas (${response.status}): ${bodyText}`);
+        return await this.repository.obtenerTarjetasUsuario(idUsers);
+      }
+
+      const externalCards = (await response.json()) as any[];
+      const localCards = await this.repository.obtenerTarjetasUsuario(idUsers);
+      
+      const externalTokens = new Set(externalCards.map(c => c.id));
+      
+      // 1. Eliminar de local lo que ya no está en externo
+      for (const localCard of localCards) {
+        if (!externalTokens.has(localCard.payment_method_token)) {
+          await this.repository.eliminarTarjeta(idUsers, localCard.payment_method_token);
+        }
+      }
+
+      // 2. Insertar en local lo que está en externo pero no en local
+      const localTokens = new Set(localCards.map(c => c.payment_method_token));
+      for (const extCard of externalCards) {
+        if (!localTokens.has(extCard.id)) {
+          await this.repository.registrarTarjeta(
+            idUsers,
+            extCard.id,
+            extCard.brand,
+            extCard.last4,
+            extCard.holderName || 'Tarjetahabiente'
+          );
+        }
+      }
+
+      return await this.repository.obtenerTarjetasUsuario(idUsers);
+    } catch (error) {
+      console.error('[UCNPAY] Error en obtenerTarjetasUsuario (pasarela):', error);
+      return await this.repository.obtenerTarjetasUsuario(idUsers);
+    }
   }
 
   async eliminarTarjeta(idUsers: string, token: string): Promise<boolean> {
