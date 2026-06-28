@@ -82,11 +82,14 @@ export default function Dashboard({ navItems, activeNavLabel, userId }: ClientPa
     let cancelled = false
     async function load() {
       try {
-        const params: Record<string, string | number | undefined> = { status: 'ACTIVE', page_size: 1 }
-        if (userId) params.id_users = userId
+        const params: Record<string, string | number | undefined> = { 
+          status: 'ACTIVE', 
+          page_size: 1, 
+          id_users: userId || '-1' 
+        }
 
         const contratos = await listarContratos(params)
-        const allUserContratos = await listarContratos({ id_users: userId || undefined })
+        const allUserContratos = await listarContratos({ id_users: userId || '-1' })
 
         if (cancelled) return
 

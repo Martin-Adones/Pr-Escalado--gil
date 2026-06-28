@@ -65,7 +65,7 @@ export default function Plans({ navItems, activeNavLabel, userId }: ClientPlansP
       try {
         const [planesData, contratosData] = await Promise.all([
           listarPlanes({ isActive: true }),
-          listarContratos({ status: 'ACTIVE', id_users: userId || undefined }),
+          listarContratos({ status: 'ACTIVE', id_users: userId || '-1' }),
         ])  
         if (cancelled) return
 
