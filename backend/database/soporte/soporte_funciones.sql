@@ -146,7 +146,7 @@ CREATE OR REPLACE FUNCTION sp_actualizar_ticket(
 RETURNS TABLE (
     id_support BIGINT,
     id_contracts BIGINT,
-    id_users BIGINT,
+    id_users UUID,
     description TEXT,
     status VARCHAR(50),
     created_at TIMESTAMP,
