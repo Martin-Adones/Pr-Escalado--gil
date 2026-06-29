@@ -20,7 +20,7 @@ DROP TABLE IF EXISTS "Products" CASCADE;
 
 -- 1. Tablas Base (Sin dependencias de llaves foráneas)
 CREATE TABLE "Users" (
-    "id_users" UUID PRIMARY KEY DEFAULT gen_random_uuid(),   
+    "id_users" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     "type" VARCHAR(255) NOT NULL,
     "isActive" BOOLEAN NOT NULL
 );
@@ -1346,8 +1346,8 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 -- sp_crear_usuario
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION sp_crear_usuario(
-    p_tipo VARCHAR, 
-    p_id_usuario UUID DEFAULT NULL, 
+    p_tipo VARCHAR,
+    p_id_usuario UUID DEFAULT NULL,
     p_is_active BOOLEAN DEFAULT TRUE
 )
 RETURNS TABLE (
@@ -1809,3 +1809,46 @@ INSERT INTO "Payments" ("id_users", "id_billing_cycles", "amount", "concept", "s
   ('2d4ddcb1-e822-46ad-b4ee-6016f8ce8633', 1, 45990, 'Adquisición de Plan Pyme', 'APROBADO', 'mock_tx_12345'),
   ('eda5c8c2-dafd-451d-b860-34e592ece123', 6, 19990, 'Cobro Ciclo de Facturación Contrato #4', 'RECHAZADO', 'mock_tx_54321');
 
+-- =============================================================================
+-- sp_sincronizar_usuario — upsert post-login con UUID de Keycloak
+-- =============================================================================
+CREATE OR REPLACE FUNCTION sp_sincronizar_usuario(
+    p_keycloak_id UUID,
+    p_tipo VARCHAR DEFAULT 'cliente',
+    p_is_active BOOLEAN DEFAULT TRUE
+)
+RETURNS TABLE (
+  id_users UUID,
+  type VARCHAR(255),
+  "isActive" BOOLEAN
+) AS $$
+DECLARE
+  v_existente RECORD;
+  v_tipo VARCHAR(255);
+BEGIN
+  IF p_keycloak_id IS NULL THEN
+    RAISE EXCEPTION 'keycloak_id es obligatorio';
+  END IF;
+
+  v_tipo := fn_normalizar_tipo_usuario(COALESCE(p_tipo, 'cliente'));
+
+  SELECT u."id_users", u."type", u."isActive" INTO v_existente
+  FROM "Users" u
+  WHERE u."id_users" = p_keycloak_id;
+
+  IF FOUND THEN
+    RETURN QUERY
+    SELECT v_existente."id_users", v_existente."type", v_existente."isActive";
+    RETURN;
+  END IF;
+
+  IF NOT fn_es_tipo_usuario_valido(v_tipo) THEN
+    RAISE EXCEPTION 'tipo inválido: debe ser texto no vacío de hasta 255 caracteres';
+  END IF;
+
+  RETURN QUERY
+  INSERT INTO "Users" ("id_users", "type", "isActive")
+  VALUES (p_keycloak_id, v_tipo, COALESCE(p_is_active, TRUE))
+  RETURNING "Users"."id_users", "Users"."type", "Users"."isActive";
+END;
+$$ LANGUAGE plpgsql;
