@@ -13,7 +13,7 @@ const idBigint = {
 
 export const contratoFilaProperties = {
   id_contracts: { ...idBigint, description: 'Identificador del contrato (BIGSERIAL).' },
-  id_users: { ...idBigint, description: 'Usuario titular; FK a Users.id_users.' },
+  id_users: { type: 'string' as const, format: 'uuid', description: 'Usuario titular; FK a Users.id_users (UUID).' },
   id_plans: { ...idBigint, description: 'Plan asociado; FK a Plans.id_plans.' },
   status: {
     type: 'string',

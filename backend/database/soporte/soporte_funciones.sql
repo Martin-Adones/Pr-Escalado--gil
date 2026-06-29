@@ -35,7 +35,7 @@ CREATE OR REPLACE FUNCTION sp_crear_ticket(
 RETURNS TABLE (
     id_support BIGINT,
     id_contracts BIGINT,
-    id_users BIGINT,
+    id_users UUID,
     description TEXT,
     status VARCHAR(50),
     created_at TIMESTAMP,
@@ -75,7 +75,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION sp_listar_tickets(
     p_id_support BIGINT DEFAULT NULL,
     p_id_contrato BIGINT DEFAULT NULL,
-    p_id_usuario BIGINT DEFAULT NULL,
+    p_id_usuario UUID DEFAULT NULL,
     p_status VARCHAR DEFAULT NULL,
     p_tam_pagina INTEGER DEFAULT 10,
     p_num_pagina INTEGER DEFAULT 1
@@ -83,7 +83,7 @@ CREATE OR REPLACE FUNCTION sp_listar_tickets(
 RETURNS TABLE (
     id_support BIGINT,
     id_contracts BIGINT,
-    id_users BIGINT,
+    id_users UUID,
     description TEXT,
     status VARCHAR(50),
     created_at TIMESTAMP,

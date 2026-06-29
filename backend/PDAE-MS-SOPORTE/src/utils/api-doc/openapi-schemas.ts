@@ -12,7 +12,7 @@ const idBigint = {
 export const soporteFilaProperties = {
   id_support: { ...idBigint, description: 'Identificador del ticket de soporte (BIGSERIAL).' },
   id_contracts: { ...idBigint, description: 'Identificador del contrato asociado (BIGINT).' },
-  id_users: { ...idBigint, description: 'Identificador del usuario dueño del contrato (BIGINT).' },
+  id_users: { type: 'string' as const, format: 'uuid', description: 'Identificador del usuario dueño del contrato (UUID).' },
   description: {
     type: 'string',
     description: 'Descripción detallada del ticket.',

@@ -22,8 +22,8 @@ const idContract = {
 
 const idUser = {
   type: 'string' as const,
-  pattern: '^[0-9]+$',
-  description: 'ID del usuario (Users.id_users, BIGINT)',
+  format: 'uuid',
+  description: 'ID del usuario (Users.id_users, UUID)',
 };
 
 const SOPORTE_ESTADOS = ['open', 'in_progress', 'resolved', 'closed'] as const;

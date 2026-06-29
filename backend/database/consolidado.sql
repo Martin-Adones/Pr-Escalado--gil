@@ -20,10 +20,9 @@ DROP TABLE IF EXISTS "Products" CASCADE;
 
 -- 1. Tablas Base (Sin dependencias de llaves foráneas)
 CREATE TABLE "Users" (
-    "id_users" BIGSERIAL PRIMARY KEY,   
+    "id_users" UUID PRIMARY KEY DEFAULT gen_random_uuid(),   
     "type" VARCHAR(255) NOT NULL,
-    "isActive" BOOLEAN NOT NULL,
-    "keycloak_id" UUID UNIQUE NOT NULL
+    "isActive" BOOLEAN NOT NULL
 );
 
 CREATE TABLE "Plans" (
@@ -47,7 +46,7 @@ CREATE TABLE "Products" (
 -- 2. Tablas con Relaciones Directas
 CREATE TABLE "Contracts" (
     "id_contracts" BIGSERIAL PRIMARY KEY,
-    "id_users" BIGINT NOT NULL REFERENCES "Users"("id_users") ON DELETE CASCADE,
+    "id_users" UUID NOT NULL REFERENCES "Users"("id_users") ON DELETE CASCADE,
     "id_plans" BIGINT NOT NULL REFERENCES "Plans"("id_plans"),
     "status" VARCHAR(50) NOT NULL,
     "start_date" DATE NOT NULL,
@@ -75,7 +74,7 @@ CREATE TABLE "billing_cycles" (
 
 CREATE TABLE "UserCards" (
     "id_user_cards" BIGSERIAL PRIMARY KEY,
-    "id_users" BIGINT NOT NULL REFERENCES "Users"("id_users") ON DELETE CASCADE,
+    "id_users" UUID NOT NULL REFERENCES "Users"("id_users") ON DELETE CASCADE,
     "payment_method_token" VARCHAR(255) NOT NULL,
     "card_brand" VARCHAR(50) NOT NULL,
     "card_last4" VARCHAR(4) NOT NULL,
@@ -85,7 +84,7 @@ CREATE TABLE "UserCards" (
 
 CREATE TABLE "Payments" (
     "id_payments" BIGSERIAL PRIMARY KEY,
-    "id_users" BIGINT NOT NULL REFERENCES "Users"("id_users") ON DELETE CASCADE,
+    "id_users" UUID NOT NULL REFERENCES "Users"("id_users") ON DELETE CASCADE,
     "id_billing_cycles" BIGINT REFERENCES "billing_cycles"("id_billing_cycles") ON DELETE SET NULL,
     "amount" DECIMAL(12, 2) NOT NULL,
     "concept" VARCHAR(255) NOT NULL,
@@ -259,7 +258,7 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 -- sp_crear_contrato — alta de contrato (usuario + plan existentes)
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION sp_crear_contrato(
-    p_id_usuario BIGINT,
+    p_id_usuario UUID,
     p_id_plan BIGINT,
     p_estado VARCHAR(50),
     p_fecha_inicio DATE DEFAULT NULL,
@@ -268,7 +267,7 @@ CREATE OR REPLACE FUNCTION sp_crear_contrato(
 -- Nombres de columnas devueltos en inglés: coinciden con el JSON del microservicio (camelCase se arma en cliente si aplica).
 RETURNS TABLE (
     id_contracts BIGINT,
-    id_users BIGINT,
+    id_users UUID,
     id_plans BIGINT,
     status VARCHAR(50),
     start_date DATE,
@@ -352,7 +351,7 @@ $$ LANGUAGE plpgsql;
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION sp_actualizar_contrato(
     p_id_contrato BIGINT,
-    p_id_usuario BIGINT DEFAULT NULL,
+    p_id_usuario UUID DEFAULT NULL,
     p_id_plan BIGINT DEFAULT NULL,
     p_estado VARCHAR(50) DEFAULT NULL,
     p_fecha_inicio DATE DEFAULT NULL,
@@ -360,7 +359,7 @@ CREATE OR REPLACE FUNCTION sp_actualizar_contrato(
 )
 RETURNS TABLE (
     id_contracts BIGINT,
-    id_users BIGINT,
+    id_users UUID,
     id_plans BIGINT,
     status VARCHAR(50),
     start_date DATE,
@@ -445,7 +444,7 @@ $$ LANGUAGE plpgsql;
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION sp_listar_contratos(
     p_id_contrato BIGINT DEFAULT NULL,
-    p_id_usuario BIGINT DEFAULT NULL,
+    p_id_usuario UUID DEFAULT NULL,
     p_id_plan BIGINT DEFAULT NULL,
     p_estado VARCHAR(50) DEFAULT NULL,
     p_desde_inicio DATE DEFAULT NULL,
@@ -457,7 +456,7 @@ CREATE OR REPLACE FUNCTION sp_listar_contratos(
 )
 RETURNS TABLE (
     id_contracts BIGINT,
-    id_users BIGINT,
+    id_users UUID,
     id_plans BIGINT,
     status VARCHAR(50),
     start_date DATE,
@@ -517,7 +516,7 @@ CREATE OR REPLACE FUNCTION sp_finalizar_contrato(
 )
 RETURNS TABLE (
     id_contracts BIGINT,
-    id_users BIGINT,
+    id_users UUID,
     id_plans BIGINT,
     status VARCHAR(50),
     start_date DATE,
@@ -583,7 +582,7 @@ CREATE OR REPLACE FUNCTION sp_eliminar_contrato_descontinuado(
 )
 RETURNS TABLE (
     id_contracts BIGINT,
-    id_users BIGINT,
+    id_users UUID,
     id_plans BIGINT,
     status VARCHAR(50),
     start_date DATE,
@@ -1346,9 +1345,13 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 -- -----------------------------------------------------------------------------
 -- sp_crear_usuario
 -- -----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION sp_crear_usuario(p_tipo VARCHAR, p_is_active BOOLEAN DEFAULT TRUE)
+CREATE OR REPLACE FUNCTION sp_crear_usuario(
+    p_tipo VARCHAR, 
+    p_id_usuario UUID DEFAULT NULL, 
+    p_is_active BOOLEAN DEFAULT TRUE
+)
 RETURNS TABLE (
-  id_users BIGINT,
+  id_users UUID,
   type VARCHAR(255),
   "isActive" BOOLEAN
 ) AS $$
@@ -1365,8 +1368,8 @@ BEGIN
   END IF;
 
   RETURN QUERY
-  INSERT INTO "Users" AS u ("type", "isActive")
-  VALUES (v_tipo, COALESCE(p_is_active, TRUE))
+  INSERT INTO "Users" AS u ("id_users", "type", "isActive")
+  VALUES (COALESCE(p_id_usuario, gen_random_uuid()), v_tipo, COALESCE(p_is_active, TRUE))
   RETURNING u."id_users", u."type", u."isActive";
 
   RETURN;
@@ -1377,17 +1380,17 @@ $$ LANGUAGE plpgsql;
 -- sp_listar_usuarios — filtros opcionales y paginación
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION sp_listar_usuarios(
-    p_id_usuario BIGINT DEFAULT NULL,
+    p_id_usuario UUID DEFAULT NULL,
     p_tipo_contiene VARCHAR DEFAULT NULL,
     p_tam_pagina INTEGER DEFAULT 10,
-  p_num_pagina INTEGER DEFAULT 1,
-  p_is_active BOOLEAN DEFAULT NULL
+    p_num_pagina INTEGER DEFAULT 1,
+    p_is_active BOOLEAN DEFAULT NULL
 )
 RETURNS TABLE (
-    id_users BIGINT,
+  id_users UUID,
   type VARCHAR(255),
   "isActive" BOOLEAN,
-    total_count BIGINT
+  total_count BIGINT
 ) AS $$
 DECLARE
   v_offset INTEGER;
@@ -1428,12 +1431,12 @@ $$ LANGUAGE plpgsql;
 -- sp_actualizar_usuario
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION sp_actualizar_usuario(
-    p_id_usuario BIGINT,
-  p_tipo VARCHAR,
-  p_is_active BOOLEAN DEFAULT NULL
+    p_id_usuario UUID,
+    p_tipo VARCHAR,
+    p_is_active BOOLEAN DEFAULT NULL
 )
 RETURNS TABLE (
-    id_users BIGINT,
+  id_users UUID,
   type VARCHAR(255),
   "isActive" BOOLEAN
 ) AS $$
@@ -1471,7 +1474,7 @@ $$ LANGUAGE plpgsql;
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION sp_buscar_usuario_por_keycloak_id(p_keycloak_id UUID)
 RETURNS TABLE (
-  id_users BIGINT,
+  id_users UUID,
   type VARCHAR(255),
   "isActive" BOOLEAN
 ) AS $$
@@ -1483,7 +1486,7 @@ BEGIN
   RETURN QUERY
   SELECT u."id_users", u."type", u."isActive"
   FROM "Users" u
-  WHERE u."keycloak_id" = p_keycloak_id;
+  WHERE u."id_users" = p_keycloak_id;
 
   RETURN;
 END;
@@ -1531,7 +1534,7 @@ CREATE OR REPLACE FUNCTION sp_crear_ticket(
 RETURNS TABLE (
     id_support BIGINT,
     id_contracts BIGINT,
-    id_users BIGINT,
+    id_users UUID,
     description TEXT,
     status VARCHAR(50),
     created_at TIMESTAMP,
@@ -1571,7 +1574,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION sp_listar_tickets(
     p_id_support BIGINT DEFAULT NULL,
     p_id_contrato BIGINT DEFAULT NULL,
-    p_id_usuario BIGINT DEFAULT NULL,
+    p_id_usuario UUID DEFAULT NULL,
     p_status VARCHAR DEFAULT NULL,
     p_tam_pagina INTEGER DEFAULT 10,
     p_num_pagina INTEGER DEFAULT 1
@@ -1579,7 +1582,7 @@ CREATE OR REPLACE FUNCTION sp_listar_tickets(
 RETURNS TABLE (
     id_support BIGINT,
     id_contracts BIGINT,
-    id_users BIGINT,
+    id_users UUID,
     description TEXT,
     status VARCHAR(50),
     created_at TIMESTAMP,
@@ -1699,17 +1702,17 @@ $$ LANGUAGE plpgsql;
 -- =============================================================================
 
 -- 1. USERS (10)
-INSERT INTO "Users" ("type", "isActive", "keycloak_id") VALUES
-  ('client', TRUE, '2d4ddcb1-e822-46ad-b4ee-6016f8ce8633'),
-  ('client', TRUE, 'f4e18dcd-e3e2-47c2-8e2d-a346cd60b043'),
-  ('client', TRUE, 'c93a4ca9-7a25-47d2-8272-12130d2843d7'),
-  ('client', TRUE, 'eda5c8c2-dafd-451d-b860-34e592ece123'),
-  ('client', TRUE, 'a15b2f00-26a5-474c-b530-d0f6824558b2'),
-  ('client', TRUE, '4a487811-6f23-417c-8951-b1ad2e8bacce'),
-  ('client', TRUE, 'b717bc0e-bead-470e-b086-f28aadb51179'),
-  ('client', TRUE, 'd81750d2-a656-4f3c-aaf5-2c1a4f022982'),
-  ('admin', TRUE, 'a065ba72-be8c-4116-be9c-590ce708b784'),
-  ('admin', TRUE, '4d63a0df-e7a1-4c3c-9fab-89ed5c7ca10d');
+INSERT INTO "Users" ("id_users", "type", "isActive") VALUES
+  ('2d4ddcb1-e822-46ad-b4ee-6016f8ce8633', 'client', TRUE),
+  ('f4e18dcd-e3e2-47c2-8e2d-a346cd60b043', 'client', TRUE),
+  ('c93a4ca9-7a25-47d2-8272-12130d2843d7', 'client', TRUE),
+  ('eda5c8c2-dafd-451d-b860-34e592ece123', 'client', TRUE),
+  ('a15b2f00-26a5-474c-b530-d0f6824558b2', 'client', TRUE),
+  ('4a487811-6f23-417c-8951-b1ad2e8bacce', 'client', TRUE),
+  ('b717bc0e-bead-470e-b086-f28aadb51179', 'client', TRUE),
+  ('d81750d2-a656-4f3c-aaf5-2c1a4f022982', 'client', TRUE),
+  ('a065ba72-be8c-4116-be9c-590ce708b784', 'admin', TRUE),
+  ('4d63a0df-e7a1-4c3c-9fab-89ed5c7ca10d', 'admin', TRUE);
 
 -- 2. PLANS (5)
 INSERT INTO "Plans" ("name", "billing_cycle", "amount", "isActive") VALUES
@@ -1734,15 +1737,15 @@ INSERT INTO "Products" ("name", "description", "type", "quantity", "price", "isA
 
 -- 4. CONTRACTS (10) — referencian Users (1-10) y Plans (1-5)
 INSERT INTO "Contracts" ("id_users", "id_plans", "status", "start_date", "end_date") VALUES
-  (1, 4, 'ACTIVE',     '2026-01-01', '2026-12-31'),
-  (2, 3, 'ACTIVE',     '2026-03-15', '2026-09-15'),
-  (3, 2, 'ACTIVE',     '2026-05-01', '2026-08-01'),
-  (4, 1, 'ACTIVE',     '2026-02-01', '2026-07-01'),
-  (5, 5, 'ACTIVE',     '2026-04-10', '2026-07-10'),
-  (6, 2, 'SUSPENDED',  '2026-01-15', '2026-06-15'),
-  (7, 3, 'TERMINATED', '2025-11-01', '2026-04-01'),
-  (9, 5, 'DRAFT',      '2026-06-01', '2026-09-01'),
-  (10,4, 'ACTIVE',     '2026-03-01', '2027-02-28');
+  ('2d4ddcb1-e822-46ad-b4ee-6016f8ce8633', 4, 'ACTIVE',     '2026-01-01', '2026-12-31'),
+  ('f4e18dcd-e3e2-47c2-8e2d-a346cd60b043', 3, 'ACTIVE',     '2026-03-15', '2026-09-15'),
+  ('c93a4ca9-7a25-47d2-8272-12130d2843d7', 2, 'ACTIVE',     '2026-05-01', '2026-08-01'),
+  ('eda5c8c2-dafd-451d-b860-34e592ece123', 1, 'ACTIVE',     '2026-02-01', '2026-07-01'),
+  ('a15b2f00-26a5-474c-b530-d0f6824558b2', 5, 'ACTIVE',     '2026-04-10', '2026-07-10'),
+  ('4a487811-6f23-417c-8951-b1ad2e8bacce', 2, 'SUSPENDED',  '2026-01-15', '2026-06-15'),
+  ('b717bc0e-bead-470e-b086-f28aadb51179', 3, 'TERMINATED', '2025-11-01', '2026-04-01'),
+  ('a065ba72-be8c-4116-be9c-590ce708b784', 5, 'DRAFT',      '2026-06-01', '2026-09-01'),
+  ('4d63a0df-e7a1-4c3c-9fab-89ed5c7ca10d', 4, 'ACTIVE',     '2026-03-01', '2027-02-28');
 
 -- 5. billing_cycles (10) — referencian Contracts (1-10)
 INSERT INTO "billing_cycles" ("id_contracts", "amount", "status", "retry_attempts", "created_at") VALUES
@@ -1802,7 +1805,7 @@ INSERT INTO "Contracts_Products" ("id_contracts", "id_products", "quantity") VAL
 
 -- 11. Payments (3)
 INSERT INTO "Payments" ("id_users", "id_billing_cycles", "amount", "concept", "status", "external_tx_id") VALUES
-  (1, 8, 9990, 'Cobro Ciclo de Facturación Contrato #5', 'PENDIENTE', NULL),
-  (1, 1, 45990, 'Adquisición de Plan Pyme', 'APROBADO', 'mock_tx_12345'),
-  (4, 6, 19990, 'Cobro Ciclo de Facturación Contrato #4', 'RECHAZADO', 'mock_tx_54321');
+  ('2d4ddcb1-e822-46ad-b4ee-6016f8ce8633', 8, 9990, 'Cobro Ciclo de Facturación Contrato #5', 'PENDIENTE', NULL),
+  ('2d4ddcb1-e822-46ad-b4ee-6016f8ce8633', 1, 45990, 'Adquisición de Plan Pyme', 'APROBADO', 'mock_tx_12345'),
+  ('eda5c8c2-dafd-451d-b860-34e592ece123', 6, 19990, 'Cobro Ciclo de Facturación Contrato #4', 'RECHAZADO', 'mock_tx_54321');
 

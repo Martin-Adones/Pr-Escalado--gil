@@ -166,7 +166,7 @@ describe('Soporte API Endpoints', () => {
         {
           id_support: '1',
           id_contracts: '5',
-          id_users: '10',
+          id_users: 'eda5c8c2-dafd-451d-b860-34e592ece123',
           description: 'Error en el panel',
           status: 'open',
           created_at: new Date().toISOString(),
@@ -176,16 +176,16 @@ describe('Soporte API Endpoints', () => {
       ];
 
       const spy = jest
-        .spyOn(SoporteRepository.prototype, 'ejecutarListarTickets')
-        .mockResolvedValue(mockTickets as any);
+          .spyOn(SoporteRepository.prototype, 'ejecutarListarTickets')
+          .mockResolvedValue(mockTickets as any);
 
       const response = await supertest(app.server)
-        .get('/api/soporte/listar')
-        .query({
-          id_users: '10',
-          status: 'open',
-        })
-        .expect(200);
+          .get('/api/soporte/listar')
+          .query({
+            id_users: 'eda5c8c2-dafd-451d-b860-34e592ece123',
+            status: 'open',
+          })
+          .expect(200);
 
       expect(response.body).toEqual({
         success: true,

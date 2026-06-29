@@ -9,6 +9,7 @@ import {
   IsNotEmpty,
   IsIn,
   Matches,
+  IsUUID,
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import {
@@ -37,10 +38,7 @@ function normalizarEstadoRequerido({ value }: { value: unknown }) {
 
 /** Entrada HTTP → procedimiento `sp_crear_contrato` */
 export class CrearContratoEntradaDto {
-  @TransformVacioAIndefinido
-  @IsString()
-  @IsNotEmpty({ message: 'El campo id_users es requerido' })
-  @Matches(REGEX_ID_BIGINT, { message: `id_users: ${MENSAJE_ID_BIGINT}` })
+  @IsUUID(4, { message: 'id_users debe ser un UUID v4 válido' })
   id_users!: string;
 
   @TransformVacioAIndefinido
@@ -96,8 +94,7 @@ export class ListarContratosConsultaDto {
 
   @TransformVacioAIndefinido
   @IsOptional()
-  @IsString()
-  @Matches(REGEX_ID_BIGINT, { message: `id_users: ${MENSAJE_ID_BIGINT}` })
+  @IsUUID(4, { message: 'id_users debe ser un UUID v4 válido' })
   id_users!: string;
 
   @TransformVacioAIndefinido
@@ -154,8 +151,7 @@ export class ActualizarContratoEntradaDto {
 
   @TransformVacioAIndefinido
   @IsOptional()
-  @IsString()
-  @Matches(REGEX_ID_BIGINT, { message: `id_users: ${MENSAJE_ID_BIGINT}` })
+  @IsUUID(4, { message: 'id_users debe ser un UUID v4 válido' })
   id_users!: string;
 
   @TransformVacioAIndefinido

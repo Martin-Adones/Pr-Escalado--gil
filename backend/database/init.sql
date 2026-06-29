@@ -16,10 +16,9 @@ DROP TABLE IF EXISTS "Products" CASCADE;
 
 -- 1. Tablas Base (Sin dependencias de llaves foráneas)
 CREATE TABLE "Users" (
-    "id_users" BIGSERIAL PRIMARY KEY,   
+    "id_users" UUID PRIMARY KEY DEFAULT gen_random_uuid(),   
     "type" VARCHAR(255) NOT NULL,
-    "isActive" BOOLEAN NOT NULL,
-    "keycloak_id" UUID UNIQUE NOT NULL
+    "isActive" BOOLEAN NOT NULL
 );
 
 CREATE TABLE "Plans" (
@@ -43,7 +42,7 @@ CREATE TABLE "Products" (
 -- 2. Tablas con Relaciones Directas
 CREATE TABLE "Contracts" (
     "id_contracts" BIGSERIAL PRIMARY KEY,
-    "id_users" BIGINT NOT NULL REFERENCES "Users"("id_users") ON DELETE CASCADE,
+    "id_users" UUID NOT NULL REFERENCES "Users"("id_users") ON DELETE CASCADE,
     "id_plans" BIGINT NOT NULL REFERENCES "Plans"("id_plans"),
     "status" VARCHAR(50) NOT NULL,
     "start_date" DATE NOT NULL,
@@ -71,7 +70,7 @@ CREATE TABLE "billing_cycles" (
 
 CREATE TABLE "UserCards" (
     "id_user_cards" BIGSERIAL PRIMARY KEY,
-    "id_users" BIGINT NOT NULL REFERENCES "Users"("id_users") ON DELETE CASCADE,
+    "id_users" UUID NOT NULL REFERENCES "Users"("id_users") ON DELETE CASCADE,
     "payment_method_token" VARCHAR(255) NOT NULL,
     "card_brand" VARCHAR(50) NOT NULL,
     "card_last4" VARCHAR(4) NOT NULL,
@@ -81,7 +80,7 @@ CREATE TABLE "UserCards" (
 
 CREATE TABLE "Payments" (
     "id_payments" BIGSERIAL PRIMARY KEY,
-    "id_users" BIGINT NOT NULL REFERENCES "Users"("id_users") ON DELETE CASCADE,
+    "id_users" UUID NOT NULL REFERENCES "Users"("id_users") ON DELETE CASCADE,
     "id_billing_cycles" BIGINT REFERENCES "billing_cycles"("id_billing_cycles") ON DELETE SET NULL,
     "amount" DECIMAL(12, 2) NOT NULL,
     "concept" VARCHAR(255) NOT NULL,

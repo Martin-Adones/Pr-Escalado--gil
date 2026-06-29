@@ -7,6 +7,7 @@ import {
   IsNumber,
   Min,
   ValidateNested,
+  IsUUID,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import {
@@ -34,10 +35,7 @@ export class TarjetaSubDto {
 }
 
 export class RegistrarTarjetaEntradaDto {
-  @TransformVacioAIndefinido
-  @IsString()
-  @IsNotEmpty({ message: 'El campo id_users es requerido' })
-  @Matches(REGEX_ID_BIGINT, { message: `id_users: ${MENSAJE_ID_BIGINT}` })
+  @IsUUID(4, { message: 'id_users debe ser un UUID v4 válido' })
   id_users!: string;
 
   @IsNotEmpty({ message: 'El titular de la tarjeta es requerido' })
@@ -50,10 +48,7 @@ export class RegistrarTarjetaEntradaDto {
 }
 
 export class CrearPagoEntradaDto {
-  @TransformVacioAIndefinido
-  @IsString()
-  @IsNotEmpty({ message: 'El campo id_users es requerido' })
-  @Matches(REGEX_ID_BIGINT, { message: `id_users: ${MENSAJE_ID_BIGINT}` })
+  @IsUUID(4, { message: 'id_users debe ser un UUID v4 válido' })
   id_users!: string;
 
   @IsNotEmpty({ message: 'El campo amount es requerido' })

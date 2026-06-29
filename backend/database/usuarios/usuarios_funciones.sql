@@ -49,9 +49,13 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 -- -----------------------------------------------------------------------------
 -- sp_crear_usuario
 -- -----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION sp_crear_usuario(p_tipo VARCHAR, p_is_active BOOLEAN DEFAULT TRUE)
+CREATE OR REPLACE FUNCTION sp_crear_usuario(
+    p_tipo VARCHAR, 
+    p_id_usuario UUID DEFAULT NULL, 
+    p_is_active BOOLEAN DEFAULT TRUE
+)
 RETURNS TABLE (
-  id_users BIGINT,
+  id_users UUID,
   type VARCHAR(255),
   "isActive" BOOLEAN
 ) AS $$
@@ -68,8 +72,8 @@ BEGIN
   END IF;
 
   RETURN QUERY
-  INSERT INTO "Users" AS u ("type", "isActive")
-  VALUES (v_tipo, COALESCE(p_is_active, TRUE))
+  INSERT INTO "Users" AS u ("id_users", "type", "isActive")
+  VALUES (COALESCE(p_id_usuario, gen_random_uuid()), v_tipo, COALESCE(p_is_active, TRUE))
   RETURNING u."id_users", u."type", u."isActive";
 
   RETURN;
@@ -80,17 +84,17 @@ $$ LANGUAGE plpgsql;
 -- sp_listar_usuarios — filtros opcionales y paginación
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION sp_listar_usuarios(
-    p_id_usuario BIGINT DEFAULT NULL,
+    p_id_usuario UUID DEFAULT NULL,
     p_tipo_contiene VARCHAR DEFAULT NULL,
     p_tam_pagina INTEGER DEFAULT 10,
-  p_num_pagina INTEGER DEFAULT 1,
-  p_is_active BOOLEAN DEFAULT NULL
+    p_num_pagina INTEGER DEFAULT 1,
+    p_is_active BOOLEAN DEFAULT NULL
 )
 RETURNS TABLE (
-    id_users BIGINT,
+  id_users UUID,
   type VARCHAR(255),
   "isActive" BOOLEAN,
-    total_count BIGINT
+  total_count BIGINT
 ) AS $$
 DECLARE
   v_offset INTEGER;
@@ -131,12 +135,12 @@ $$ LANGUAGE plpgsql;
 -- sp_actualizar_usuario
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION sp_actualizar_usuario(
-    p_id_usuario BIGINT,
-  p_tipo VARCHAR,
-  p_is_active BOOLEAN DEFAULT NULL
+    p_id_usuario UUID,
+    p_tipo VARCHAR,
+    p_is_active BOOLEAN DEFAULT NULL
 )
 RETURNS TABLE (
-    id_users BIGINT,
+  id_users UUID,
   type VARCHAR(255),
   "isActive" BOOLEAN
 ) AS $$
@@ -174,7 +178,7 @@ $$ LANGUAGE plpgsql;
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION sp_buscar_usuario_por_keycloak_id(p_keycloak_id UUID)
 RETURNS TABLE (
-  id_users BIGINT,
+  id_users UUID,
   type VARCHAR(255),
   "isActive" BOOLEAN
 ) AS $$
@@ -186,7 +190,7 @@ BEGIN
   RETURN QUERY
   SELECT u."id_users", u."type", u."isActive"
   FROM "Users" u
-  WHERE u."keycloak_id" = p_keycloak_id;
+  WHERE u."id_users" = p_keycloak_id;
 
   RETURN;
 END;

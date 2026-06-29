@@ -125,7 +125,7 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 -- sp_crear_contrato — alta de contrato (usuario + plan existentes)
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION sp_crear_contrato(
-    p_id_usuario BIGINT,
+    p_id_usuario UUID,
     p_id_plan BIGINT,
     p_estado VARCHAR(50),
     p_fecha_inicio DATE DEFAULT NULL,
@@ -134,7 +134,7 @@ CREATE OR REPLACE FUNCTION sp_crear_contrato(
 -- Nombres de columnas devueltos en inglés: coinciden con el JSON del microservicio (camelCase se arma en cliente si aplica).
 RETURNS TABLE (
     id_contracts BIGINT,
-    id_users BIGINT,
+    id_users UUID,
     id_plans BIGINT,
     status VARCHAR(50),
     start_date DATE,
@@ -218,7 +218,7 @@ $$ LANGUAGE plpgsql;
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION sp_actualizar_contrato(
     p_id_contrato BIGINT,
-    p_id_usuario BIGINT DEFAULT NULL,
+    p_id_usuario UUID DEFAULT NULL,
     p_id_plan BIGINT DEFAULT NULL,
     p_estado VARCHAR(50) DEFAULT NULL,
     p_fecha_inicio DATE DEFAULT NULL,
@@ -226,7 +226,7 @@ CREATE OR REPLACE FUNCTION sp_actualizar_contrato(
 )
 RETURNS TABLE (
     id_contracts BIGINT,
-    id_users BIGINT,
+    id_users UUID,
     id_plans BIGINT,
     status VARCHAR(50),
     start_date DATE,
@@ -311,7 +311,7 @@ $$ LANGUAGE plpgsql;
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION sp_listar_contratos(
     p_id_contrato BIGINT DEFAULT NULL,
-    p_id_usuario BIGINT DEFAULT NULL,
+    p_id_usuario UUID DEFAULT NULL,
     p_id_plan BIGINT DEFAULT NULL,
     p_estado VARCHAR(50) DEFAULT NULL,
     p_desde_inicio DATE DEFAULT NULL,
@@ -323,7 +323,7 @@ CREATE OR REPLACE FUNCTION sp_listar_contratos(
 )
 RETURNS TABLE (
     id_contracts BIGINT,
-    id_users BIGINT,
+    id_users UUID,
     id_plans BIGINT,
     status VARCHAR(50),
     start_date DATE,
@@ -383,7 +383,7 @@ CREATE OR REPLACE FUNCTION sp_finalizar_contrato(
 )
 RETURNS TABLE (
     id_contracts BIGINT,
-    id_users BIGINT,
+    id_users UUID,
     id_plans BIGINT,
     status VARCHAR(50),
     start_date DATE,
@@ -449,7 +449,7 @@ CREATE OR REPLACE FUNCTION sp_eliminar_contrato_descontinuado(
 )
 RETURNS TABLE (
     id_contracts BIGINT,
-    id_users BIGINT,
+    id_users UUID,
     id_plans BIGINT,
     status VARCHAR(50),
     start_date DATE,

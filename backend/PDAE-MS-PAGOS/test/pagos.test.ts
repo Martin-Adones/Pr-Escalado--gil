@@ -20,7 +20,7 @@ describe('Endpoints de Pagos con UCNPAY', () => {
     it('debe registrar el pago y devolver redirectUrl si el usuario no tiene tarjeta guardada', async () => {
       const mockPago = {
         id_payments: '100',
-        id_users: '1',
+        id_users: 'eda5c8c2-dafd-451d-b860-34e592ece123',
         amount: 25000,
         concept: 'Suscripción mensual',
         status: 'PENDIENTE',
@@ -35,7 +35,7 @@ describe('Endpoints de Pagos con UCNPAY', () => {
         method: 'POST',
         url: '/api/pagos/crear',
         payload: {
-          id_users: '1',
+          id_users: 'eda5c8c2-dafd-451d-b860-34e592ece123',
           amount: 25000,
           concept: 'Suscripción mensual'
         }
@@ -53,7 +53,7 @@ describe('Endpoints de Pagos con UCNPAY', () => {
     it('debe registrar la tarjeta en UCNPAY y guardar localmente', async () => {
       const mockCardDb = {
         id_user_cards: '1',
-        id_users: '1',
+        id_users: 'eda5c8c2-dafd-451d-b860-34e592ece123',
         payment_method_token: 'token_123',
         card_brand: 'VISA',
         card_last4: '4444',
@@ -85,7 +85,7 @@ describe('Endpoints de Pagos con UCNPAY', () => {
         method: 'POST',
         url: '/api/pagos/tarjeta',
         payload: {
-          id_users: '1',
+          id_users: 'eda5c8c2-dafd-451d-b860-34e592ece123',
           titular: 'Juan Perez',
           tarjeta: {
             numero: '1111222233334444',
@@ -142,7 +142,7 @@ describe('Endpoints de Pagos con UCNPAY', () => {
 
       const response = await app.inject({
         method: 'GET',
-        url: '/api/pagos/tarjeta/1',
+        url: '/api/pagos/tarjeta/eda5c8c2-dafd-451d-b860-34e592ece123',
       });
 
       expect(response.statusCode).toBe(200);
@@ -157,7 +157,7 @@ describe('Endpoints de Pagos con UCNPAY', () => {
     it('debe procesar el webhook aprobado y sincronizar con contratos', async () => {
       const mockPago = {
         id_payments: '10',
-        id_users: '1',
+        id_users: 'eda5c8c2-dafd-451d-b860-34e592ece123',
         id_billing_cycles: '5',
         amount: '25000',
         status: 'APROBADO',

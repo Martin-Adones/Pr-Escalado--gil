@@ -47,7 +47,7 @@ export const esquemaGetListarUsuarios = {
     properties: {
       id_users: {
         type: 'string',
-        pattern: '^[0-9]+$',
+        format: 'uuid',
         description: 'Filtrar por id de usuario',
       },
       type: {
@@ -91,7 +91,7 @@ export const esquemaPostActualizarUsuario = {
     properties: {
       id_users: {
         type: 'string',
-        pattern: '^[0-9]+$',
+        format: 'uuid',
         description: 'Usuario a modificar',
       },
       type: {

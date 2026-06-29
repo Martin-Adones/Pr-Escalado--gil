@@ -12,8 +12,8 @@ import {
 
 const idUsuario = {
   type: 'string' as const,
-  pattern: '^[0-9]+$',
-  description: 'ID del usuario (Users.id_users, BIGSERIAL)',
+  format: 'uuid',
+  description: 'ID del usuario (Users.id_users, UUID)',
 };
 
 const idPlan = {

@@ -6,17 +6,17 @@
 -- =============================================================================
 
 -- 1. USERS (10)
-INSERT INTO "Users" ("type", "isActive", "keycloak_id") VALUES
-  ('client', TRUE, '2d4ddcb1-e822-46ad-b4ee-6016f8ce8633'),
-  ('client', TRUE, 'f4e18dcd-e3e2-47c2-8e2d-a346cd60b043'),
-  ('client', TRUE, 'c93a4ca9-7a25-47d2-8272-12130d2843d7'),
-  ('client', TRUE, 'eda5c8c2-dafd-451d-b860-34e592ece123'),
-  ('client', TRUE, 'a15b2f00-26a5-474c-b530-d0f6824558b2'),
-  ('client', TRUE, '4a487811-6f23-417c-8951-b1ad2e8bacce'),
-  ('client', TRUE, 'b717bc0e-bead-470e-b086-f28aadb51179'),
-  ('client', TRUE, 'd81750d2-a656-4f3c-aaf5-2c1a4f022982'),
-  ('admin', TRUE, 'a065ba72-be8c-4116-be9c-590ce708b784'),
-  ('admin', TRUE, '4d63a0df-e7a1-4c3c-9fab-89ed5c7ca10d');
+INSERT INTO "Users" ("id_users", "type", "isActive") VALUES
+  ('2d4ddcb1-e822-46ad-b4ee-6016f8ce8633', 'client', TRUE),
+  ('f4e18dcd-e3e2-47c2-8e2d-a346cd60b043', 'client', TRUE),
+  ('c93a4ca9-7a25-47d2-8272-12130d2843d7', 'client', TRUE),
+  ('eda5c8c2-dafd-451d-b860-34e592ece123', 'client', TRUE),
+  ('a15b2f00-26a5-474c-b530-d0f6824558b2', 'client', TRUE),
+  ('4a487811-6f23-417c-8951-b1ad2e8bacce', 'client', TRUE),
+  ('b717bc0e-bead-470e-b086-f28aadb51179', 'client', TRUE),
+  ('d81750d2-a656-4f3c-aaf5-2c1a4f022982', 'client', TRUE),
+  ('a065ba72-be8c-4116-be9c-590ce708b784', 'admin', TRUE),
+  ('4d63a0df-e7a1-4c3c-9fab-89ed5c7ca10d', 'admin', TRUE);
 
 -- 2. PLANS (5)
 INSERT INTO "Plans" ("name", "billing_cycle", "amount", "isActive") VALUES
@@ -41,15 +41,15 @@ INSERT INTO "Products" ("name", "description", "type", "quantity", "price", "isA
 
 -- 4. CONTRACTS (10) — referencian Users (1-10) y Plans (1-5)
 INSERT INTO "Contracts" ("id_users", "id_plans", "status", "start_date", "end_date") VALUES
-  (1, 4, 'ACTIVE',     '2026-01-01', '2026-12-31'),
-  (2, 3, 'ACTIVE',     '2026-03-15', '2026-09-15'),
-  (3, 2, 'ACTIVE',     '2026-05-01', '2026-08-01'),
-  (4, 1, 'ACTIVE',     '2026-02-01', '2026-07-01'),
-  (5, 5, 'ACTIVE',     '2026-04-10', '2026-07-10'),
-  (6, 2, 'SUSPENDED',  '2026-01-15', '2026-06-15'),
-  (7, 3, 'TERMINATED', '2025-11-01', '2026-04-01'),
-  (9, 5, 'DRAFT',      '2026-06-01', '2026-09-01'),
-  (10,4, 'ACTIVE',     '2026-03-01', '2027-02-28');
+  ('2d4ddcb1-e822-46ad-b4ee-6016f8ce8633', 4, 'ACTIVE',     '2026-01-01', '2026-12-31'),
+  ('f4e18dcd-e3e2-47c2-8e2d-a346cd60b043', 3, 'ACTIVE',     '2026-03-15', '2026-09-15'),
+  ('c93a4ca9-7a25-47d2-8272-12130d2843d7', 2, 'ACTIVE',     '2026-05-01', '2026-08-01'),
+  ('eda5c8c2-dafd-451d-b860-34e592ece123', 1, 'ACTIVE',     '2026-02-01', '2026-07-01'),
+  ('a15b2f00-26a5-474c-b530-d0f6824558b2', 5, 'ACTIVE',     '2026-04-10', '2026-07-10'),
+  ('4a487811-6f23-417c-8951-b1ad2e8bacce', 2, 'SUSPENDED',  '2026-01-15', '2026-06-15'),
+  ('b717bc0e-bead-470e-b086-f28aadb51179', 3, 'TERMINATED', '2025-11-01', '2026-04-01'),
+  ('a065ba72-be8c-4116-be9c-590ce708b784', 5, 'DRAFT',      '2026-06-01', '2026-09-01'),
+  ('4d63a0df-e7a1-4c3c-9fab-89ed5c7ca10d', 4, 'ACTIVE',     '2026-03-01', '2027-02-28');
 
 -- 5. billing_cycles (10) — referencian Contracts (1-10)
 INSERT INTO "billing_cycles" ("id_contracts", "amount", "status", "retry_attempts", "created_at") VALUES
@@ -109,6 +109,6 @@ INSERT INTO "Contracts_Products" ("id_contracts", "id_products", "quantity") VAL
 
 -- 11. Payments (3)
 INSERT INTO "Payments" ("id_users", "id_billing_cycles", "amount", "concept", "status", "external_tx_id") VALUES
-  (1, 8, 9990, 'Cobro Ciclo de Facturación Contrato #5', 'PENDIENTE', NULL),
-  (1, 1, 45990, 'Adquisición de Plan Pyme', 'APROBADO', 'mock_tx_12345'),
-  (4, 6, 19990, 'Cobro Ciclo de Facturación Contrato #4', 'RECHAZADO', 'mock_tx_54321');
+  ('2d4ddcb1-e822-46ad-b4ee-6016f8ce8633', 8, 9990, 'Cobro Ciclo de Facturación Contrato #5', 'PENDIENTE', NULL),
+  ('2d4ddcb1-e822-46ad-b4ee-6016f8ce8633', 1, 45990, 'Adquisición de Plan Pyme', 'APROBADO', 'mock_tx_12345'),
+  ('eda5c8c2-dafd-451d-b860-34e592ece123', 6, 19990, 'Cobro Ciclo de Facturación Contrato #4', 'RECHAZADO', 'mock_tx_54321');
