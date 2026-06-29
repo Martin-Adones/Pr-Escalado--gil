@@ -82,14 +82,20 @@ export default function Dashboard({ navItems, activeNavLabel, userId }: ClientPa
     let cancelled = false
     async function load() {
       try {
+        // Si aún no hay userId (sincronización post-login pendiente), no hacemos llamadas
+        if (!userId) {
+          setLoading(false)
+          return
+        }
+
         const params: Record<string, string | number | undefined> = { 
           status: 'ACTIVE', 
           page_size: 1, 
-          id_users: userId || '-1' 
+          id_users: userId
         }
 
         const contratos = await listarContratos(params)
-        const allUserContratos = await listarContratos({ id_users: userId || '-1' })
+        const allUserContratos = await listarContratos({ id_users: userId })
 
         if (cancelled) return
 

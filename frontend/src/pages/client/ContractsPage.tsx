@@ -74,10 +74,14 @@ export default function Contracts({
     let cancelled = false
     async function load() {
       try {
+        if (!userId) {
+          setLoading(false)
+          return
+        }
         const params: Record<string, string | number | undefined> = { 
           status: 'ACTIVE', 
           page_size: 1, 
-          id_users: userId || '-1' 
+          id_users: userId
         }
         const contratos = await listarContratos(params)
         if (cancelled) return

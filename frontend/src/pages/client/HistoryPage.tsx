@@ -19,7 +19,11 @@ export default function History({ navItems, activeNavLabel, userId }: ClientHist
     let cancelled = false
     async function load() {
       try {
-        const contratos = await listarContratos({ id_users: userId || '-1' })
+        if (!userId) {
+          setLoading(false)
+          return
+        }
+        const contratos = await listarContratos({ id_users: userId })
         if (cancelled) return
 
         if (contratos.length === 0) {

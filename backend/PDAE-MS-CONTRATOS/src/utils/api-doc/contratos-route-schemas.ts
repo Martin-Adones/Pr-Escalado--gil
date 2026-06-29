@@ -110,8 +110,8 @@ export const esquemaGetListarContratos = {
       },
       id_users: {
         type: 'string',
-        pattern: '^[0-9]+$',
-        description: 'Filtrar por usuario',
+        format: 'uuid',
+        description: 'Filtrar por usuario (UUID)',
       },
       id_plans: {
         type: 'string',
