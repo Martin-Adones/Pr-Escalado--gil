@@ -8,7 +8,7 @@ jest.mock('shared', () => {
   return {
     ...actual,
     transformAndValidate: jest.fn().mockImplementation((_cls: unknown, data: unknown) => Promise.resolve(data)),
-    verificarTokenKeycloak: jest.fn().mockResolvedValue({ sub: 'test-uuid-1234' }),
+    extraerSubDeJwt: jest.fn().mockReturnValue('test-uuid-1234'),
     extraerBearerToken: jest.fn().mockReturnValue('fake-token'),
   };
 });
@@ -163,7 +163,7 @@ describe('UsuariosController', () => {
       // Resetear los mocks de shared antes de cada test de sincronizar
       const shared = require('shared');
       shared.extraerBearerToken.mockReturnValue('fake-token');
-      shared.verificarTokenKeycloak.mockResolvedValue({ sub: 'test-uuid-1234' });
+      shared.extraerSubDeJwt.mockReturnValue('test-uuid-1234');
     });
 
     it('responde 200 cuando JWT es válido y el servicio retorna el usuario', async () => {
@@ -192,8 +192,8 @@ describe('UsuariosController', () => {
     });
 
     it('responde 401 si el JWT es inválido', async () => {
-      const { verificarTokenKeycloak } = require('shared');
-      verificarTokenKeycloak.mockRejectedValueOnce(new Error('token inválido'));
+      const { extraerSubDeJwt } = require('shared');
+      extraerSubDeJwt.mockImplementationOnce(() => { throw new Error('token inválido'); });
 
       await controlador.manejarSincronizarUsuario(
         { method: 'POST', log: logSimulado, headers: { authorization: 'Bearer bad' }, body: {} } as unknown as FastifyRequest,

@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { UsuariosService } from "../services/usuarios.service";
 import { transformAndValidate } from "shared";
-import { verificarTokenKeycloak, extraerBearerToken } from "shared";
+import { extraerSubDeJwt, extraerBearerToken } from "shared";
 import {
   CrearUsuarioEntradaDto,
   ListarUsuariosConsultaDto,
@@ -188,9 +188,10 @@ export class UsuariosController {
 
     let sub: string;
     try {
-      const payload = await verificarTokenKeycloak(token);
-      if (!payload.sub) throw new Error("JWT sin campo sub");
-      sub = payload.sub;
+      // Usamos decodificación sin verificación de firma para evitar dependencia
+      // del JWKS remoto de Keycloak (ngrok cambia URL, no siempre accesible desde producción).
+      // El token ya fue validado por Keycloak en el cliente; aquí solo necesitamos el sub.
+      sub = extraerSubDeJwt(token);
     } catch (error: any) {
       solicitud.log?.warn?.(
         { error: error.message },

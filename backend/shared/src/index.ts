@@ -24,5 +24,6 @@ export {
 export {
   verificarTokenKeycloak,
   extraerBearerToken,
+  extraerSubDeJwt,
   type KeycloakTokenPayload,
 } from "./utils/jwt-verifier";

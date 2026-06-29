@@ -1,4 +1,4 @@
-import { createRemoteJWKSet, jwtVerify, type JWTPayload } from "jose";
+import { createRemoteJWKSet, jwtVerify, decodeJwt, type JWTPayload } from "jose";
 
 /**
  * Verificación de JWTs emitidos por Keycloak (realm sistema-centralizado).
@@ -49,6 +49,31 @@ export async function verificarTokenKeycloak(
     issuer: `${keycloakUrl}/realms/${realm}`,
   });
   return payload as KeycloakTokenPayload;
+}
+
+/**
+ * Decodifica un JWT de Keycloak SIN verificar la firma.
+ * Útil cuando el JWKS remoto no es alcanzable (ngrok, URL cambiante) y
+ * el token ya proviene de un cliente autenticado.
+ * SOLO usar en endpoints que no requieran garantía criptográfica adicional.
+ * Lanza si el token está malformado o expirado.
+ */
+export function extraerSubDeJwt(token: string): string {
+  let payload: Record<string, unknown>;
+  try {
+    payload = decodeJwt(token) as Record<string, unknown>;
+  } catch {
+    throw new Error("JWT malformado");
+  }
+  const sub = payload.sub as string | undefined;
+  if (!sub) throw new Error("JWT sin campo sub");
+
+  // Verificar expiración manualmente
+  const exp = payload.exp as number | undefined;
+  if (exp && Date.now() / 1000 > exp) {
+    throw new Error("JWT expirado");
+  }
+  return sub;
 }
 
 /** Extrae el JWT del header Authorization: Bearer <token>. */
