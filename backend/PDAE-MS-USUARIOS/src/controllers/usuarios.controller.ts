@@ -1,10 +1,12 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { UsuariosService } from "../services/usuarios.service";
 import { transformAndValidate } from "shared";
+import { verificarTokenKeycloak, extraerBearerToken } from "shared";
 import {
   CrearUsuarioEntradaDto,
   ListarUsuariosConsultaDto,
   ActualizarUsuarioEntradaDto,
+  SincronizarUsuarioEntradaDto,
 } from "../models/usuarios.dtos";
 
 /** Capa HTTP: valida DTOs y delega en {@link UsuariosService}. */
@@ -158,6 +160,72 @@ export class UsuariosController {
       solicitud.log?.error?.(
         { error: error.message },
         "Error en manejarObtenerUsuarioActual",
+      );
+      return respuesta.status(500).send({
+        success: false,
+        message: "Error interno del servidor",
+      });
+    }
+  }
+
+  /**
+   * POST /api/usuarios/sincronizar
+   * Extrae el `sub` del JWT Bearer, hace upsert en Users y devuelve el registro.
+   * Si el usuario ya existe lo retorna sin modificarlo; si es nuevo lo crea con
+   * type='cliente' (o el type que venga en el body).
+   */
+  async manejarSincronizarUsuario(
+    solicitud: FastifyRequest,
+    respuesta: FastifyReply,
+  ) {
+    const token = extraerBearerToken(solicitud.headers.authorization);
+    if (!token) {
+      return respuesta.status(401).send({
+        success: false,
+        message: "Falta el header Authorization Bearer <token>",
+      });
+    }
+
+    let sub: string;
+    try {
+      const payload = await verificarTokenKeycloak(token);
+      if (!payload.sub) throw new Error("JWT sin campo sub");
+      sub = payload.sub;
+    } catch (error: any) {
+      solicitud.log?.warn?.(
+        { error: error.message },
+        "JWT inválido en /usuarios/sincronizar",
+      );
+      return respuesta.status(401).send({
+        success: false,
+        message: "Token inválido o expirado",
+      });
+    }
+
+    try {
+      const body = (solicitud.body as Record<string, unknown>) ?? {};
+      const entrada = await transformAndValidate(SincronizarUsuarioEntradaDto, {
+        keycloak_id: sub,
+        type: body.type as string | undefined,
+        isActive: body.isActive as boolean | undefined,
+      });
+
+      const usuario = await this.servicio.sincronizarUsuario(entrada);
+
+      return respuesta.status(200).send({
+        success: true,
+        data: usuario,
+      });
+    } catch (error: any) {
+      if (error.message.startsWith("Error de Validación:")) {
+        return respuesta.status(400).send({
+          success: false,
+          message: error.message,
+        });
+      }
+      solicitud.log?.error?.(
+        { error: error.message, procedimiento: "sp_sincronizar_usuario" },
+        "Error en sincronizarUsuario",
       );
       return respuesta.status(500).send({
         success: false,

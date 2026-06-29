@@ -112,3 +112,40 @@ export const esquemaPostActualizarUsuario = {
     500: respuestaErrorServidor,
   },
 } as const;
+
+export const esquemaPostSincronizarUsuario = {
+  operationId: 'sincronizarUsuario',
+  summary: 'Sincronizar usuario post-login (upsert)',
+  description:
+    'Extrae el sub (UUID) del JWT Bearer de Keycloak y hace un UPSERT en la tabla Users. ' +
+    'Si el UUID ya existe lo retorna sin modificarlo. Si es nuevo lo crea con type=cliente. ' +
+    'Llamar justo después del login para garantizar que el usuario existe en nuestra BD.',
+  tags: ['Usuarios'],
+  security: [{ bearerAuth: [] }],
+  body: {
+    type: 'object',
+    properties: {
+      type: {
+        type: 'string',
+        maxLength: 255,
+        description: 'Tipo de usuario (por defecto "cliente")',
+      },
+      isActive: {
+        type: 'boolean',
+        description: 'Estado inicial del usuario (por defecto true)',
+      },
+    },
+  },
+  response: {
+    200: respuestaExitoUsuario,
+    401: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+        message: { type: 'string' },
+      },
+    },
+    500: respuestaErrorServidor,
+  },
+} as const;
+

@@ -8,6 +8,8 @@ jest.mock('shared', () => {
   return {
     ...actual,
     transformAndValidate: jest.fn().mockImplementation((_cls: unknown, data: unknown) => Promise.resolve(data)),
+    verificarTokenKeycloak: jest.fn().mockResolvedValue({ sub: 'test-uuid-1234' }),
+    extraerBearerToken: jest.fn().mockReturnValue('fake-token'),
   };
 });
 
@@ -21,6 +23,7 @@ describe('UsuariosController', () => {
     servicioSimulado.crearUsuario = jest.fn();
     servicioSimulado.listarUsuarios = jest.fn();
     servicioSimulado.actualizarUsuario = jest.fn();
+    servicioSimulado.sincronizarUsuario = jest.fn();
     controlador = new UsuariosController();
     (controlador as unknown as { servicio: UsuariosService }).servicio = servicioSimulado;
 
@@ -148,6 +151,63 @@ describe('UsuariosController', () => {
 
       await controlador.manejarActualizarUsuario(
         { method: 'POST', log: logSimulado, query: {}, body: {} } as unknown as FastifyRequest,
+        respuestaSimulada as FastifyReply,
+      );
+
+      expect(respuestaSimulada.status).toHaveBeenCalledWith(500);
+    });
+  });
+
+  describe('manejarSincronizarUsuario', () => {
+    beforeEach(() => {
+      // Resetear los mocks de shared antes de cada test de sincronizar
+      const shared = require('shared');
+      shared.extraerBearerToken.mockReturnValue('fake-token');
+      shared.verificarTokenKeycloak.mockResolvedValue({ sub: 'test-uuid-1234' });
+    });
+
+    it('responde 200 cuando JWT es válido y el servicio retorna el usuario', async () => {
+      const usuario = { id_users: 'test-uuid-1234', type: 'cliente', isActive: true };
+      (servicioSimulado.sincronizarUsuario as jest.Mock).mockResolvedValue(usuario);
+
+      await controlador.manejarSincronizarUsuario(
+        { method: 'POST', log: logSimulado, headers: { authorization: 'Bearer fake-token' }, body: {} } as unknown as FastifyRequest,
+        respuestaSimulada as FastifyReply,
+      );
+
+      expect(respuestaSimulada.status).toHaveBeenCalledWith(200);
+      expect(respuestaSimulada.send).toHaveBeenCalledWith({ success: true, data: usuario });
+    });
+
+    it('responde 401 si no hay token', async () => {
+      const { extraerBearerToken } = require('shared');
+      extraerBearerToken.mockReturnValueOnce(null);
+
+      await controlador.manejarSincronizarUsuario(
+        { method: 'POST', log: logSimulado, headers: {}, body: {} } as unknown as FastifyRequest,
+        respuestaSimulada as FastifyReply,
+      );
+
+      expect(respuestaSimulada.status).toHaveBeenCalledWith(401);
+    });
+
+    it('responde 401 si el JWT es inválido', async () => {
+      const { verificarTokenKeycloak } = require('shared');
+      verificarTokenKeycloak.mockRejectedValueOnce(new Error('token inválido'));
+
+      await controlador.manejarSincronizarUsuario(
+        { method: 'POST', log: logSimulado, headers: { authorization: 'Bearer bad' }, body: {} } as unknown as FastifyRequest,
+        respuestaSimulada as FastifyReply,
+      );
+
+      expect(respuestaSimulada.status).toHaveBeenCalledWith(401);
+    });
+
+    it('responde 500 si el servicio de sincronizar falla', async () => {
+      (servicioSimulado.sincronizarUsuario as jest.Mock).mockRejectedValue(new Error('bd falla'));
+
+      await controlador.manejarSincronizarUsuario(
+        { method: 'POST', log: logSimulado, headers: { authorization: 'Bearer fake-token' }, body: {} } as unknown as FastifyRequest,
         respuestaSimulada as FastifyReply,
       );
 

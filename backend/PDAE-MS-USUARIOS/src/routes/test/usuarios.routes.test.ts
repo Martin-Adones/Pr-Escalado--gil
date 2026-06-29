@@ -26,4 +26,12 @@ describe('Rutas usuarios', () => {
   it('registra POST /api/usuarios/actualizar', () => {
     expect(app.findRoute({ method: 'POST', url: '/api/usuarios/actualizar' })).toBeDefined();
   });
+
+  it('registra POST /api/usuarios/sincronizar', () => {
+    expect(app.findRoute({ method: 'POST', url: '/api/usuarios/sincronizar' })).toBeDefined();
+  });
+
+  it('registra GET /api/usuarios/me', () => {
+    expect(app.findRoute({ method: 'GET', url: '/api/usuarios/me' })).toBeDefined();
+  });
 });

@@ -20,6 +20,7 @@ BEGIN
         'sp_listar_usuarios',
         'sp_actualizar_usuario',
         'sp_buscar_usuario_por_keycloak_id',
+        'sp_sincronizar_usuario',
         'fn_normalizar_tipo_usuario',
         'fn_es_tipo_usuario_valido'
       )
@@ -195,3 +196,43 @@ BEGIN
   RETURN;
 END;
 $$ LANGUAGE plpgsql;
+
+-- -----------------------------------------------------------------------------
+-- sp_sincronizar_usuario — UPSERT por UUID de Keycloak (campo sub del JWT)
+-- Si el UUID ya existe en Users lo devuelve tal cual (sin modificarlo).
+-- Si no existe, lo inserta con p_tipo (default 'cliente') y lo devuelve.
+-- -----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION sp_sincronizar_usuario(
+    p_keycloak_id UUID,
+    p_tipo        VARCHAR DEFAULT 'cliente',
+    p_is_active   BOOLEAN DEFAULT TRUE
+)
+RETURNS TABLE (
+  id_users  UUID,
+  type      VARCHAR(255),
+  "isActive" BOOLEAN
+) AS $$
+BEGIN
+  IF p_keycloak_id IS NULL THEN
+    RAISE EXCEPTION 'keycloak_id es obligatorio';
+  END IF;
+
+  -- Inserta solo si el UUID no existe aún (ON CONFLICT no hace nada)
+  INSERT INTO "Users" ("id_users", "type", "isActive")
+  VALUES (
+    p_keycloak_id,
+    COALESCE(fn_normalizar_tipo_usuario(p_tipo), 'cliente'),
+    COALESCE(p_is_active, TRUE)
+  )
+  ON CONFLICT ("id_users") DO NOTHING;
+
+  -- Retorna el registro (recién creado o preexistente)
+  RETURN QUERY
+  SELECT u."id_users", u."type", u."isActive"
+  FROM "Users" u
+  WHERE u."id_users" = p_keycloak_id;
+
+  RETURN;
+END;
+$$ LANGUAGE plpgsql;
+

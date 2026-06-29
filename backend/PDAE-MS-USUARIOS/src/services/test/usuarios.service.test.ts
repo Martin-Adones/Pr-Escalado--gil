@@ -12,6 +12,7 @@ describe('UsuariosService', () => {
     repositorioSimulado.ejecutarCrearUsuario = jest.fn();
     repositorioSimulado.ejecutarListarUsuarios = jest.fn();
     repositorioSimulado.ejecutarActualizarUsuario = jest.fn();
+    repositorioSimulado.ejecutarSincronizarUsuario = jest.fn();
     servicio = new UsuariosService();
     (servicio as unknown as { repositorio: UsuariosRepository }).repositorio = repositorioSimulado;
   });
@@ -35,5 +36,18 @@ describe('UsuariosService', () => {
     (repositorioSimulado.ejecutarActualizarUsuario as jest.Mock).mockResolvedValue([]);
     await servicio.actualizarUsuario({ id_users: '1', type: 'Y', isActive: false } as never);
     expect(repositorioSimulado.ejecutarActualizarUsuario).toHaveBeenCalled();
+  });
+
+  it('sincronizarUsuario retorna el primer elemento del repositorio', async () => {
+    const fila = { id_users: 'uuid-abc', type: 'cliente', isActive: true };
+    (repositorioSimulado.ejecutarSincronizarUsuario as jest.Mock).mockResolvedValue([fila]);
+    const resultado = await servicio.sincronizarUsuario({ keycloak_id: 'uuid-abc' } as never);
+    expect(resultado).toEqual(fila);
+  });
+
+  it('sincronizarUsuario retorna null si el repositorio devuelve vacío', async () => {
+    (repositorioSimulado.ejecutarSincronizarUsuario as jest.Mock).mockResolvedValue([]);
+    const resultado = await servicio.sincronizarUsuario({ keycloak_id: 'uuid-xyz' } as never);
+    expect(resultado).toBeNull();
   });
 });

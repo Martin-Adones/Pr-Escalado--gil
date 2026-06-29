@@ -101,3 +101,28 @@ export interface FilaUsuarioPorKeycloakId {
   type: string;
   isActive: boolean;
 }
+
+/** Cuerpo POST - `sp_sincronizar_usuario` (upsert post-login con UUID de Keycloak) */
+export class SincronizarUsuarioEntradaDto {
+  @IsString()
+  @IsNotEmpty({ message: 'keycloak_id es requerido' })
+  @IsUUID(4, { message: 'keycloak_id debe ser un UUID v4 válido' })
+  keycloak_id!: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(255, { message: 'type admite como máximo 255 caracteres' })
+  type?: string;
+
+  @TransformNormalizarBooleano
+  @IsOptional()
+  @IsBoolean({ message: 'isActive debe ser booleano' })
+  isActive?: boolean;
+}
+
+/** Resultado de sp_sincronizar_usuario */
+export interface FilaSincronizarUsuario {
+  id_users: string;
+  type: string;
+  isActive: boolean;
+}

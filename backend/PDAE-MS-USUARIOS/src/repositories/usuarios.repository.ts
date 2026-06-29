@@ -3,9 +3,11 @@ import {
   CrearUsuarioEntradaDto,
   ListarUsuariosConsultaDto,
   ActualizarUsuarioEntradaDto,
+  SincronizarUsuarioEntradaDto,
   FilaUsuario,
   FilaUsuarioListado,
   FilaUsuarioPorKeycloakId,
+  FilaSincronizarUsuario,
 } from "../models/usuarios.dtos";
 
 /**
@@ -57,6 +59,17 @@ export class UsuariosRepository extends BaseRepository {
     return await this.callProcedure<FilaUsuarioPorKeycloakId>(
       "sp_buscar_usuario_por_keycloak_id",
       [keycloak_id],
+      undefined,
+    );
+  }
+
+  async ejecutarSincronizarUsuario(
+    dto: SincronizarUsuarioEntradaDto,
+  ): Promise<FilaSincronizarUsuario[]> {
+    const params = [dto.keycloak_id, dto.type ?? "cliente", dto.isActive ?? true];
+    return await this.callProcedure<FilaSincronizarUsuario>(
+      "sp_sincronizar_usuario",
+      params,
       undefined,
     );
   }

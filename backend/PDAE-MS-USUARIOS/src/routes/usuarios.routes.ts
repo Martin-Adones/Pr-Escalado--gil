@@ -5,6 +5,7 @@ import {
   esquemaGetListarUsuarios,
   esquemaPostActualizarUsuario,
   esquemaPostCrearUsuario,
+  esquemaPostSincronizarUsuario,
 } from "../utils/api-doc/usuarios-route-schemas";
 
 /**
@@ -28,6 +29,13 @@ export default async function rutasUsuarios(fastify: FastifyInstance) {
     "/usuarios/actualizar",
     { schema: esquemaPostActualizarUsuario },
     controlador.manejarActualizarUsuario.bind(controlador),
+  );
+
+  /** Upsert post-login: crea o retorna el usuario cuyo UUID = sub del JWT */
+  fastify.post(
+    "/usuarios/sincronizar",
+    { schema: esquemaPostSincronizarUsuario },
+    controlador.manejarSincronizarUsuario.bind(controlador),
   );
 
   fastify.get("/usuarios/me", async (solicitud, respuesta) => {

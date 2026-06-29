@@ -40,4 +40,16 @@ describe('UsuariosRepository', () => {
     await repositorio.ejecutarActualizarUsuario({ id_users: '3', type: 'ADMIN' } as never);
     expect(espia).toHaveBeenCalledWith('sp_actualizar_usuario', ['3', 'ADMIN', null], undefined);
   });
+
+  it('ejecutarSincronizarUsuario llama a sp_sincronizar_usuario con keycloak_id, tipo y activo', async () => {
+    const espia = jest.spyOn(BaseRepository.prototype as any, 'callProcedure').mockResolvedValue([{ id_users: 'uuid-1', type: 'cliente', isActive: true }]);
+    await repositorio.ejecutarSincronizarUsuario({ keycloak_id: 'uuid-1', type: 'cliente', isActive: true } as never);
+    expect(espia).toHaveBeenCalledWith('sp_sincronizar_usuario', ['uuid-1', 'cliente', true], undefined);
+  });
+
+  it('ejecutarSincronizarUsuario usa defaults cuando type e isActive no se pasan', async () => {
+    const espia = jest.spyOn(BaseRepository.prototype as any, 'callProcedure').mockResolvedValue([]);
+    await repositorio.ejecutarSincronizarUsuario({ keycloak_id: 'uuid-2' } as never);
+    expect(espia).toHaveBeenCalledWith('sp_sincronizar_usuario', ['uuid-2', 'cliente', true], undefined);
+  });
 });
