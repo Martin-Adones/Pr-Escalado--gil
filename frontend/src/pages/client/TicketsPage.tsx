@@ -272,7 +272,7 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
       userInitial={userId?.[0] || 'C'}
       userName={`Usuario #${userId || '—'}`}
       userRole="Miembro de Soporte"
-      headerTitle="Mis Tickets de Soporte"
+      headerTitle="Tickets"
       headerSubtitle="Crea y gestiona tus solicitudes de soporte técnico."
       headerRightLabel="Tickets Totales"
       headerRightValue={loading ? '...' : String(totalCount)}
@@ -323,7 +323,7 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
                 title={sortOrder === 'desc' ? 'Ver más antiguos primero' : 'Ver más recientes primero'}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
               >
-                <i className={`fa-solid fa-arrow-${sortOrder === 'desc' ? 'down' : 'up'} text-[10px]`}></i>
+                <i aria-hidden="true" className={`fa-solid fa-arrow-${sortOrder === 'desc' ? 'down' : 'up'} text-[10px]`}></i>
                 {sortOrder === 'desc' ? 'Recientes' : 'Antiguos'}
               </button>
               <button
@@ -338,7 +338,7 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
           {error && (
             <div className="bg-red-50 border-b border-red-100 px-6 py-3 flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-red-600">
-                <i className="fa-solid fa-circle-exclamation"></i>
+                <i aria-hidden="true" className="fa-solid fa-circle-exclamation"></i>
                 <span className="font-semibold">{error}</span>
               </div>
               <button
@@ -368,7 +368,7 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
                   <tr>
                     <td colSpan={7} className="px-6 py-10 text-center">
                       <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
-                        <i className="fa-solid fa-spinner animate-spin text-[#3C6E71]"></i>
+                        <i aria-hidden="true" className="fa-solid fa-spinner animate-spin text-[#3C6E71]"></i>
                         <span>Cargando solicitudes...</span>
                       </div>
                     </td>
@@ -403,7 +403,7 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
                             title="Ver detalles"
                             className="p-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-[#284B63]/10 hover:text-[#284B63] transition-colors"
                           >
-                            <i className="fa-solid fa-eye text-xs"></i>
+                            <i aria-hidden="true" className="fa-solid fa-eye text-xs"></i>
                           </button>
                           {ticket.status === 'open' && (
                             <button
@@ -411,7 +411,7 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
                               title="Editar descripción"
                               className="p-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-[#3C6E71]/10 hover:text-[#3C6E71] transition-colors"
                             >
-                              <i className="fa-solid fa-edit text-xs"></i>
+                              <i aria-hidden="true" className="fa-solid fa-edit text-xs"></i>
                             </button>
                           )}
                         </div>
@@ -434,7 +434,7 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
                   disabled={sortedAndPagedTickets.safePage === 1}
                   className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 disabled:opacity-30 transition"
                 >
-                  <i className="fa-solid fa-chevron-left text-xs"></i>
+                  <i aria-hidden="true" className="fa-solid fa-chevron-left text-xs"></i>
                 </button>
                 {Array.from({ length: sortedAndPagedTickets.totalPages }, (_, i) => i + 1).map(page => (
                   <button
@@ -454,7 +454,7 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
                   disabled={sortedAndPagedTickets.safePage === sortedAndPagedTickets.totalPages}
                   className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 disabled:opacity-30 transition"
                 >
-                  <i className="fa-solid fa-chevron-right text-xs"></i>
+                  <i aria-hidden="true" className="fa-solid fa-chevron-right text-xs"></i>
                 </button>
               </div>
             </div>
@@ -471,7 +471,7 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
                 onClick={() => setIsNewModalOpen(false)}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
-                <i className="fa-solid fa-times"></i>
+                <i aria-hidden="true" className="fa-solid fa-times"></i>
               </button>
             </div>
             <form onSubmit={handleCreateTicket} className="p-6 space-y-4">
@@ -496,7 +496,7 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
                 </select>
                 {contracts.filter(c => c.status === 'ACTIVE').length === 0 && (
                   <p className="text-xs text-red-500 mt-1.5 font-semibold">
-                    <i className="fa-solid fa-circle-exclamation mr-1"></i>
+                    <i aria-hidden="true" className="fa-solid fa-circle-exclamation mr-1"></i>
                     Necesitas un contrato activo para abrir un ticket.
                   </p>
                 )}
@@ -543,7 +543,7 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
                 onClick={() => { setIsEditModalOpen(false); setSelectedTicket(null) }}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
-                <i className="fa-solid fa-times"></i>
+                <i aria-hidden="true" className="fa-solid fa-times"></i>
               </button>
             </div>
             <form onSubmit={handleUpdateTicket} className="p-6 space-y-4">
@@ -592,7 +592,7 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
                 onClick={() => { setIsViewModalOpen(false); setSelectedTicket(null) }}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
-                <i className="fa-solid fa-times"></i>
+                <i aria-hidden="true" className="fa-solid fa-times"></i>
               </button>
             </div>
             <div className="p-6 space-y-4">

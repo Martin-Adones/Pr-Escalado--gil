@@ -39,8 +39,8 @@ export async function obtenerPagoPorId(id_payments: string): Promise<FilaPago> {
   return apiGet<FilaPago>(`/pagos/${id_payments}`)
 }
 
-export async function obtenerTarjetasUsuario(id_users: string): Promise<FilaUserCard[]> {
-  return apiGet<FilaUserCard[]>(`/pagos/tarjeta/${id_users}`)
+export async function obtenerTarjetasUsuario(id_users: string, signal?: AbortSignal): Promise<FilaUserCard[]> {
+  return apiGet<FilaUserCard[]>(`/pagos/tarjeta/${id_users}`, undefined, signal)
 }
 
 export async function eliminarTarjeta(token: string): Promise<void> {

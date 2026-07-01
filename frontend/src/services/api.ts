@@ -64,10 +64,12 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
 export async function apiGet<T>(
   path: string,
   params?: Record<string, string | number | boolean | undefined | null>,
+  signal?: AbortSignal,
 ): Promise<T> {
   const url = `${getApiBase()}${path}${params ? buildQuery(params) : ""}`;
   const response = await fetch(url, {
     headers: await getAuthHeaders(),
+    signal,
   });
   return handleResponse<T>(response);
 }

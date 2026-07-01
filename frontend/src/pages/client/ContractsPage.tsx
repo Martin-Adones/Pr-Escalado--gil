@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import PortalTemplate from '../../portal/PortalTemplate'
 import { getCurrentBillingCycle, formatDateLabel } from '../../utils/billingCycle'
 import { listarContratos } from '../../services/contratos.service'
@@ -71,6 +72,7 @@ export default function Contracts({
   const [plan, setPlan] = useState<FilaPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     let cancelled = false
@@ -286,7 +288,7 @@ export default function Contracts({
             </div>
             <button
               type="button"
-              onClick={plansNavItem?.onClick}
+              onClick={plansNavItem?.onClick ?? (() => navigate('/client/planes'))}
               className="shrink-0 px-3 py-2 rounded-lg text-xs font-bold bg-[#284B63] text-white hover:opacity-90 transition"
             >
               Cambiar plan

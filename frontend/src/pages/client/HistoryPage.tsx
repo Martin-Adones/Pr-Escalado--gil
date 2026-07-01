@@ -15,6 +15,7 @@ type ClientHistoryPageProps = {
 export default function History({ navItems, logoutItem, activeNavLabel, userId }: ClientHistoryPageProps) {
   const [loading, setLoading] = useState(true)
   const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -92,6 +93,7 @@ export default function History({ navItems, logoutItem, activeNavLabel, userId }
         setTransactions(mapped)
       } catch (error) {
         console.error('Error al cargar historial:', error)
+        setError('No se pudo cargar el historial. Intenta nuevamente.')
         setTransactions([])
       } finally {
         if (!cancelled) setLoading(false)
@@ -129,6 +131,10 @@ export default function History({ navItems, logoutItem, activeNavLabel, userId }
           <div className="h-6 w-64 bg-gray-200 rounded" />
           <div className="h-4 w-48 bg-gray-200 rounded" />
           <div className="h-28 bg-gray-200 rounded animate-pulse" />
+        </div>
+      ) : error ? (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-6 text-sm font-semibold">
+          {error}
         </div>
       ) : (
         <div className="space-y-6">

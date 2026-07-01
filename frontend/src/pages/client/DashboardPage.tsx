@@ -109,11 +109,9 @@ export default function Dashboard({ navItems, logoutItem, activeNavLabel, userId
           }
         }
 
-        if (userId) {
-          const ticketsData = await listarTickets({ id_users: userId, page_size: 3 })
-          if (!cancelled) {
-            setTickets(ticketsData)
-          }
+        const ticketsData = await listarTickets({ id_users: userId, page_size: 3 })
+        if (!cancelled) {
+          setTickets(ticketsData)
         }
 
         if (allUserContratos.length > 0) {
@@ -248,7 +246,7 @@ export default function Dashboard({ navItems, logoutItem, activeNavLabel, userId
                 <div className="flex justify-between items-start mb-6">
                   <div className="flex items-center gap-4">
                     <div className="p-4 bg-[#3C6E71]/10 rounded-2xl">
-                      <i className="fa-solid fa-gem text-2xl text-[#3C6E71]" />
+                      <i aria-hidden="true" className="fa-solid fa-gem text-2xl text-[#3C6E71]" />
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-[#353535]">{planName}</h3>
@@ -297,7 +295,7 @@ export default function Dashboard({ navItems, logoutItem, activeNavLabel, userId
             ) : (
               <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200 flex flex-col justify-center items-center text-center min-h-[320px]">
                 <div className="p-4 bg-gray-50 rounded-full mb-4">
-                  <i className="fa-solid fa-file-invoice text-4xl text-gray-400" />
+                  <i aria-hidden="true" className="fa-solid fa-file-invoice text-4xl text-gray-400" />
                 </div>
                 <h3 className="text-lg font-bold text-[#353535] mb-2">No tienes contratos activos</h3>
                 <p className="text-sm text-gray-500 max-w-sm mb-6 leading-relaxed">
@@ -362,13 +360,13 @@ export default function Dashboard({ navItems, logoutItem, activeNavLabel, userId
                   onClick={handleDownloadInvoice}
                   className="w-full text-left px-4 py-3 rounded-lg border border-gray-100 hover:border-[#3C6E71] hover:bg-[#3C6E71]/5 transition text-sm flex items-center gap-3 font-semibold text-[#353535]"
                 >
-                  <i className="fa-solid fa-file-pdf text-[#3C6E71]" /> Factura de {cycle.lastPaymentDateLabel}
+                  <i aria-hidden="true" className="fa-solid fa-file-pdf text-[#3C6E71]" /> Factura de {cycle.lastPaymentDateLabel}
                 </button>
                 <button
                   onClick={() => navigate('/client/contratos')}
                   className="w-full text-left px-4 py-3 rounded-lg border border-gray-100 hover:border-[#3C6E71] hover:bg-[#3C6E71]/5 transition text-sm flex items-center gap-3 font-semibold text-[#353535]"
                 >
-                  <i className="fa-solid fa-pen-nib text-[#3C6E71]" /> Ver Contratos
+                  <i aria-hidden="true" className="fa-solid fa-pen-nib text-[#3C6E71]" /> Ver Contratos
                 </button>
               </div>
             </div>
@@ -411,7 +409,7 @@ export default function Dashboard({ navItems, logoutItem, activeNavLabel, userId
             </div>
 
             <div className="bg-[#284B63] p-6 rounded-xl text-white shadow-lg relative overflow-hidden group">
-              <i className="fa-solid fa-bolt absolute -right-4 -bottom-4 text-8xl opacity-10 group-hover:rotate-12 transition-transform" />
+              <i aria-hidden="true" className="fa-solid fa-bolt absolute -right-4 -bottom-4 text-8xl opacity-10 group-hover:rotate-12 transition-transform" />
               <h4 className="font-bold text-lg mb-2 leading-tight">¿Necesitas más potencia?</h4>
               <p className="text-xs text-white/70 mb-4">
                 Escala tu plan ahora y obtén un 10% de descuento por volumen.

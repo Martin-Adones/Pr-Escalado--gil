@@ -273,7 +273,7 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
                   : 'text-gray-500 hover:text-gray-700')
               }
             >
-              <i className="fa-solid fa-calendar-day mr-1.5 text-xs" />
+              <i aria-hidden="true" className="fa-solid fa-calendar-day mr-1.5 text-xs" />
               Mensual
             </button>
             <button
@@ -286,7 +286,7 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
                   : 'text-gray-500 hover:text-gray-700')
               }
             >
-              <i className="fa-solid fa-calendar-check mr-1.5 text-xs" />
+              <i aria-hidden="true" className="fa-solid fa-calendar-check mr-1.5 text-xs" />
               Anual
             </button>
           </div>
@@ -361,7 +361,7 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
                   <ul className="mt-6 flex-grow space-y-3">
                     {plan.features.map((feature) => (
                       <li key={feature} className="flex items-start gap-3 text-sm font-semibold text-gray-600">
-                        <i className="fa-solid fa-circle-check mt-0.5 text-[#3C6E71]" />
+                        <i aria-hidden="true" className="fa-solid fa-circle-check mt-0.5 text-[#3C6E71]" />
                         <span>{feature}</span>
                       </li>
                     ))}
