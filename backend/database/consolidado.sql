@@ -1745,7 +1745,8 @@ INSERT INTO "Contracts" ("id_users", "id_plans", "status", "start_date", "end_da
   ('4a487811-6f23-417c-8951-b1ad2e8bacce', 2, 'SUSPENDED',  '2026-01-15', '2026-06-15'),
   ('b717bc0e-bead-470e-b086-f28aadb51179', 3, 'TERMINATED', '2025-11-01', '2026-04-01'),
   ('a065ba72-be8c-4116-be9c-590ce708b784', 5, 'DRAFT',      '2026-06-01', '2026-09-01'),
-  ('4d63a0df-e7a1-4c3c-9fab-89ed5c7ca10d', 4, 'ACTIVE',     '2026-03-01', '2027-02-28');
+  ('4d63a0df-e7a1-4c3c-9fab-89ed5c7ca10d', 4, 'ACTIVE',     '2026-03-01', '2027-02-28'),
+  ('d81750d2-a656-4f3c-aaf5-2c1a4f022982', 1, 'ACTIVE',     '2026-05-20', '2026-11-20');
 
 -- 5. billing_cycles (10) — referencian Contracts (1-10)
 INSERT INTO "billing_cycles" ("id_contracts", "amount", "status", "retry_attempts", "created_at") VALUES
