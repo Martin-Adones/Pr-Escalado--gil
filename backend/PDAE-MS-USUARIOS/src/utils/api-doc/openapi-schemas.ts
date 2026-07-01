@@ -59,4 +59,16 @@ export const respuestaExitoUsuario = {
   },
 } as const;
 
+export const respuestaExitoUsuarioUnico = {
+  description: 'Un usuario',
+  type: 'object',
+  properties: {
+    success: { type: 'boolean' },
+    data: {
+      type: 'object',
+      properties: usuarioFilaProperties,
+    },
+  },
+} as const;
+
 export { respuestaErrorValidacion, respuestaErrorServidor } from 'shared';

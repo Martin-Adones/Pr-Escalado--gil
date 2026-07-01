@@ -6,6 +6,7 @@ import {
   respuestaErrorValidacion,
   respuestaExitoListaUsuarios,
   respuestaExitoUsuario,
+  respuestaExitoUsuarioUnico,
 } from './openapi-schemas';
 
 export const esquemaPostCrearUsuario = {
@@ -137,7 +138,7 @@ export const esquemaPostSincronizarUsuario = {
     },
   },
   response: {
-    200: respuestaExitoUsuario,
+    200: respuestaExitoUsuarioUnico,
     401: {
       type: 'object',
       properties: {

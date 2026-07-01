@@ -17,7 +17,7 @@ export class UsuariosRepository extends BaseRepository {
   async ejecutarCrearUsuario(
     dto: CrearUsuarioEntradaDto,
   ): Promise<FilaUsuario[]> {
-    const params = [dto.type, dto.isActive ?? true];
+    const params = [dto.type, null, dto.isActive ?? true];
     return await this.callProcedure<FilaUsuario>(
       "sp_crear_usuario",
       params,

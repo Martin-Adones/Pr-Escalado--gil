@@ -215,7 +215,7 @@ export class UsuariosController {
 
       return respuesta.status(200).send({
         success: true,
-        data: usuario ? [usuario] : [],
+        data: usuario,
       });
     } catch (error: any) {
       if (error.message.startsWith("Error de Validación:")) {

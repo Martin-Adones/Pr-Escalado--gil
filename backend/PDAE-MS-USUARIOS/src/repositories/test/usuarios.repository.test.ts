@@ -12,7 +12,7 @@ describe('UsuariosRepository', () => {
   it('ejecutarCrearUsuario llama a sp_crear_usuario con type e isActive', async () => {
     const espia = jest.spyOn(BaseRepository.prototype as any, 'callProcedure').mockResolvedValue([{ id_users: '1' }]);
     await repositorio.ejecutarCrearUsuario({ type: 'CUSTOMER' } as never);
-    expect(espia).toHaveBeenCalledWith('sp_crear_usuario', ['CUSTOMER', true], undefined);
+    expect(espia).toHaveBeenCalledWith('sp_crear_usuario', ['CUSTOMER', null, true], undefined);
   });
 
   it('ejecutarListarUsuarios llama a sp_listar_usuarios con orden de parámetros', async () => {
