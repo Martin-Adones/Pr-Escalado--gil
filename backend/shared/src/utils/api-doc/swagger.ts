@@ -58,6 +58,15 @@ export async function registerSwagger(app: FastifyInstance, config: SwaggerConfi
       },
       servers: getOpenApiServers(config.defaultPort),
       tags: config.tags,
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'JWT',
+          },
+        },
+      },
     },
   });
 
