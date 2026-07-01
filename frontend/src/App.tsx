@@ -23,6 +23,7 @@ import { getAppUser } from "./auth/appUser";
 
 type PageProps = {
   navItems: { label: string; iconClass: string; onClick?: () => void }[];
+  logoutItem?: { label: string; iconClass: string; onClick?: () => void };
   activeNavLabel: string;
   userId: string | null;
 };
@@ -76,13 +77,17 @@ function AdminLayout({ onLogout }: { onLogout: () => void }) {
         iconClass: "fa-solid fa-gear",
         onClick: () => navigate("/admin/configuracion"),
       },
-      {
-        label: "Cerrar sesión",
-        iconClass: "fa-solid fa-right-from-bracket",
-        onClick: onLogout,
-      },
     ],
-    [navigate, onLogout],
+    [navigate],
+  );
+
+  const logoutItem = useMemo(
+    () => ({
+      label: "Cerrar sesión",
+      iconClass: "fa-solid fa-right-from-bracket",
+      onClick: onLogout,
+    }),
+    [onLogout],
   );
 
   return (
@@ -90,13 +95,13 @@ function AdminLayout({ onLogout }: { onLogout: () => void }) {
       <Route
         index
         element={
-          <AdminDashboard navItems={navItems} activeNavLabel={activeNavLabel} />
+          <AdminDashboard navItems={navItems} logoutItem={logoutItem} activeNavLabel={activeNavLabel} />
         }
       />
       <Route
         path="contratos"
         element={
-          <ContratosPage navItems={navItems} activeNavLabel={activeNavLabel} />
+          <ContratosPage navItems={navItems} logoutItem={logoutItem} activeNavLabel={activeNavLabel} />
         }
       />
       <Route
@@ -104,6 +109,7 @@ function AdminLayout({ onLogout }: { onLogout: () => void }) {
         element={
           <CiclosDeCobroPage
             navItems={navItems}
+            logoutItem={logoutItem}
             activeNavLabel={activeNavLabel}
           />
         }
@@ -111,7 +117,7 @@ function AdminLayout({ onLogout }: { onLogout: () => void }) {
       <Route
         path="clientes"
         element={
-          <ClientesPage navItems={navItems} activeNavLabel={activeNavLabel} />
+          <ClientesPage navItems={navItems} logoutItem={logoutItem} activeNavLabel={activeNavLabel} />
         }
       />
       <Route
@@ -119,6 +125,7 @@ function AdminLayout({ onLogout }: { onLogout: () => void }) {
         element={
           <ConfiguracionPage
             navItems={navItems}
+            logoutItem={logoutItem}
             activeNavLabel={activeNavLabel}
           />
         }
@@ -170,16 +177,20 @@ function ClientLayout({
         iconClass: "fa-solid fa-ticket",
         onClick: () => navigate("/client/tickets"),
       },
-      {
-        label: "Cerrar sesión",
-        iconClass: "fa-solid fa-right-from-bracket",
-        onClick: onLogout,
-      },
     ],
-    [navigate, onLogout],
+    [navigate],
   );
 
-  const pageProps: PageProps = { navItems, activeNavLabel, userId };
+  const logoutItem = useMemo(
+    () => ({
+      label: "Cerrar sesión",
+      iconClass: "fa-solid fa-right-from-bracket",
+      onClick: onLogout,
+    }),
+    [onLogout],
+  );
+
+  const pageProps: PageProps & { logoutItem?: typeof logoutItem } = { navItems, logoutItem, activeNavLabel, userId };
 
   return (
     <Routes>

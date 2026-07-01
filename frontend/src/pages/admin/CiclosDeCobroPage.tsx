@@ -2,16 +2,18 @@ import PortalTemplate from '../../portal/PortalTemplate'
 
 type AdminCiclosDeCobroPageProps = {
   navItems: { label: string; iconClass: string; onClick?: () => void }[]
+  logoutItem?: { label: string; iconClass: string; onClick?: () => void }
   activeNavLabel: string
 }
 
-export default function CiclosDeCobroPage({ navItems, activeNavLabel }: AdminCiclosDeCobroPageProps) {
+export default function CiclosDeCobroPage({ navItems, logoutItem, activeNavLabel }: AdminCiclosDeCobroPageProps) {
   return (
     <PortalTemplate
       sidebarTitle="Admin"
       sidebarSubtitle="Panel administrativo"
       contentZoom={0.75}
       navItems={navItems}
+      logoutItem={logoutItem}
       activeNavLabel={activeNavLabel}
       userInitial="A"
       userName="Administrador"

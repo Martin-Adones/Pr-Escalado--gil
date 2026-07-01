@@ -5,10 +5,11 @@ import type { FilaUsuarioListado } from '../../services/interfaces'
 
 type AdminClientesPageProps = {
   navItems: { label: string; iconClass: string; onClick?: () => void }[]
+  logoutItem?: { label: string; iconClass: string; onClick?: () => void }
   activeNavLabel: string
 }
 
-export default function ClientesPage({ navItems, activeNavLabel }: AdminClientesPageProps) {
+export default function ClientesPage({ navItems, logoutItem, activeNavLabel }: AdminClientesPageProps) {
   const [usuarios, setUsuarios] = useState<FilaUsuarioListado[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -45,6 +46,7 @@ export default function ClientesPage({ navItems, activeNavLabel }: AdminClientes
       sidebarSubtitle="Panel administrativo"
       contentZoom={0.75}
       navItems={navItems}
+      logoutItem={logoutItem}
       activeNavLabel={activeNavLabel}
       userInitial="A"
       userName="Administrador"

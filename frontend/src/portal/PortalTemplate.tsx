@@ -6,10 +6,17 @@ export type PortalNavItem = {
   onClick?: () => void
 }
 
+export type PortalLogoutItem = {
+  label: string
+  iconClass: string
+  onClick?: () => void
+}
+
 export type PortalTemplateProps = {
   sidebarTitle: string
   sidebarSubtitle: string
   navItems: PortalNavItem[]
+  logoutItem?: PortalLogoutItem
   activeNavLabel: string
   userInitial: string
   userName: string
@@ -26,6 +33,7 @@ export default function PortalTemplate({
   sidebarTitle,
   sidebarSubtitle,
   navItems,
+  logoutItem,
   activeNavLabel,
   userInitial,
   userName,
@@ -73,6 +81,18 @@ export default function PortalTemplate({
               )
             })}
           </nav>
+
+          {logoutItem && (
+            <div className="px-4 pb-4">
+              <button
+                type="button"
+                onClick={logoutItem.onClick}
+                className="flex items-center gap-3 p-3 w-full text-left rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition"
+              >
+                <i className={`${logoutItem.iconClass} text-sm`} /> {logoutItem.label}
+              </button>
+            </div>
+          )}
 
           <div className="p-6 mt-auto border-t border-white/10">
             <div className="flex items-center gap-3">

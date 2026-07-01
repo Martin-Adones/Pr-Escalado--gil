@@ -2,16 +2,18 @@ import PortalTemplate from '../../portal/PortalTemplate'
 
 type AdminConfiguracionPageProps = {
   navItems: { label: string; iconClass: string; onClick?: () => void }[]
+  logoutItem?: { label: string; iconClass: string; onClick?: () => void }
   activeNavLabel: string
 }
 
-export default function ConfiguracionPage({ navItems, activeNavLabel }: AdminConfiguracionPageProps) {
+export default function ConfiguracionPage({ navItems, logoutItem, activeNavLabel }: AdminConfiguracionPageProps) {
   return (
     <PortalTemplate
       sidebarTitle="Admin"
       sidebarSubtitle="Panel administrativo"
       contentZoom={0.75}
       navItems={navItems}
+      logoutItem={logoutItem}
       activeNavLabel={activeNavLabel}
       userInitial="A"
       userName="Administrador"

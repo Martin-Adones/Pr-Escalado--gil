@@ -7,6 +7,7 @@ import type { FilaTicketListado, FilaContratoListado, FilaPlanListado } from '..
 
 type ClientTicketsPageProps = {
   navItems: { label: string; iconClass: string; onClick?: () => void }[]
+  logoutItem?: { label: string; iconClass: string; onClick?: () => void }
   activeNavLabel: string
   userId: string | null
 }
@@ -64,7 +65,7 @@ function getPriorityBadgeClasses(priority: 'Alta' | 'Media' | 'Baja') {
   }
 }
 
-export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: ClientTicketsPageProps) {
+export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel, userId }: ClientTicketsPageProps) {
   const [tickets, setTickets] = useState<FilaTicketListado[]>([])
   const [contracts, setContracts] = useState<FilaContratoListado[]>([])
   const [planes, setPlanes] = useState<FilaPlanListado[]>([])
@@ -266,6 +267,7 @@ export default function ClientTicketsPage({ navItems, activeNavLabel, userId }: 
       sidebarSubtitle="Tickets"
       contentZoom={0.75}
       navItems={navItems}
+      logoutItem={logoutItem}
       activeNavLabel={activeNavLabel}
       userInitial={userId?.[0] || 'C'}
       userName={`Usuario #${userId || '—'}`}

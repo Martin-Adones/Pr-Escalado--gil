@@ -7,6 +7,7 @@ import type { FilaContrato, FilaPlan } from '../../services/interfaces'
 
 type ClientContractsPageProps = {
   navItems: { label: string; iconClass: string; onClick?: () => void }[]
+  logoutItem?: { label: string; iconClass: string; onClick?: () => void }
   activeNavLabel: string
   userId: string | null
 }
@@ -62,6 +63,7 @@ function formatShortDate(date: Date): string {
 
 export default function Contracts({
   navItems,
+  logoutItem,
   activeNavLabel,
   userId,
 }: ClientContractsPageProps) {
@@ -243,6 +245,7 @@ export default function Contracts({
       sidebarSubtitle="Contratos"
       contentZoom={0.75}
       navItems={navItems}
+      logoutItem={logoutItem}
       activeNavLabel={activeNavLabel}
       userInitial={userId?.[0] || 'C'}
       userName={`Usuario #${userId || '—'}`}

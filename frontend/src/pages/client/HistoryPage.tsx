@@ -7,11 +7,12 @@ import { planesCacheService } from '../../services/planes-cache.service'
 
 type ClientHistoryPageProps = {
   navItems: { label: string; iconClass: string; onClick?: () => void }[]
+  logoutItem?: { label: string; iconClass: string; onClick?: () => void }
   activeNavLabel: string
   userId: string | null
 }
 
-export default function History({ navItems, activeNavLabel, userId }: ClientHistoryPageProps) {
+export default function History({ navItems, logoutItem, activeNavLabel, userId }: ClientHistoryPageProps) {
   const [loading, setLoading] = useState(true)
   const [transactions, setTransactions] = useState<Transaction[]>([])
 
@@ -113,6 +114,7 @@ export default function History({ navItems, activeNavLabel, userId }: ClientHist
       sidebarSubtitle="Historial"
       contentZoom={0.75}
       navItems={navItems}
+      logoutItem={logoutItem}
       activeNavLabel={activeNavLabel}
       userInitial={userId?.[0] || 'C'}
       userName={`Usuario #${userId || '—'}`}

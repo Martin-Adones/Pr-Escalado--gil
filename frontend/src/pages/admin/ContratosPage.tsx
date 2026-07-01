@@ -7,6 +7,7 @@ import type { FilaContratoListado, FilaPlan } from '../../services/interfaces'
 
 type AdminContractsPageProps = {
   navItems: { label: string; iconClass: string; onClick?: () => void }[]
+  logoutItem?: { label: string; iconClass: string; onClick?: () => void }
   activeNavLabel: string
 }
 
@@ -22,7 +23,7 @@ function formatFecha(fecha: string) {
   return new Date(fecha).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
-export default function ContratosPage({ navItems, activeNavLabel }: AdminContractsPageProps) {
+export default function ContratosPage({ navItems, logoutItem, activeNavLabel }: AdminContractsPageProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [contratos, setContratos] = useState<FilaContratoListado[]>([])
   const [planes, setPlanes] = useState<Record<string, string>>({})
@@ -89,6 +90,7 @@ export default function ContratosPage({ navItems, activeNavLabel }: AdminContrac
       sidebarSubtitle="Panel administrativo"
       contentZoom={0.75}
       navItems={navItems}
+      logoutItem={logoutItem}
       activeNavLabel={activeNavLabel}
       userInitial="A"
       userName="Administrador"

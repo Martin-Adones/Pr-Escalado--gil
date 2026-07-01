@@ -8,6 +8,7 @@ import { obtenerUsuarioActual } from '../../services/usuarios.service'
 
 type ClientPlansPageProps = {
   navItems: { label: string; iconClass: string; onClick?: () => void }[]
+  logoutItem?: { label: string; iconClass: string; onClick?: () => void }
   activeNavLabel: string
   userId: string | null
 }
@@ -50,7 +51,7 @@ function getLevel(_name: string, index: number, total: number): string {
   return 'Recomendado'
 }
 
-export default function Plans({ navItems, activeNavLabel, userId }: ClientPlansPageProps) {
+export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: ClientPlansPageProps) {
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly')
   const [plans, setPlans] = useState<Plan[]>([])
   const [isLoadingPlans, setIsLoadingPlans] = useState(true)
@@ -243,6 +244,7 @@ export default function Plans({ navItems, activeNavLabel, userId }: ClientPlansP
       sidebarSubtitle="Planes"
       contentZoom={0.75}
       navItems={navItems}
+      logoutItem={logoutItem}
       activeNavLabel={activeNavLabel}
       userInitial={userId?.[0] || 'C'}
       userName={`Usuario #${userId || '—'}`}

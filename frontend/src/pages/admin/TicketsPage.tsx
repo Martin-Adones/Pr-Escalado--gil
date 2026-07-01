@@ -7,6 +7,7 @@ import type { FilaTicketListado, FilaContratoListado, FilaPlanListado } from '..
 
 type AdminTicketsPageProps = {
   navItems: { label: string; iconClass: string; onClick?: () => void }[]
+  logoutItem?: { label: string; iconClass: string; onClick?: () => void }
   activeNavLabel: string
 }
 
@@ -79,7 +80,7 @@ function getPriorityBadgeClasses(priority: 'Alta' | 'Media' | 'Baja') {
   }
 }
 
-export default function TicketsPage({ navItems, activeNavLabel }: AdminTicketsPageProps) {
+export default function TicketsPage({ navItems, logoutItem, activeNavLabel }: AdminTicketsPageProps) {
   const [tickets, setTickets] = useState<FilaTicketListado[]>([])
   const [contracts, setContracts] = useState<FilaContratoListado[]>([])
   const [planes, setPlanes] = useState<FilaPlanListado[]>([])
@@ -214,6 +215,7 @@ export default function TicketsPage({ navItems, activeNavLabel }: AdminTicketsPa
       sidebarSubtitle="Panel administrativo"
       contentZoom={0.75}
       navItems={navItems}
+      logoutItem={logoutItem}
       activeNavLabel={activeNavLabel}
       userInitial="A"
       userName="Administrador"

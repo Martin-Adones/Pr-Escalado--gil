@@ -11,6 +11,7 @@ import type { FilaContrato, FilaPlan, FilaTicketListado } from '../../services/i
 
 type ClientPageProps = {
   navItems: { label: string; iconClass: string; onClick?: () => void }[]
+  logoutItem?: { label: string; iconClass: string; onClick?: () => void }
   activeNavLabel: string
   userId: string | null
 }
@@ -70,7 +71,7 @@ function getTicketStatusLabel(status: string) {
   }
 }
 
-export default function Dashboard({ navItems, activeNavLabel, userId }: ClientPageProps) {
+export default function Dashboard({ navItems, logoutItem, activeNavLabel, userId }: ClientPageProps) {
   const navigate = useNavigate()
   const [contrato, setContrato] = useState<FilaContrato | null>(null)
   const [plan, setPlan] = useState<FilaPlan | null>(null)
@@ -217,6 +218,7 @@ export default function Dashboard({ navItems, activeNavLabel, userId }: ClientPa
       sidebarSubtitle="Dashboard general"
       contentZoom={0.75}
       navItems={navItems}
+      logoutItem={logoutItem}
       activeNavLabel={activeNavLabel}
       userInitial={userId?.[0] || 'C'}
       userName={`Usuario #${userId || '—'}`}

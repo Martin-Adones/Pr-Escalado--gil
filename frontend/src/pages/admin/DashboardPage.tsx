@@ -7,10 +7,11 @@ import type { FilaContratoListado, FilaPlan, FilaUsuarioListado } from '../../se
 
 type AdminDashboardPageProps = {
   navItems: { label: string; iconClass: string; onClick?: () => void }[]
+  logoutItem?: { label: string; iconClass: string; onClick?: () => void }
   activeNavLabel: string
 }
 
-export default function Dashboard({ navItems, activeNavLabel }: AdminDashboardPageProps) {
+export default function Dashboard({ navItems, logoutItem, activeNavLabel }: AdminDashboardPageProps) {
   const [contratos, setContratos] = useState<FilaContratoListado[]>([])
   const [usuarios, setUsuarios] = useState<FilaUsuarioListado[]>([])
   const [planes, setPlanes] = useState<FilaPlan[]>([])
@@ -58,10 +59,11 @@ export default function Dashboard({ navItems, activeNavLabel }: AdminDashboardPa
       sidebarSubtitle="Panel administrativo"
       contentZoom={0.75}
       navItems={navItems}
+      logoutItem={logoutItem}
       activeNavLabel={activeNavLabel}
       userInitial="A"
       userName="Administrador"
-      userRole="Juan Castro Fobinachi"
+      userRole="Admin"
       headerTitle="Dashboard Admin"
       headerSubtitle="Entorno administrativo del sistema."
       headerRightLabel="Perfil"

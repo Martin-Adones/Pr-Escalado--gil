@@ -9,11 +9,12 @@ import { apiPost } from '../../services/api'
 
 type ClientPaymentMethodsPageProps = {
   navItems: { label: string; iconClass: string; onClick?: () => void }[]
+  logoutItem?: { label: string; iconClass: string; onClick?: () => void }
   activeNavLabel: string
   userId: string | null
 }
 
-export default function PaymentMethods({ navItems, activeNavLabel, userId }: ClientPaymentMethodsPageProps) {
+export default function PaymentMethods({ navItems, logoutItem, activeNavLabel, userId }: ClientPaymentMethodsPageProps) {
   const [loading, setLoading] = useState(true)
   const [cards, setCards] = useState<FilaUserCard[]>([])
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -140,6 +141,7 @@ export default function PaymentMethods({ navItems, activeNavLabel, userId }: Cli
       sidebarSubtitle="Métodos de Pago"
       contentZoom={0.75}
       navItems={navItems}
+      logoutItem={logoutItem}
       activeNavLabel={activeNavLabel}
       userInitial={userId?.[0] || 'C'}
       userName={`Usuario #${userId || '—'}`}
