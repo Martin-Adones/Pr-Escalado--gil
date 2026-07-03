@@ -57,8 +57,8 @@ export default function PortalTemplate({
       <div className="flex min-h-screen">
         <aside className="w-64 text-white flex flex-col fixed h-full shadow-2xl bg-[#284B63]">
           <div className="p-8">
-            <h1 className="text-xl mt-2 font-bold tracking-tight">{sidebarTitle}</h1>
-            <p className="text-[10px] -mt-6 uppercase tracking-widest opacity-60">{sidebarSubtitle}</p>
+            <h1 className="text-xl font-bold tracking-tight">{sidebarTitle}</h1>
+            <p className="text-[10px] uppercase tracking-widest opacity-60">{sidebarSubtitle}</p>
           </div>
 
           <nav className="flex-grow px-4 space-y-2">

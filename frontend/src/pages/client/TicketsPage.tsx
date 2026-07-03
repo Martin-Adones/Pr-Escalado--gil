@@ -3,6 +3,7 @@ import PortalTemplate from '../../portal/PortalTemplate'
 import { listarTickets, crearTicket, actualizarTicket } from '../../services/tickets.service'
 import { listarContratos } from '../../services/contratos.service'
 import { listarPlanes } from '../../services/planes.service'
+import { lockBodyScroll } from '../../utils/scrollLock'
 import type { FilaTicketListado, FilaContratoListado, FilaPlanListado } from '../../services/interfaces'
 
 type ClientTicketsPageProps = {
@@ -82,6 +83,7 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
 
   const [selectedTicket, setSelectedTicket] = useState<(FilaTicketListado & { planName: string; priority: 'Alta' | 'Media' | 'Baja' }) | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
 
   const loadData = useCallback(async () => {
     if (!userId) return
@@ -134,11 +136,7 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
   }, [userId])
 
   useEffect(() => {
-    if (isNewModalOpen || isEditModalOpen || isViewModalOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
-    }
+    lockBodyScroll(isNewModalOpen || isEditModalOpen || isViewModalOpen)
   }, [isNewModalOpen, isEditModalOpen, isViewModalOpen])
 
   const contractLookup = useMemo(() => {
@@ -202,6 +200,7 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
 
   const handleCreateTicket = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setFormError(null)
     const formData = new FormData(e.currentTarget)
     const id_contracts = formData.get('id_contracts') as string
     const description = formData.get('description') as string
@@ -213,12 +212,13 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
       setIsNewModalOpen(false)
       loadData()
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al crear tu ticket')
+      setFormError(err instanceof Error ? err.message : 'Error al crear tu ticket')
     }
   }
 
   const handleUpdateTicket = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setFormError(null)
     if (!selectedTicket) return
     const formData = new FormData(e.currentTarget)
     const description = formData.get('description') as string
@@ -232,7 +232,7 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
       setSelectedTicket(null)
       loadData()
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al actualizar el ticket')
+      setFormError(err instanceof Error ? err.message : 'Error al actualizar el ticket')
     }
   }
 
@@ -513,10 +513,16 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
                   className="w-full resize-none text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#3C6E71]"
                 />
               </div>
+              {formError && (
+                <div className="flex items-start gap-2 rounded-lg bg-red-50 border border-red-200 p-3">
+                  <i aria-hidden="true" className="fa-solid fa-circle-exclamation mt-0.5 text-red-600 text-xs" />
+                  <p className="text-xs text-red-700 font-semibold">{formError}</p>
+                </div>
+              )}
               <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
                 <button
                   type="button"
-                  onClick={() => setIsNewModalOpen(false)}
+                  onClick={() => { setIsNewModalOpen(false); setFormError(null) }}
                   className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 transition"
                 >
                   Cancelar
@@ -563,10 +569,16 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
                   className="w-full resize-none text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#3C6E71]"
                 />
               </div>
+              {formError && (
+                <div className="flex items-start gap-2 rounded-lg bg-red-50 border border-red-200 p-3">
+                  <i aria-hidden="true" className="fa-solid fa-circle-exclamation mt-0.5 text-red-600 text-xs" />
+                  <p className="text-xs text-red-700 font-semibold">{formError}</p>
+                </div>
+              )}
               <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
                 <button
                   type="button"
-                  onClick={() => { setIsEditModalOpen(false); setSelectedTicket(null) }}
+                  onClick={() => { setIsEditModalOpen(false); setSelectedTicket(null); setFormError(null) }}
                   className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 transition"
                 >
                   Cancelar

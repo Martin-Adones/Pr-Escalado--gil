@@ -3,6 +3,7 @@ import PortalTemplate from '../../portal/PortalTemplate'
 import { listarTickets } from '../../services/tickets.service'
 import { listarContratos } from '../../services/contratos.service'
 import { listarPlanes } from '../../services/planes.service'
+import { lockBodyScroll } from '../../utils/scrollLock'
 import type { FilaTicketListado, FilaContratoListado, FilaPlanListado } from '../../services/interfaces'
 
 type AdminTicketsPageProps = {
@@ -119,13 +120,8 @@ export default function TicketsPage({ navItems, logoutItem, activeNavLabel }: Ad
     loadData()
   }, [])
 
-  // Lock body scroll when modal is open
   useEffect(() => {
-    if (isViewModalOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
-    }
+    lockBodyScroll(isViewModalOpen)
   }, [isViewModalOpen])
 
   const contractLookup = useMemo(() => {

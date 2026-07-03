@@ -7,6 +7,8 @@ type PlanChangeModalProps = {
   newPlanPrice: string
   billingPeriod: 'monthly' | 'yearly'
   isUpgrade: boolean
+  isProcessing?: boolean
+  errorMessage?: string | null
 }
 
 export default function PlanChangeModal({
@@ -18,6 +20,8 @@ export default function PlanChangeModal({
   newPlanPrice,
   billingPeriod,
   isUpgrade,
+  isProcessing = false,
+  errorMessage = null,
 }: PlanChangeModalProps) {
   if (!isOpen) return null
 
@@ -28,7 +32,11 @@ export default function PlanChangeModal({
       <div className="mx-4 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
         <div className="mb-6">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#284B63]/10">
-            <i className="fa-solid fa-arrow-right-arrow-left text-xl text-[#284B63]" />
+            {isProcessing ? (
+              <i className="fa-solid fa-circle-notch fa-spin text-xl text-[#284B63]" />
+            ) : (
+              <i className="fa-solid fa-arrow-right-arrow-left text-xl text-[#284B63]" />
+            )}
           </div>
           <h3 className="text-center text-xl font-bold text-[#353535]">Confirmar cambio de plan</h3>
           <p className="mt-2 text-center text-sm text-gray-600">
@@ -49,6 +57,16 @@ export default function PlanChangeModal({
             </div>
           </div>
         </div>
+
+        {errorMessage && (
+          <div className="mb-6 flex items-start gap-3 rounded-lg bg-red-50 border border-red-200 p-3">
+            <i className="fa-solid fa-circle-exclamation mt-0.5 text-red-600" />
+            <div>
+              <p className="text-sm font-semibold text-red-800">Error al procesar</p>
+              <p className="mt-1 text-xs text-red-700">{errorMessage}</p>
+            </div>
+          </div>
+        )}
 
         <div className="mb-6 space-y-3">
           {isUpgrade ? (
@@ -80,16 +98,25 @@ export default function PlanChangeModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm font-bold text-gray-700 transition hover:bg-gray-50"
+            disabled={isProcessing}
+            className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm font-bold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancelar
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className="flex-1 rounded-xl bg-[#284B63] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#3C6E71]"
+            disabled={isProcessing}
+            className="flex-1 rounded-xl bg-[#284B63] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#3C6E71] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            Confirmar cambio
+            {isProcessing ? (
+              <>
+                <i className="fa-solid fa-circle-notch fa-spin" />
+                Procesando...
+              </>
+            ) : (
+              'Confirmar cambio'
+            )}
           </button>
         </div>
       </div>

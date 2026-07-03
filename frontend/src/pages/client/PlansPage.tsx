@@ -72,7 +72,7 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
 
         const activeContractPlanId = contratosData.length > 0 ? contratosData[0].id_plans : null
 
-        const sortedPlanes = planesData.sort((a, b) => Number(a.amount) - Number(b.amount))
+        const sortedPlanes = [...planesData].sort((a, b) => Number(a.amount) - Number(b.amount))
         const total = sortedPlanes.length
 
         const mapped: Plan[] = sortedPlanes.map((p, i) => {
@@ -167,7 +167,11 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
         const pagoId = pago.id_payments
 
         const approved = await new Promise<boolean>((resolve) => {
+          let attempts = 0
+          const maxAttempts = 200
           const poll = () => {
+            if (attempts >= maxAttempts) { popup.close(); resolve(false); return }
+            attempts++
             setTimeout(async () => {
               try {
                 const actual = await obtenerPagoPorId(pagoId)

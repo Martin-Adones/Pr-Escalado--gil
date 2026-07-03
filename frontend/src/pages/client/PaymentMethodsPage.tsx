@@ -7,6 +7,7 @@ import {
   type FilaUserCard
 } from '../../services/pagos.service'
 import { apiPost } from '../../services/api'
+import { lockBodyScroll } from '../../utils/scrollLock'
 
 type ClientPaymentMethodsPageProps = {
   navItems: { label: string; iconClass: string; onClick?: () => void }[]
@@ -33,8 +34,8 @@ export default function PaymentMethods({ navItems, logoutItem, activeNavLabel, u
   const [reloadTrigger, setReloadTrigger] = useState(0)
 
   useEffect(() => {
-    document.body.style.overflow = showAddForm ? 'hidden' : 'unset'
-    return () => { document.body.style.overflow = 'unset' }
+    lockBodyScroll(showAddForm)
+    return () => { lockBodyScroll(false) }
   }, [showAddForm])
 
   useEffect(() => {

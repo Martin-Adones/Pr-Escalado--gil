@@ -56,8 +56,6 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
     return {};
   }
   const token = keycloak.token;
-  const parsed = keycloak.tokenParsed as Record<string, unknown> | null;
-  console.log("[AUTH] Token existe?", !!token, "| iss:", parsed?.iss, "| sub:", parsed?.sub, "| exp:", parsed?.exp ? new Date((parsed.exp as number) * 1000).toISOString() : "N/A");
   return { Authorization: `Bearer ${token}` };
 }
 
