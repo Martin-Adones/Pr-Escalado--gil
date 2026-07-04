@@ -192,4 +192,8 @@ export class WebhookPagosEntradaDto {
 
   @IsNotEmpty({ message: 'El campo amount es requerido' })
   amount!: number;
+
+  @IsOptional()
+  @IsString()
+  user_email!: string;
 }

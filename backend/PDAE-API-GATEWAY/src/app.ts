@@ -232,6 +232,9 @@ export const createServer = async (): Promise<FastifyInstance> => {
       if (cuerpo?.success && cuerpo?.data?.id_users) {
         request.headers["x-user-id"] = String(cuerpo.data.id_users);
         request.headers["x-user-role"] = role;
+        if (payload.email) {
+          request.headers["x-user-email"] = payload.email;
+        }
       }
     } catch (err) {
       app.log.warn("No se pudo verificar el token de Keycloak en el Gateway");

@@ -8,6 +8,7 @@ import {
   ActualizarContratoEntradaDto,
   WebhookPagosEntradaDto,
 } from '../models/contratos.dtos';
+import { notificarEmail } from '../utils/notifications.client';
 
 /**
  * Capa HTTP: valida DTOs, aplica reglas de control de acceso e IDOR, y delega en {@link ContratosService}.
@@ -57,6 +58,17 @@ export class ContratosController {
 
       const entrada = await transformAndValidate(CrearContratoEntradaDto, datos);
       const resultado = await this.servicio.crearContrato(entrada);
+
+      if (resultado && resultado.length > 0) {
+        const userEmail = solicitud.headers?.['x-user-email'] as string | undefined;
+        if (userEmail) {
+          notificarEmail({
+            email: userEmail,
+            subject: 'Contrato creado exitosamente',
+            htmlBody: `<p>Tu contrato ha sido creado exitosamente.</p><p>ID de contrato: ${resultado[0].id_contracts}</p>`,
+          });
+        }
+      }
 
       return respuesta.status(200).send({
         success: true,

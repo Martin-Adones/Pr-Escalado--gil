@@ -4,6 +4,7 @@ import {
   notificarRenewalSuccess,
   notificarRenewalFailed,
 } from '../utils/analytics.client';
+import { notificarEmail, notificarEmailConFallbackSms } from '../utils/notifications.client';
 import {
   CrearContratoEntradaDto,
   FinalizarContratoEntradaDto,
@@ -98,6 +99,23 @@ export class ContratosService {
         notificarRenewalSuccess(payload);
       } else {
         notificarRenewalFailed(payload);
+      }
+    }
+
+    // 5. Notificar al usuario por email si viene especificado
+    if (dto.user_email) {
+      if (esCompletado) {
+        notificarEmail({
+          email: dto.user_email,
+          subject: 'Pago recibido exitosamente',
+          htmlBody: `<p>Hemos recibido tu pago correctamente.</p><p>Monto: $${dto.amount}</p>`,
+        });
+      } else {
+        notificarEmail({
+          email: dto.user_email,
+          subject: 'Pago fallido',
+          htmlBody: `<p>Tu pago no pudo ser procesado.</p><p>Monto: $${dto.amount}</p><p>Por favor, intenta nuevamente.</p>`,
+        });
       }
     }
 
