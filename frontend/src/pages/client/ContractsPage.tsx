@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PortalTemplate from '../../portal/PortalTemplate'
-import { getCurrentBillingCycle, formatDateLabel } from '../../utils/billingCycle'
+import { getCurrentBillingCycle, formatDateLabel, clamp } from '../../utils/billingCycle'
 import { listarContratos } from '../../services/contratos.service'
 import { listarPlanes } from '../../services/planes.service'
+import LoadingSpinner from '../../components/LoadingSpinner'
 import type { FilaContrato, FilaPlan } from '../../services/interfaces'
 
 type ClientContractsPageProps = {
@@ -28,10 +29,6 @@ function getStatusLabel(status: string) {
     CANCELLED: 'Cancelado',
   }
   return map[status] || status
-}
-
-function clamp(n: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, n))
 }
 
 function formatCurrencyLabel(value: string) {
@@ -122,7 +119,6 @@ export default function Contracts({
       recurringAmount: `$${Number(plan.amount).toLocaleString('es-CL')}`,
       cycleStartISO: contrato.start_date,
       renewalISO: contrato.end_date,
-      paymentState: 'ok' as 'ok' | 'pending' | 'grace',
       details: [
         { label: 'Contrato', value: `#${contrato.id_contracts}` },
         { label: 'Ciclo', value: plan.billing_cycle },
@@ -220,26 +216,9 @@ export default function Contracts({
     }
   }, [activeContract])
 
-  const alertVariant = useMemo(() => {
-    if (!activeContract) return 'normal'
-    if (activeContract.paymentState === 'pending') return 'warning'
-    if (activeContract.paymentState === 'grace') return 'danger'
-    return 'normal'
-  }, [activeContract])
+  const cardClass = 'rounded-xl border border-gray-200 bg-white p-6 shadow-sm'
 
-  const cardClass =
-    alertVariant === 'danger'
-      ? 'rounded-xl border border-red-200 bg-red-50 p-6'
-      : alertVariant === 'warning'
-        ? 'rounded-xl border border-amber-200 bg-amber-50 p-6'
-        : 'rounded-xl border border-gray-200 bg-white p-6 shadow-sm'
-
-  const progressBarClass =
-    alertVariant === 'danger'
-      ? 'h-full bg-red-500 rounded-full transition-all duration-500'
-      : alertVariant === 'warning'
-        ? 'h-full bg-amber-500 rounded-full transition-all duration-500'
-        : 'h-full bg-[#3C6E71] rounded-full transition-all duration-500'
+  const progressBarClass = 'h-full bg-[#3C6E71] rounded-full transition-all duration-500'
 
   return (
     <PortalTemplate
@@ -258,15 +237,7 @@ export default function Contracts({
       headerRightValue={cycle.renewalDateLabel}
     >
       {loading ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm animate-pulse space-y-4">
-          <div className="h-5 w-56 bg-gray-200 rounded" />
-          <div className="h-3 w-36 bg-gray-200 rounded" />
-          <div className="h-2 w-full bg-gray-200 rounded" />
-          <div className="grid grid-cols-2 gap-4">
-            <div className="h-24 bg-gray-200 rounded" />
-            <div className="h-24 bg-gray-200 rounded" />
-          </div>
-        </div>
+        <LoadingSpinner />
       ) : activeContract && billingPeriod ? (
         <div className={cardClass}>
           {/* ── Header ── */}

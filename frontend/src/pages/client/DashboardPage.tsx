@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PortalTemplate from '../../portal/PortalTemplate'
-import { getCurrentBillingCycle, formatDateLabel } from '../../utils/billingCycle'
+import { getCurrentBillingCycle, formatDateLabel, clamp } from '../../utils/billingCycle'
 import { listarContratos } from '../../services/contratos.service'
 import { listarPlanes } from '../../services/planes.service'
 import { listarTickets } from '../../services/tickets.service'
 import { listarAuditoria } from '../../services/auditoria.service'
 import { planesCacheService } from '../../services/planes-cache.service'
+import LoadingSpinner from '../../components/LoadingSpinner'
 import type { FilaContrato, FilaPlan, FilaTicketListado } from '../../services/interfaces'
 
 type ClientPageProps = {
@@ -22,10 +23,6 @@ interface DashboardTransaction {
   concepto: string
   monto: number
   estado: string
-}
-
-function clamp(n: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, n))
 }
 
 function getUsageMetrics(startDate: string, endDate: string) {
@@ -96,7 +93,7 @@ export default function Dashboard({ navItems, logoutItem, activeNavLabel, userId
         }
 
         const contratos = await listarContratos(params)
-        const allUserContratos = await listarContratos({ id_users: userId })
+        const allUserContratos = await listarContratos({ id_users: userId, page_size: 100 })
 
         if (cancelled) return
 
@@ -227,17 +224,7 @@ export default function Dashboard({ navItems, logoutItem, activeNavLabel, userId
       headerRightValue={cycle.renewalDateLabel}
     >
       {loading ? (
-        <div className="space-y-6 animate-pulse">
-          <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200">
-            <div className="h-6 w-48 bg-gray-200 rounded mb-4" />
-            <div className="h-4 w-32 bg-gray-200 rounded mb-6" />
-            <div className="h-2 w-full bg-gray-200 rounded mb-6" />
-            <div className="grid grid-cols-2 gap-10">
-              <div className="h-12 bg-gray-200 rounded" />
-              <div className="h-12 bg-gray-200 rounded" />
-            </div>
-          </div>
-        </div>
+        <LoadingSpinner />
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           <div className="xl:col-span-2 space-y-8">

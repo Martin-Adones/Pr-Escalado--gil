@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import PortalTemplate from '../../portal/PortalTemplate'
 import PlanChangeModal from '../../components/PlanChangeModal'
 import { listarPlanes } from '../../services/planes.service'
 import { listarContratos, crearContrato, cambiarPlanContrato } from '../../services/contratos.service'
 import { crearPago, obtenerPagoPorId } from '../../services/pagos.service'
 import { obtenerUsuarioActual } from '../../services/usuarios.service'
+import LoadingSpinner from '../../components/LoadingSpinner'
 
 type ClientPlansPageProps = {
   navItems: { label: string; iconClass: string; onClick?: () => void }[]
@@ -45,6 +46,10 @@ function getDiscountPct(): number {
   return 15
 }
 
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
+
 function getLevel(_name: string, index: number, total: number): string {
   if (index === 0) return 'Entrada'
   if (index === total - 1) return 'Empresarial'
@@ -59,10 +64,13 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null)
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
   const [paymentError, setPaymentError] = useState<string | null>(null)
+  const [plansError, setPlansError] = useState<string | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     let cancelled = false
     async function load() {
+      setPlansError(null)
       try {
         const [planesData, contratosData] = await Promise.all([
           listarPlanes({ isActive: true }),
@@ -99,21 +107,27 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
             ],
             isRecommended: total > 2 && i === Math.floor(total / 2),
             isCurrent,
-            actionLabel: isCurrent ? 'Plan actual' : i < sortedPlanes.findIndex(sp => sp.id_plans === activeContractPlanId) ? `Cambiar a ${p.name}` : 'Actualizar ahora',
+            actionLabel: isCurrent ? 'Plan actual'
+              : activeContractPlanId === null
+                ? 'Contratar ahora'
+                : i < sortedPlanes.findIndex(sp => sp.id_plans === activeContractPlanId)
+                  ? `Cambiar a ${p.name}`
+                  : 'Actualizar ahora',
             billingCycle: p.billing_cycle,
           }
         })
 
         setPlans(mapped)
-      } catch {
+      } catch (err) {
         setPlans([])
+        setPlansError(getErrorMessage(err))
       } finally {
         if (!cancelled) setIsLoadingPlans(false)
       }
     }
     load()
     return () => { cancelled = true }
-  }, [userId])
+  }, [userId, refreshKey])
 
   const currentPlan = plans.find((p) => p.isCurrent)
 
@@ -197,8 +211,8 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
         setIsProcessingPayment(false)
         return
       }
-    } catch (error: any) {
-      setPaymentError('Error al procesar el pago: ' + (error?.message || 'Intenta de nuevo.'))
+    } catch (error: unknown) {
+      setPaymentError('Error al procesar el pago: ' + getErrorMessage(error))
       setIsProcessingPayment(false)
       return
     }
@@ -210,11 +224,17 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
       if (activeContractId) {
         await cambiarPlanContrato(activeContractId, selectedPlan.id)
       } else {
-        const [nuevo] = await crearContrato({
+        const nuevosContratos = await crearContrato({
           id_users: resolvedUserId,
           id_plans: selectedPlan.id,
           status: 'ACTIVE',
         })
+        if (nuevosContratos.length === 0) {
+          setPaymentError('Error al crear el contrato. Intenta de nuevo.')
+          setIsProcessingPayment(false)
+          return
+        }
+        const [nuevo] = nuevosContratos
         try {
           window.dispatchEvent(new CustomEvent('auditoria:changed', { detail: { id_contracts: nuevo.id_contracts } }))
         } catch (e) { /* noop */ }
@@ -224,9 +244,9 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
       setSelectedPlan(null)
       setIsProcessingPayment(false)
       setPaymentError(null)
-      window.location.reload()
-    } catch (error: any) {
-      setPaymentError('Error al actualizar el contrato: ' + (error?.message || 'Intenta de nuevo.'))
+      setRefreshKey(k => k + 1)
+    } catch (error: unknown) {
+      setPaymentError('Error al actualizar el contrato: ' + getErrorMessage(error))
       setIsProcessingPayment(false)
     }
   }
@@ -301,21 +321,21 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
           )}
         </div>
 
-        {isLoadingPlans ? (
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-            {[0, 1, 2].map((item) => (
-              <div key={item} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-                <div className="h-4 w-24 animate-pulse rounded bg-gray-200" />
-                <div className="mt-5 h-8 w-36 animate-pulse rounded bg-gray-200" />
-                <div className="mt-6 space-y-3">
-                  <div className="h-3 w-full animate-pulse rounded bg-gray-100" />
-                  <div className="h-3 w-10/12 animate-pulse rounded bg-gray-100" />
-                  <div className="h-3 w-8/12 animate-pulse rounded bg-gray-100" />
-                </div>
-                <div className="mt-6 h-10 w-full animate-pulse rounded-lg bg-gray-200" />
-              </div>
-            ))}
+        {plansError && !isLoadingPlans && (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
+            <p className="text-sm font-bold text-red-600">{plansError}</p>
+            <button
+              onClick={() => { setPlansError(null); setIsLoadingPlans(true); setRefreshKey(k => k + 1) }}
+              className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold bg-red-100 text-red-700 hover:bg-red-200 transition"
+            >
+              <i aria-hidden="true" className="fa-solid fa-rotate-right" />
+              Reintentar
+            </button>
           </div>
+        )}
+
+        {isLoadingPlans ? (
+          <LoadingSpinner />
         ) : (
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
             {plans.map((plan) => {

@@ -34,20 +34,6 @@ export interface FilaUsuarioListado extends FilaUsuario {
   total_count: string
 }
 
-export interface FilaProducto {
-  id_products: string
-  name: string
-  description: string | null
-  type: string
-  quantity: number | null
-  price: string
-  isActive: boolean
-}
-
-export interface FilaProductoListado extends FilaProducto {
-  total_count: string
-}
-
 export interface FilaAuditLog {
   id_audit_logs: string
   id_contracts: string | null

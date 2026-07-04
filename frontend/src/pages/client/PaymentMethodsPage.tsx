@@ -7,6 +7,7 @@ import {
   type FilaUserCard
 } from '../../services/pagos.service'
 import { apiPost } from '../../services/api'
+import LoadingSpinner from '../../components/LoadingSpinner'
 import { lockBodyScroll } from '../../utils/scrollLock'
 
 type ClientPaymentMethodsPageProps = {
@@ -33,10 +34,17 @@ export default function PaymentMethods({ navItems, logoutItem, activeNavLabel, u
 
   const [reloadTrigger, setReloadTrigger] = useState(0)
 
+  // Delete confirmation modal
+  const [cardToDelete, setCardToDelete] = useState<FilaUserCard | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  const isAnyModalOpen = showAddForm || cardToDelete !== null
+
   useEffect(() => {
-    lockBodyScroll(showAddForm)
+    lockBodyScroll(isAnyModalOpen)
     return () => { lockBodyScroll(false) }
-  }, [showAddForm])
+  }, [isAnyModalOpen])
 
   useEffect(() => {
     let cancelled = false
@@ -74,19 +82,34 @@ export default function PaymentMethods({ navItems, logoutItem, activeNavLabel, u
     }
   }, [userId, reloadTrigger])
 
-  const handleDelete = async (token: string) => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar este método de pago?')) return
+  const handleDelete = (card: FilaUserCard) => {
+    setCardToDelete(card)
+    setDeleteError(null)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!cardToDelete) return
+    setIsDeleting(true)
+    setDeleteError(null)
     try {
       setErrorMessage(null)
       setSuccessMessage(null)
-      await eliminarTarjeta(token)
+      await eliminarTarjeta(cardToDelete.payment_method_token)
       setSuccessMessage('Método de pago eliminado con éxito.')
+      setCardToDelete(null)
       setReloadTrigger(prev => prev + 1)
     } catch (err) {
-      console.error('Error al eliminar tarjeta:', err)
       const msg = err instanceof Error ? err.message : 'Error al eliminar el método de pago.'
-      setErrorMessage(msg)
+      setDeleteError(msg)
+    } finally {
+      setIsDeleting(false)
     }
+  }
+
+  const handleCloseDeleteModal = () => {
+    if (isDeleting) return
+    setCardToDelete(null)
+    setDeleteError(null)
   }
 
   const handleAddCard = async (e: React.FormEvent) => {
@@ -316,12 +339,69 @@ export default function PaymentMethods({ navItems, logoutItem, activeNavLabel, u
           </div>
         , document.body)}
 
+        {cardToDelete && createPortal(
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="mx-4 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" style={{ transform: 'scale(0.75)', transformOrigin: 'center' }}>
+              <div className="mb-6">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
+                  {isDeleting ? (
+                    <i className="fa-solid fa-circle-notch fa-spin text-xl text-red-500" />
+                  ) : (
+                    <i className="fa-solid fa-trash-can text-xl text-red-500" />
+                  )}
+                </div>
+                <h3 className="text-center text-xl font-bold text-[#353535]">Eliminar método de pago</h3>
+                <p className="mt-2 text-center text-sm text-gray-600">
+                  ¿Estás seguro de que deseas eliminar{' '}
+                  <span className="font-semibold">{cardToDelete.card_brand.toUpperCase()} •••• {cardToDelete.card_last4}</span>?
+                </p>
+                <p className="mt-1 text-center text-xs text-gray-400">
+                  Esta acción no se puede deshacer. Si eliminas esta tarjeta, los próximos cobros podrían fallar.
+                </p>
+              </div>
+
+              {deleteError && (
+                <div className="mb-6 flex items-start gap-3 rounded-lg bg-red-50 border border-red-200 p-3">
+                  <i className="fa-solid fa-circle-exclamation mt-0.5 text-red-600" />
+                  <div>
+                    <p className="text-sm font-semibold text-red-800">Error al eliminar</p>
+                    <p className="mt-1 text-xs text-red-700">{deleteError}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleCloseDeleteModal}
+                  disabled={isDeleting}
+                  className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm font-bold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmDelete}
+                  disabled={isDeleting}
+                  className="flex-1 rounded-xl bg-red-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isDeleting ? (
+                    <>
+                      <i className="fa-solid fa-circle-notch fa-spin" />
+                      Eliminando...
+                    </>
+                  ) : (
+                    'Eliminar'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {[1, 2].map((i) => (
-              <div key={i} className="animate-pulse rounded-2xl border border-gray-200 bg-white p-6 h-32" />
-            ))}
-          </div>
+          <LoadingSpinner />
         ) : cards.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center max-w-lg mx-auto shadow-sm">
             <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#284B63]/5 text-[#284B63]">
@@ -360,7 +440,7 @@ export default function PaymentMethods({ navItems, logoutItem, activeNavLabel, u
 
                 <button
                   type="button"
-                  onClick={() => handleDelete(card.payment_method_token)}
+                  onClick={() => handleDelete(card)}
                   className="rounded-xl border border-gray-200 hover:border-red-200 hover:bg-red-50 text-gray-400 hover:text-red-500 p-2.5 transition shadow-sm opacity-0 group-hover:opacity-100 focus:opacity-100"
                   title="Eliminar método de pago"
                 >

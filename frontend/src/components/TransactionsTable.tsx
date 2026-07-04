@@ -150,8 +150,9 @@ export default function TransactionsTable({ transactions }: TransactionsTablePro
                       {isFailed ? (
                         <button
                           type="button"
-                          onClick={() => console.log('Reintentar cobro:', transaction.id)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 transition-colors"
+                          disabled
+                          title="Funcionalidad no disponible"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-300 bg-red-50 rounded-lg border border-red-200 cursor-not-allowed"
                         >
                           <i className="fa-solid fa-rotate-right" />
                           Reintentar

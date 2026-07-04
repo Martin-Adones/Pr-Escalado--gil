@@ -1,7 +1,5 @@
 import { apiGet, apiPost } from './api'
 import type { FilaContrato, FilaContratoListado } from './interfaces'
-import type { FilaAuditLog } from './interfaces'
-
 export interface ListarContratosParams {
   id_contracts?: string
   id_users?: string
@@ -45,13 +43,3 @@ export async function cambiarPlanContrato(id_contracts: string, idNuevoPlan: str
   return apiPost<FilaContrato[]>('/contratos/actualizar', { id_contracts, id_plans: idNuevoPlan })
 }
 
-// Helper para construir un registro de auditoría local si quieres simular la respuesta
-export function crearAuditCambioPlanLocal(id_audit_logs: string, id_contracts: string, nuevoPlanId: string): FilaAuditLog {
-  return {
-    id_audit_logs,
-    id_contracts,
-    action: 'CAMBIO_PLAN',
-    assigned_to: nuevoPlanId,
-    created_at: new Date().toISOString(),
-  }
-}

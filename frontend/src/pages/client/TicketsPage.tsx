@@ -4,6 +4,7 @@ import { listarTickets, crearTicket, actualizarTicket } from '../../services/tic
 import { listarContratos } from '../../services/contratos.service'
 import { listarPlanes } from '../../services/planes.service'
 import { lockBodyScroll } from '../../utils/scrollLock'
+import LoadingSpinner from '../../components/LoadingSpinner'
 import type { FilaTicketListado, FilaContratoListado, FilaPlanListado } from '../../services/interfaces'
 
 type ClientTicketsPageProps = {
@@ -111,29 +112,8 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
   }, [loadData])
 
   useEffect(() => {
-    if (!userId) return
-    let cancelled = false
-    Promise.all([
-      listarTickets({ id_users: userId, page_size: 100 }),
-      listarContratos({ id_users: userId, page_size: 100 }),
-      listarPlanes({ page_size: 100 }),
-    ])
-      .then(([ticketsData, contractsData, planesData]) => {
-        if (cancelled) return
-        setError(null)
-        setTickets(ticketsData)
-        setContracts(contractsData)
-        setPlanes(planesData)
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-        setError(err instanceof Error ? err.message : 'Error al conectar con el servidor')
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => { cancelled = true }
-  }, [userId])
+    loadData()
+  }, [loadData])
 
   useEffect(() => {
     lockBodyScroll(isNewModalOpen || isEditModalOpen || isViewModalOpen)
@@ -205,7 +185,10 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
     const id_contracts = formData.get('id_contracts') as string
     const description = formData.get('description') as string
 
-    if (!id_contracts || !description) return
+    if (!id_contracts || !description) {
+      setFormError('Todos los campos son obligatorios.')
+      return
+    }
 
     try {
       await crearTicket({ id_contracts, description, status: 'open' })
@@ -238,6 +221,7 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
 
   const handleOpenEdit = (ticket: typeof resolvedTickets[number]) => {
     setSelectedTicket(ticket)
+    setFormError(null)
     setIsEditModalOpen(true)
   }
 
@@ -277,21 +261,24 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
       headerRightLabel="Tickets Totales"
       headerRightValue={loading ? '...' : String(totalCount)}
     >
-      <div className="space-y-4">
+      {loading ? (
+        <LoadingSpinner />
+      ) : (
+        <div className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Tickets Creados</p>
-            <p className="text-2xl font-black text-[#3C6E71] mt-1">{loading ? '—' : totalCount}</p>
+            <p className="text-2xl font-black text-[#3C6E71] mt-1">{totalCount}</p>
             <p className="text-[10px] text-gray-400 mt-1">Historial de solicitudes</p>
           </div>
           <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Pendientes</p>
-            <p className="text-2xl font-black text-orange-500 mt-1">{loading ? '—' : pendingCount}</p>
+            <p className="text-2xl font-black text-orange-500 mt-1">{pendingCount}</p>
             <p className="text-[10px] text-gray-400 mt-1">Siendo revisados por el equipo</p>
           </div>
           <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Resueltos</p>
-            <p className="text-2xl font-black text-[#3C6E71] mt-1">{loading ? '—' : resolvedCount}</p>
+            <p className="text-2xl font-black text-[#3C6E71] mt-1">{resolvedCount}</p>
             <p className="text-[10px] text-gray-400 mt-1">Casos cerrados con éxito</p>
           </div>
         </div>
@@ -364,16 +351,7 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 text-sm text-[#353535]">
-                {loading ? (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-10 text-center">
-                      <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
-                        <i aria-hidden="true" className="fa-solid fa-spinner animate-spin text-[#3C6E71]"></i>
-                        <span>Cargando solicitudes...</span>
-                      </div>
-                    </td>
-                  </tr>
-                ) : filteredTickets.length === 0 ? (
+                {filteredTickets.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-10 text-center text-sm text-gray-400">
                       No hay tickets que coincidan con la búsqueda.
@@ -461,6 +439,7 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
           )}
         </div>
       </div>
+      )}
 
       {isNewModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -546,7 +525,7 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <h2 className="text-sm font-black text-[#353535]">Editar #TK-{selectedTicket.id_support}</h2>
               <button
-                onClick={() => { setIsEditModalOpen(false); setSelectedTicket(null) }}
+                onClick={() => { setIsEditModalOpen(false); setSelectedTicket(null); setFormError(null) }}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <i aria-hidden="true" className="fa-solid fa-times"></i>

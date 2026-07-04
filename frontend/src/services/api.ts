@@ -53,7 +53,7 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
   try {
     await keycloak.updateToken(10);
   } catch {
-    return {};
+    throw new ApiError(401, 'Sesión expirada. Por favor, inicia sesión nuevamente.');
   }
   const token = keycloak.token;
   return { Authorization: `Bearer ${token}` };

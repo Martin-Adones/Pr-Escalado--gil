@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import {
   Routes,
   Route,
@@ -6,18 +6,17 @@ import {
   useNavigate,
   useLocation,
 } from "react-router-dom";
-
-const AdminDashboard = lazy(() => import("./pages/admin/DashboardPage"));
-const ContratosPage = lazy(() => import("./pages/admin/ContratosPage"));
-const CiclosDeCobroPage = lazy(() => import("./pages/admin/CiclosDeCobroPage"));
-const ClientesPage = lazy(() => import("./pages/admin/ClientesPage"));
-const ConfiguracionPage = lazy(() => import("./pages/admin/ConfiguracionPage"));
-const Contracts = lazy(() => import("./pages/client/ContractsPage"));
-const ClientDashboard = lazy(() => import("./pages/client/DashboardPage"));
-const History = lazy(() => import("./pages/client/HistoryPage"));
-const Plans = lazy(() => import("./pages/client/PlansPage"));
-const Tickets = lazy(() => import("./pages/client/TicketsPage"));
-const PaymentMethods = lazy(() => import("./pages/client/PaymentMethodsPage"));
+import AdminDashboard from "./pages/admin/DashboardPage";
+import ContratosPage from "./pages/admin/ContratosPage";
+import CiclosDeCobroPage from "./pages/admin/CiclosDeCobroPage";
+import ClientesPage from "./pages/admin/ClientesPage";
+import ConfiguracionPage from "./pages/admin/ConfiguracionPage";
+import Contracts from "./pages/client/ContractsPage";
+import ClientDashboard from "./pages/client/DashboardPage";
+import History from "./pages/client/HistoryPage";
+import Plans from "./pages/client/PlansPage";
+import Tickets from "./pages/client/TicketsPage";
+import PaymentMethods from "./pages/client/PaymentMethodsPage";
 import { useAuth } from "./auth/useAuth";
 import { resolveRole } from "./auth/roles";
 import { getAppUser } from "./auth/appUser";
@@ -92,7 +91,6 @@ function AdminLayout({ onLogout }: { onLogout: () => void }) {
   );
 
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#D9D9D9] flex items-center justify-center text-gray-500 font-bold">Cargando...</div>}>
       <Routes>
         <Route
           index
@@ -133,7 +131,6 @@ function AdminLayout({ onLogout }: { onLogout: () => void }) {
           }
         />
       </Routes>
-    </Suspense>
   );
 }
 
@@ -196,7 +193,6 @@ function ClientLayout({
   const pageProps: PageProps & { logoutItem?: typeof logoutItem } = { navItems, logoutItem, activeNavLabel, userId };
 
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#D9D9D9] flex items-center justify-center text-gray-500 font-bold">Cargando...</div>}>
       <Routes>
         <Route index element={<ClientDashboard {...pageProps} />} />
         <Route path="contratos" element={<Contracts {...pageProps} />} />
@@ -205,7 +201,6 @@ function ClientLayout({
         <Route path="metodos-pago" element={<PaymentMethods {...pageProps} />} />
         <Route path="tickets" element={<Tickets {...pageProps} />} />
       </Routes>
-    </Suspense>
   );
 }
 

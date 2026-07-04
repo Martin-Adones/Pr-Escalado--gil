@@ -12,7 +12,7 @@ export type BillingCycle = {
 
 const DAY_MS = 1000 * 60 * 60 * 24
 
-function clamp(n: number, min: number, max: number) {
+export function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n))
 }
 

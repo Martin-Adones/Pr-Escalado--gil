@@ -4,6 +4,7 @@ import TransactionsTable, { type Transaction } from '../../components/Transactio
 import { listarContratos } from '../../services/contratos.service'
 import { listarAuditoria } from '../../services/auditoria.service'
 import { planesCacheService } from '../../services/planes-cache.service'
+import LoadingSpinner from '../../components/LoadingSpinner'
 
 type ClientHistoryPageProps = {
   navItems: { label: string; iconClass: string; onClick?: () => void }[]
@@ -25,7 +26,7 @@ export default function History({ navItems, logoutItem, activeNavLabel, userId }
           setLoading(false)
           return
         }
-        const contratos = await listarContratos({ id_users: userId })
+        const contratos = await listarContratos({ id_users: userId, page_size: 100 })
         if (cancelled) return
 
         if (contratos.length === 0) {
@@ -35,7 +36,7 @@ export default function History({ navItems, logoutItem, activeNavLabel, userId }
 
         const userContractIds = contratos.map((c) => c.id_contracts)
         const logsPromises = userContractIds.map((contractId) =>
-          listarAuditoria({ id_contracts: contractId, page_size: 100 })
+          listarAuditoria({ id_contracts: contractId, page_size: 500 })
         )
         const logsResponses = await Promise.all(logsPromises)
         if (cancelled) return
@@ -127,11 +128,7 @@ export default function History({ navItems, logoutItem, activeNavLabel, userId }
       headerRightValue="12 meses"
     >
       {loading ? (
-        <div className="animate-pulse space-y-4">
-          <div className="h-6 w-64 bg-gray-200 rounded" />
-          <div className="h-4 w-48 bg-gray-200 rounded" />
-          <div className="h-28 bg-gray-200 rounded animate-pulse" />
-        </div>
+        <LoadingSpinner />
       ) : error ? (
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-6 text-sm font-semibold">
           {error}
