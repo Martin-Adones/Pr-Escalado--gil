@@ -38,7 +38,7 @@ export class PagosController {
       if (error.message?.startsWith('Error de Validación:')) {
         return respuesta.status(400).send({ success: false, message: error.message });
       }
-      return respuesta.status(500).send({ success: false, message: 'Error interno del servidor' });
+      return respuesta.status(500).send({ success: false, message: error.message || 'Error interno del servidor' });
     }
   }
 

@@ -173,60 +173,67 @@ export class PagosService {
     // 2. Revisar si el usuario ya tiene una tarjeta guardada
     const primeraTarjeta = await this.repository.obtenerPrimerTarjetaUsuario(dto.id_users);
 
-    if (primeraTarjeta) {
-      // Intentar cobro automático recurrente (MIT) directamente
-      try {
-        console.log(`[UCNPAY] Tarjeta encontrada. Ejecutando cargo recurrente automático para el pago: ${pago.id_payments}`);
-        
-        const response = await fetch(`${this.ucnpayUrl}/ucnpay/suscription/authorize`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-private-key': this.privateKey,
-          },
-          body: JSON.stringify({
-            idOrden: `PAG-${pago.id_payments}`,
-            monto: Number(pago.amount),
-            moneda: 'CLP',
-            paymentMethodToken: primeraTarjeta.payment_method_token,
-            customer: primeraTarjeta.holder_name
-          })
-        });
-
-        if (!response.ok) {
-          const bodyText = await response.text();
-          throw new Error(`UCNPAY cobro rechazado por red (${response.status}): ${bodyText}`);
-        }
-
-        const resJson = (await response.json()) as any;
-
-        // 3. Procesar respuesta del cargo recurrente
-        const webhookPayload: UcnpayWebhookEntradaDto = {
-          event: resJson.status === 'APROBADO' ? 'transaction.approved' : 'transaction.rejected',
-          transactionId: resJson.transactionId || `unknown_${Date.now()}`,
-          idOrden: `PAG-${pago.id_payments}`,
-          status: resJson.status,
-          monto: Number(pago.amount),
-          reason: resJson.message,
-          paymentMethodToken: resJson.paymentMethodToken,
-          mandateId: resJson.mandateId,
-          card: resJson.card
-        };
-
-        const pagoActualizado = await this.procesarPagoWebhook(webhookPayload);
-        if (pagoActualizado) {
-          return { pago: pagoActualizado };
-        }
-      } catch (error) {
-        console.error('[UCNPAY] Cargo automático fallido, cayendo a flujo manual:', error);
-      }
+    if (!primeraTarjeta) {
+      // Si no tiene tarjeta, actualizamos a RECHAZADO localmente y lanzamos error
+      await this.repository.actualizarEstadoPago(pago.id_payments, 'RECHAZADO', null);
+      throw new Error('No tienes ningún método de pago registrado. Por favor registra una tarjeta primero.');
     }
 
-    // 4. Si no tiene tarjeta o el cobro falló, devolver la URL del Checkout interactivo
-    const gatewayPort = process.env.GATEWAY_PORT || '4000';
-    const redirectUrl = `http://localhost:${gatewayPort}/api/pagos/mock-externo/checkout-page?paymentId=${pago.id_payments}&amount=${pago.amount}&concept=${encodeURIComponent(pago.concept)}&id_users=${dto.id_users}`;
+    // Intentar cobro automático recurrente (MIT) directamente
+    try {
+      console.log(`[UCNPAY] Tarjeta encontrada. Ejecutando cargo recurrente automático para el pago: ${pago.id_payments}`);
+      
+      const response = await fetch(`${this.ucnpayUrl}/ucnpay/suscription/authorize`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-private-key': this.privateKey,
+        },
+        body: JSON.stringify({
+          idOrden: `PAG-${pago.id_payments}`,
+          monto: Number(pago.amount),
+          moneda: 'CLP',
+          paymentMethodToken: primeraTarjeta.payment_method_token,
+          customer: primeraTarjeta.holder_name
+        })
+      });
 
-    return { pago, redirectUrl };
+      if (!response.ok) {
+        const bodyText = await response.text();
+        throw new Error(`UCNPAY cobro rechazado por la pasarela (${response.status}): ${bodyText}`);
+      }
+
+      const resJson = (await response.json()) as any;
+
+      // 3. Procesar respuesta del cargo recurrente
+      const webhookPayload: UcnpayWebhookEntradaDto = {
+        event: resJson.status === 'APROBADO' ? 'transaction.approved' : 'transaction.rejected',
+        transactionId: resJson.transactionId || `unknown_${Date.now()}`,
+        idOrden: `PAG-${pago.id_payments}`,
+        status: resJson.status,
+        monto: Number(pago.amount),
+        reason: resJson.message,
+        paymentMethodToken: resJson.paymentMethodToken,
+        mandateId: resJson.mandateId,
+        card: resJson.card
+      };
+
+      const pagoActualizado = await this.procesarPagoWebhook(webhookPayload);
+      if (pagoActualizado) {
+        if (pagoActualizado.status === 'APROBADO') {
+          return { pago: pagoActualizado };
+        } else {
+          throw new Error(resJson.message || 'El cobro fue rechazado por la pasarela de pagos.');
+        }
+      } else {
+        throw new Error('No se pudo procesar la respuesta del pago.');
+      }
+    } catch (error: any) {
+      console.error('[UCNPAY] Cargo automático fallido:', error);
+      // Actualizar el pago a RECHAZADO localmente si hubo error
+      await this.repository.actualizarEstadoPago(pago.id_payments, 'RECHAZADO', null);
+      throw new Error(error.message || 'Error al procesar el cobro automático con la pasarela de pagos.');
+    }
   }
 
   async obtenerPagoPorId(idPayments: string): Promise<FilaPago | null> {

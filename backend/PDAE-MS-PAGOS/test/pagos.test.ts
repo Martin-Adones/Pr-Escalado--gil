@@ -17,7 +17,7 @@ describe('Endpoints de Pagos con UCNPAY', () => {
   });
 
   describe('POST /api/pagos/crear', () => {
-    it('debe registrar el pago y devolver redirectUrl si el usuario no tiene tarjeta guardada', async () => {
+    it('debe registrar el pago, rechazarlo y retornar error 500 si el usuario no tiene tarjeta guardada', async () => {
       const mockPago = {
         id_payments: '100',
         id_users: 'eda5c8c2-dafd-451d-b860-34e592ece123',
@@ -29,7 +29,66 @@ describe('Endpoints de Pagos con UCNPAY', () => {
 
       (db.query as jest.Mock)
         .mockResolvedValueOnce({ rows: [mockPago] }) // crearPago
-        .mockResolvedValueOnce({ rows: [] }); // obtenerPrimerTarjetaUsuario
+        .mockResolvedValueOnce({ rows: [] }) // obtenerPrimerTarjetaUsuario
+        .mockResolvedValueOnce({ rows: [{ ...mockPago, status: 'RECHAZADO' }] }); // actualizarEstadoPago
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/pagos/crear',
+        payload: {
+          id_users: 'eda5c8c2-dafd-451d-b860-34e592ece123',
+          amount: 25000,
+          concept: 'Suscripción mensual'
+        }
+      });
+
+      expect(response.statusCode).toBe(500);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(false);
+      expect(body.message).toContain('No tienes ningún método de pago registrado');
+    });
+
+    it('debe realizar el cobro automático con éxito si el usuario tiene tarjeta guardada y la pasarela aprueba', async () => {
+      const mockPago = {
+        id_payments: '101',
+        id_users: 'eda5c8c2-dafd-451d-b860-34e592ece123',
+        amount: 25000,
+        concept: 'Suscripción mensual',
+        status: 'PENDIENTE',
+        id_billing_cycles: null,
+        external_tx_id: null,
+      };
+
+      const mockTarjeta = {
+        id_user_cards: '1',
+        id_users: 'eda5c8c2-dafd-451d-b860-34e592ece123',
+        payment_method_token: 'token_123',
+        card_brand: 'VISA',
+        card_last4: '4444',
+        holder_name: 'Juan Perez'
+      };
+
+      const mockPagoAprobado = {
+        ...mockPago,
+        status: 'APROBADO',
+        external_tx_id: 'trx_123'
+      };
+
+      (db.query as jest.Mock)
+        .mockResolvedValueOnce({ rows: [mockPago] }) // crearPago
+        .mockResolvedValueOnce({ rows: [mockTarjeta] }) // obtenerPrimerTarjetaUsuario
+        .mockResolvedValueOnce({ rows: [mockPagoAprobado] }); // actualizarEstadoPago
+
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          status: 'APROBADO',
+          transactionId: 'trx_123',
+          paymentMethodToken: 'token_123',
+          card: { brand: 'VISA', last4: '4444' }
+        })
+      });
+      global.fetch = mockFetch;
 
       const response = await app.inject({
         method: 'POST',
@@ -44,8 +103,65 @@ describe('Endpoints de Pagos con UCNPAY', () => {
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
       expect(body.success).toBe(true);
-      expect(body.data.pago.status).toBe('PENDIENTE');
-      expect(body.data.redirectUrl).toBeDefined();
+      expect(body.data.pago.status).toBe('APROBADO');
+      expect(mockFetch).toHaveBeenCalled();
+    });
+
+    it('debe fallar si la pasarela rechaza el cobro automático', async () => {
+      const mockPago = {
+        id_payments: '102',
+        id_users: 'eda5c8c2-dafd-451d-b860-34e592ece123',
+        amount: 25000,
+        concept: 'Suscripción mensual',
+        status: 'PENDIENTE',
+        id_billing_cycles: null,
+        external_tx_id: null,
+      };
+
+      const mockTarjeta = {
+        id_user_cards: '1',
+        id_users: 'eda5c8c2-dafd-451d-b860-34e592ece123',
+        payment_method_token: 'token_123',
+        card_brand: 'VISA',
+        card_last4: '4444',
+        holder_name: 'Juan Perez'
+      };
+
+      const mockPagoRechazado = {
+        ...mockPago,
+        status: 'RECHAZADO',
+      };
+
+      (db.query as jest.Mock)
+        .mockResolvedValueOnce({ rows: [mockPago] }) // crearPago
+        .mockResolvedValueOnce({ rows: [mockTarjeta] }) // obtenerPrimerTarjetaUsuario
+        .mockResolvedValueOnce({ rows: [mockPagoRechazado] }) // actualizarEstadoPago (del handler del webhook)
+        .mockResolvedValueOnce({ rows: [mockPagoRechazado] }); // actualizarEstadoPago (del catch general)
+
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          status: 'RECHAZADO',
+          message: 'Saldo insuficiente',
+          transactionId: 'trx_reject'
+        })
+      });
+      global.fetch = mockFetch;
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/pagos/crear',
+        payload: {
+          id_users: 'eda5c8c2-dafd-451d-b860-34e592ece123',
+          amount: 25000,
+          concept: 'Suscripción mensual'
+        }
+      });
+
+      expect(response.statusCode).toBe(500);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(false);
+      expect(body.message).toContain('Saldo insuficiente');
     });
   });
 
@@ -72,8 +188,8 @@ describe('Endpoints de Pagos con UCNPAY', () => {
       global.fetch = mockFetch;
 
       (db.query as jest.Mock).mockImplementation(async (sql: string) => {
-        if (sql.includes('keycloak_id')) {
-          return { rows: [{ keycloak_id: 'e4b2d3a1-7c9f-4b1a-8c3d-2e1f0a9b8c7d' }] };
+        if (sql.includes('Users') || sql.includes('"Users"')) {
+          return { rows: [{ id_users: 'e4b2d3a1-7c9f-4b1a-8c3d-2e1f0a9b8c7d' }] };
         }
         if (sql.includes('UserCards')) {
           return { rows: [mockCardDb] };
@@ -116,8 +232,8 @@ describe('Endpoints de Pagos con UCNPAY', () => {
       ];
 
       (db.query as jest.Mock).mockImplementation(async (sql: string) => {
-        if (sql.includes('keycloak_id')) {
-          return { rows: [{ keycloak_id: 'e4b2d3a1-7c9f-4b1a-8c3d-2e1f0a9b8c7d' }] };
+        if (sql.includes('Users') || sql.includes('"Users"')) {
+          return { rows: [{ id_users: 'e4b2d3a1-7c9f-4b1a-8c3d-2e1f0a9b8c7d' }] };
         }
         if (sql.includes('UserCards')) {
           return { rows: mockCards };
