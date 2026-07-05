@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { SoporteService } from '../services/soporte.service';
-import { transformAndValidate } from 'shared';
+import { transformAndValidate, extraerBearerToken } from 'shared';
 import {
   CrearTicketEntradaDto,
   ListarTicketsConsultaDto,
@@ -32,7 +32,11 @@ export class SoporteController {
       const entradas = await Promise.all(
         rawTickets.map((item: any) => transformAndValidate(CrearTicketEntradaDto, item))
       );
-      const resultado = await this.servicio.crearTicket(entradas.length === 1 ? entradas[0] : entradas);
+      const token = extraerBearerToken(solicitud.headers.authorization) || undefined;
+      const resultado = await this.servicio.crearTicket(
+        entradas.length === 1 ? entradas[0] : entradas,
+        token
+      );
 
       return respuesta.status(200).send({ success: true, data: resultado });
     } catch (error: any) {

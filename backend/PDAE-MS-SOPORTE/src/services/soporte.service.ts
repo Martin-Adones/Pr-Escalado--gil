@@ -6,6 +6,7 @@ import {
   FilaTicket,
   FilaTicketListado,
 } from '../models/soporte.dtos';
+import { verificarTokenKeycloak } from 'shared';
 
 /**
  * Caso de uso de soporte: orquesta el repositorio (sin conocer HTTP).
@@ -18,7 +19,8 @@ export class SoporteService {
   }
 
   async crearTicket(
-    dto: CrearTicketEntradaDto | CrearTicketEntradaDto[]
+    dto: CrearTicketEntradaDto | CrearTicketEntradaDto[],
+    token?: string
   ): Promise<FilaTicket[]> {
     const resultados: FilaTicket[] = [];
     const tickets = Array.isArray(dto) ? dto : [dto];
@@ -28,7 +30,7 @@ export class SoporteService {
       if (Array.isArray(res)) {
         resultados.push(...res);
         for (const t of res) {
-          this.enviarTicketAlCrm(t).catch((err) =>
+          this.enviarTicketAlCrm(t, token).catch((err) =>
             console.error('[CRM] Fallo al iniciar enviarTicketAlCrm:', err)
           );
         }
@@ -38,7 +40,7 @@ export class SoporteService {
     return resultados;
   }
 
-  private async enviarTicketAlCrm(ticket: FilaTicket): Promise<void> {
+  private async enviarTicketAlCrm(ticket: FilaTicket, token?: string): Promise<void> {
     try {
       const detalles = await this.repositorio.obtenerDetallesContrato(ticket.id_contracts);
       let prioridad: 'baja' | 'media' | 'alta' | 'critica' = 'media';
@@ -53,13 +55,27 @@ export class SoporteService {
         ? ticket.description.substring(0, 77) + '...'
         : ticket.description;
 
+      let email = `${ticket.id_users}@suscripciones.com`;
+
+      if (token) {
+        try {
+          const payloadToken = await verificarTokenKeycloak(token);
+          if (payloadToken.email) {
+            email = payloadToken.email;
+          }
+        } catch (err) {
+          console.error('[CRM] Error al verificar token en enviarTicketAlCrm:', err);
+        }
+      }
+
       const payload = {
         asunto,
         descripcion: ticket.description,
         prioridad,
         sistema_origen: 'suscripciones',
         sistema_id: 'P10',
-        cliente_id: detalles ? Number(detalles.id_users) : Number(ticket.id_users),
+        cliente_nombre: ticket.id_users,
+        cliente_email: email,
         suscripcion_id_ref: `SUB-${ticket.id_contracts}`
       };
 
