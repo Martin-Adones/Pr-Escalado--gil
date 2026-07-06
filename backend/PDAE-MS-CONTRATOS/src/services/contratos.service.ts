@@ -39,9 +39,20 @@ export class ContratosService {
         start_date: contrato.start_date ?? null,
         status: contrato.status ?? null,
         end_date: contrato.end_date ?? null,
+        ...(contrato.status === 'ACTIVE' ? { renewed: false, billing_success: true } : {}),
       };
       console.log('[analytics] Enviando subscription_created:', JSON.stringify(payload));
       notificarSubscriptionCreated(payload);
+
+      if (contrato.status === 'ACTIVE') {
+        const pagoPayload = {
+          contract_id: String(contrato.id_contracts),
+          user_id: Number(contrato.id_users),
+          plan_id: Number(contrato.id_plans),
+        };
+        console.log('[analytics] Enviando payment_success (pago ya confirmado):', JSON.stringify(pagoPayload));
+        notificarPaymentSuccess(pagoPayload);
+      }
     }
 
     return resultado;
