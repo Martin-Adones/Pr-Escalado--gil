@@ -36,10 +36,24 @@ interface RenewalFailedPayload {
   plan_id: number;
 }
 
+interface PaymentSuccessPayload {
+  contract_id: string;
+  user_id: number;
+  plan_id: number;
+}
+
+interface PaymentFailedPayload {
+  contract_id: string;
+  user_id: number;
+  plan_id: number;
+}
+
 type AnalyticsEvent =
   | { source: typeof SOURCE; event_type: 'subscription_created'; payload: SubscriptionCreatedPayload }
   | { source: typeof SOURCE; event_type: 'renewal_success'; payload: RenewalSuccessPayload }
-  | { source: typeof SOURCE; event_type: 'renewal_failed'; payload: RenewalFailedPayload };
+  | { source: typeof SOURCE; event_type: 'renewal_failed'; payload: RenewalFailedPayload }
+  | { source: typeof SOURCE; event_type: 'payment_success'; payload: PaymentSuccessPayload }
+  | { source: typeof SOURCE; event_type: 'payment_failed'; payload: PaymentFailedPayload };
 
 // ─── Envío interno ───────────────────────────────────────────────────────────
 
@@ -84,4 +98,12 @@ export function notificarRenewalSuccess(payload: RenewalSuccessPayload): void {
 
 export function notificarRenewalFailed(payload: RenewalFailedPayload): void {
   enviarEvento({ source: SOURCE, event_type: 'renewal_failed', payload });
+}
+
+export function notificarPaymentSuccess(payload: PaymentSuccessPayload): void {
+  enviarEvento({ source: SOURCE, event_type: 'payment_success', payload });
+}
+
+export function notificarPaymentFailed(payload: PaymentFailedPayload): void {
+  enviarEvento({ source: SOURCE, event_type: 'payment_failed', payload });
 }

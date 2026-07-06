@@ -3,6 +3,8 @@ import {
   notificarSubscriptionCreated,
   notificarRenewalSuccess,
   notificarRenewalFailed,
+  notificarPaymentSuccess,
+  notificarPaymentFailed,
 } from '../utils/analytics.client';
 import { notificarEmail, notificarEmailConFallbackSms } from '../utils/notifications.client';
 import {
@@ -97,8 +99,10 @@ export class ContratosService {
       };
       if (esCompletado) {
         notificarRenewalSuccess(payload);
+        notificarPaymentSuccess(payload);
       } else {
         notificarRenewalFailed(payload);
+        notificarPaymentFailed(payload);
       }
     }
 
