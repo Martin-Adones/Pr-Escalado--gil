@@ -54,7 +54,8 @@ describe('Soporte API Endpoints', () => {
         .post('/api/soporte/crear')
         .send({
           id_contracts: '5',
-          description: 'Error en el panel',
+          asunto: 'Error en el panel',
+          description: 'Detalle del error',
           status: 'open',
         })
         .expect(200);
@@ -81,8 +82,8 @@ describe('Soporte API Endpoints', () => {
       await supertest(app.server)
         .post('/api/soporte/crear')
         .send([
-          { id_contracts: '5', description: 'Error 1' },
-          { id_contracts: '5', description: 'Error 2' },
+          { id_contracts: '5', asunto: 'Error 1' },
+          { id_contracts: '5', asunto: 'Error 2' },
         ])
         .expect(200);
     });
@@ -103,7 +104,7 @@ describe('Soporte API Endpoints', () => {
         .post('/api/soporte/crear')
         .send({
           tickets: [
-            { id_contracts: '5', description: 'Error 1' },
+            { id_contracts: '5', asunto: 'Error 1' },
           ],
         })
         .expect(200);
@@ -130,6 +131,7 @@ describe('Soporte API Endpoints', () => {
         .post('/api/soporte/crear')
         .send({
           id_contracts: '5',
+          asunto: 'Error',
           description: 'Problema técnico',
         })
         .expect(400);
@@ -149,6 +151,7 @@ describe('Soporte API Endpoints', () => {
         .post('/api/soporte/crear')
         .send({
           id_contracts: '5',
+          asunto: 'Error',
           description: 'Problema técnico',
         })
         .expect(500);
@@ -345,7 +348,7 @@ describe('Soporte API Endpoints', () => {
       const service = new (require('../src/services/soporte.service').SoporteService)();
       service.repositorio = repo;
 
-      const tickets = await service.crearTicket({ id_contracts: '5', description: 'Error en el panel' });
+      const tickets = await service.crearTicket({ id_contracts: '5', asunto: 'Error en el panel' });
       expect(tickets.length).toBe(1);
 
       await new Promise(resolve => setTimeout(resolve, 50));
@@ -368,7 +371,7 @@ describe('Soporte API Endpoints', () => {
       const service = new (require('../src/services/soporte.service').SoporteService)();
       service.repositorio = repo;
 
-      await service.crearTicket({ id_contracts: '5', description: 'Otro error' });
+      await service.crearTicket({ id_contracts: '5', asunto: 'Otro error' });
       await new Promise(resolve => setTimeout(resolve, 50));
       expect(global.fetch).toHaveBeenCalled();
     });
@@ -389,7 +392,7 @@ describe('Soporte API Endpoints', () => {
       const service = new (require('../src/services/soporte.service').SoporteService)();
       service.repositorio = repo;
 
-      await service.crearTicket({ id_contracts: '5', description: 'Error crítico' });
+      await service.crearTicket({ id_contracts: '5', asunto: 'Error crítico' });
       await new Promise(resolve => setTimeout(resolve, 50));
       expect(global.fetch).toHaveBeenCalled();
     });

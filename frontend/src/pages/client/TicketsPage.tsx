@@ -183,15 +183,28 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
     setFormError(null)
     const formData = new FormData(e.currentTarget)
     const id_contracts = formData.get('id_contracts') as string
+    const asunto = formData.get('asunto') as string
     const description = formData.get('description') as string
+    const cliente_nombre = formData.get('cliente_nombre') as string
+    const cliente_email = formData.get('cliente_email') as string
+    const cliente_telefono = formData.get('cliente_telefono') as string
 
-    if (!id_contracts || !description) {
-      setFormError('Todos los campos son obligatorios.')
+    if (!id_contracts || !asunto || !cliente_nombre || !cliente_email) {
+      setFormError('Completa todos los campos obligatorios.')
       return
     }
 
     try {
-      await crearTicket({ id_contracts, description, status: 'open' })
+      await crearTicket({
+        id_contracts,
+        asunto,
+        description: description || undefined,
+        status: 'open',
+        cliente_nombre,
+        cliente_email,
+        cliente_telefono: cliente_telefono || undefined,
+      })
+
       setIsNewModalOpen(false)
       loadData()
     } catch (err) {
@@ -482,14 +495,62 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1.5">
-                  Descripción del problema <span className="text-red-500">*</span>
+                  Asunto <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="asunto"
+                  required
+                  placeholder="Ej: Problema con la renovación del contrato"
+                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#3C6E71]"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1.5">
+                  Descripción del problema
                 </label>
                 <textarea
                   name="description"
-                  required
-                  rows={4}
-                  placeholder="Describe el inconveniente con el mayor detalle posible..."
+                  rows={3}
+                  placeholder="Detalle técnico del problema (opcional)..."
                   className="w-full resize-none text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#3C6E71]"
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1.5">
+                    Nombre del Cliente <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="cliente_nombre"
+                    required
+                    placeholder="Ej: Juan Pérez"
+                    className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#3C6E71]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1.5">
+                    Correo del Cliente <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    name="cliente_email"
+                    required
+                    placeholder="ej: correo@ejemplo.com"
+                    className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#3C6E71]"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1.5">
+                  Teléfono del Cliente
+                </label>
+                <input
+                  type="tel"
+                  name="cliente_telefono"
+                  placeholder="Ej: +56912345678"
+                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#3C6E71]"
                 />
               </div>
               {formError && (

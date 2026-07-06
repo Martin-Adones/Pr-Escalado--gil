@@ -30,7 +30,7 @@ export class SoporteService {
       if (Array.isArray(res)) {
         resultados.push(...res);
         for (const t of res) {
-          this.enviarTicketAlCrm(t, token).catch((err) =>
+          this.enviarTicketAlCrm(t, ticket, token).catch((err) =>
             console.error('[CRM] Fallo al iniciar enviarTicketAlCrm:', err)
           );
         }
@@ -40,7 +40,7 @@ export class SoporteService {
     return resultados;
   }
 
-  private async enviarTicketAlCrm(ticket: FilaTicket, token?: string): Promise<void> {
+  private async enviarTicketAlCrm(ticket: FilaTicket, dto: CrearTicketEntradaDto, token?: string): Promise<void> {
     try {
       const detalles = await this.repositorio.obtenerDetallesContrato(ticket.id_contracts);
       let prioridad: 'baja' | 'media' | 'alta' | 'critica' = 'media';
@@ -51,13 +51,8 @@ export class SoporteService {
         else if (name.includes('enterprise') || name.includes('corporativo')) prioridad = 'alta';
       }
 
-      const asunto = ticket.description.length > 80
-        ? ticket.description.substring(0, 77) + '...'
-        : ticket.description;
-
-      let email = `${ticket.id_users}@suscripciones.com`;
-
-      if (token) {
+      let email = dto.cliente_email;
+      if (!email && token) {
         try {
           const payloadToken = await verificarTokenKeycloak(token);
           if (payloadToken.email) {
@@ -69,14 +64,15 @@ export class SoporteService {
       }
 
       const payload = {
-        asunto,
-        descripcion: ticket.description,
+        asunto: dto.asunto,
+        descripcion: dto.description || undefined,
         prioridad,
-        sistema_origen: 'suscripciones',
-        sistema_id: 'P10',
-        cliente_nombre: ticket.id_users,
-        cliente_email: email,
-        suscripcion_id_ref: `SUB-${ticket.id_contracts}`
+        sistema_origen: 'salud',
+        sistema_id: 'P01',
+        cliente_nombre: dto.cliente_nombre || ticket.id_users,
+        cliente_email: email || `${ticket.id_users}@salud.com`,
+        cliente_telefono: dto.cliente_telefono || undefined,
+        salud_ref: `SAL-${ticket.id_contracts}`
       };
 
       console.log(`[CRM] Enviando ticket #${ticket.id_support} al CRM... Payload:`, JSON.stringify(payload));
@@ -85,7 +81,7 @@ export class SoporteService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': 'suscripciones_secret_p10'
+          'x-api-key': 'salud_secret_p01'
         },
         body: JSON.stringify(payload)
       });

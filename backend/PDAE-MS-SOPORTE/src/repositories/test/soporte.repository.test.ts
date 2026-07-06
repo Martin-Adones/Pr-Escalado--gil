@@ -11,7 +11,7 @@ describe('SoporteRepository', () => {
 
   it('ejecutarCrearTicket llama a sp_crear_ticket con los parametros en orden', async () => {
     const espia = jest.spyOn(BaseRepository.prototype as any, 'callProcedure').mockResolvedValue([{ id: 1 }]);
-    const dto = { id_contracts: '2', description: 'Problema', status: 'open' } as any;
+    const dto = { id_contracts: '2', asunto: 'Problema', status: 'open' } as any;
     await repositorio.ejecutarCrearTicket(dto);
     expect(espia).toHaveBeenCalledWith('sp_crear_ticket', ['2', 'Problema', 'open'], undefined);
   });
