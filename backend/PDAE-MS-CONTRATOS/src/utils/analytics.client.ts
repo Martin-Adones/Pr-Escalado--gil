@@ -15,7 +15,6 @@ const SOURCE = 'subscriptions';
 interface SubscriptionCreatedPayload {
   contract_id: string;
   user_id: string | number;
-  plan_id: number;
   start_date?: string | null;
   status?: string | null;
   renewed?: boolean | null;
@@ -27,25 +26,27 @@ interface SubscriptionCreatedPayload {
 interface RenewalSuccessPayload {
   contract_id: string;
   user_id: string | number;
-  plan_id: number;
 }
 
 interface RenewalFailedPayload {
   contract_id: string;
   user_id: string | number;
-  plan_id: number;
 }
 
 interface PaymentSuccessPayload {
   contract_id: string;
   user_id: string | number;
-  plan_id: number;
 }
 
 interface PaymentFailedPayload {
   contract_id: string;
   user_id: string | number;
-  plan_id: number;
+}
+
+interface SubscriptionCancelledPayload {
+  contract_id: string;
+  cancelled_at: string;
+  status: string;
 }
 
 type AnalyticsEvent =
@@ -53,7 +54,8 @@ type AnalyticsEvent =
   | { source: typeof SOURCE; event_type: 'renewal_success'; payload: RenewalSuccessPayload }
   | { source: typeof SOURCE; event_type: 'renewal_failed'; payload: RenewalFailedPayload }
   | { source: typeof SOURCE; event_type: 'payment_success'; payload: PaymentSuccessPayload }
-  | { source: typeof SOURCE; event_type: 'payment_failed'; payload: PaymentFailedPayload };
+  | { source: typeof SOURCE; event_type: 'payment_failed'; payload: PaymentFailedPayload }
+  | { source: typeof SOURCE; event_type: 'subscription_cancelled'; payload: SubscriptionCancelledPayload };
 
 // ─── Envío interno ───────────────────────────────────────────────────────────
 
@@ -107,4 +109,8 @@ export function notificarPaymentSuccess(payload: PaymentSuccessPayload): void {
 
 export function notificarPaymentFailed(payload: PaymentFailedPayload): void {
   enviarEvento({ source: SOURCE, event_type: 'payment_failed', payload });
+}
+
+export function notificarSubscriptionCancelled(payload: SubscriptionCancelledPayload): void {
+  enviarEvento({ source: SOURCE, event_type: 'subscription_cancelled', payload });
 }

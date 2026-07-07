@@ -5,6 +5,7 @@ import {
   notificarRenewalFailed,
   notificarPaymentSuccess,
   notificarPaymentFailed,
+  notificarSubscriptionCancelled,
 } from '../utils/analytics.client';
 import { notificarEmail, notificarEmailConFallbackSms } from '../utils/notifications.client';
 import {
@@ -41,7 +42,6 @@ export class ContratosService {
       const payload = {
         contract_id: String(contrato.id_contracts),
         user_id: String(contrato.id_users),
-        plan_id: Number(contrato.id_plans),
         start_date: contrato.start_date ?? null,
         status: (contrato.status ?? '').toLowerCase() || null,
         end_date: contrato.end_date ?? null,
@@ -54,7 +54,6 @@ export class ContratosService {
         const pagoPayload = {
           contract_id: String(contrato.id_contracts),
           user_id: String(contrato.id_users),
-          plan_id: Number(contrato.id_plans),
         };
         console.log('[analytics] Enviando payment_success (pago ya confirmado):', JSON.stringify(pagoPayload));
         notificarPaymentSuccess(pagoPayload);
@@ -68,11 +67,17 @@ export class ContratosService {
     const resultado = await this.repositorio.ejecutarFinalizarContrato(dto);
 
     if (resultado && resultado.length > 0) {
+      const contrato = resultado[0];
       await this.repositorio.registrarLogAuditoria(
-        resultado[0].id_contracts,
+        contrato.id_contracts,
         'FINALIZAR_CONTRATO',
         'sistema'
       );
+      notificarSubscriptionCancelled({
+        contract_id: String(contrato.id_contracts),
+        cancelled_at: new Date().toISOString(),
+        status: 'cancelled',
+      });
     }
 
     return resultado;
@@ -144,7 +149,6 @@ export class ContratosService {
       const payload = {
         contract_id: String(contrato.id_contracts),
         user_id: String(contrato.id_users),
-        plan_id: Number(contrato.id_plans),
       };
       if (esCompletado) {
         notificarRenewalSuccess(payload);
