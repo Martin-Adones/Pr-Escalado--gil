@@ -39,7 +39,7 @@ export class ContratosService {
         start_date: contrato.start_date ?? null,
         status: contrato.status ?? null,
         end_date: contrato.end_date ?? null,
-        ...(contrato.status === 'ACTIVE' ? { renewed: false, billing_success: true } : {}),
+        ...(contrato.status === 'ACTIVE' ? { renewed: false, auto_service: true, billing_success: true } : {}),
       };
       console.log('[analytics] Enviando subscription_created:', JSON.stringify(payload));
       notificarSubscriptionCreated(payload);

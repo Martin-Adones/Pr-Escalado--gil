@@ -65,11 +65,12 @@ async function enviarEvento(evento: AnalyticsEvent): Promise<void> {
       body: JSON.stringify(evento),
     });
 
-    if (!respuesta.ok) {
+    if (respuesta.ok) {
       const texto = await respuesta.text().catch(() => '');
-      console.warn(
-        `[analytics] Evento "${evento.event_type}" rechazado con HTTP ${respuesta.status}: ${texto}`
-      );
+      console.log(`[analytics] Evento "${evento.event_type}" aceptado: ${texto}`);
+    } else {
+      const texto = await respuesta.text().catch(() => '');
+      console.warn(`[analytics] Evento "${evento.event_type}" rechazado con HTTP ${respuesta.status}: ${texto}`);
     }
   } catch (err) {
     console.error(`[analytics] Error al enviar evento "${evento.event_type}":`, err);
