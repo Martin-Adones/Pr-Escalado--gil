@@ -43,7 +43,7 @@ export class ContratosService {
         user_id: String(contrato.id_users),
         plan_id: Number(contrato.id_plans),
         start_date: contrato.start_date ?? null,
-        status: contrato.status ?? null,
+        status: (contrato.status ?? '').toLowerCase() || null,
         end_date: contrato.end_date ?? null,
         ...(contrato.status === 'ACTIVE' ? { renewed: false, auto_service: true, billing_success: true } : {}),
       };
