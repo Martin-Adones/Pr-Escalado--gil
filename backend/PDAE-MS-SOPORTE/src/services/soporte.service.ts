@@ -67,12 +67,12 @@ export class SoporteService {
         asunto: dto.asunto,
         descripcion: dto.description || undefined,
         prioridad,
-        sistema_origen: 'salud',
-        sistema_id: 'P01',
+        sistema_origen: 'suscripciones',
+        sistema_id: 'P10',
         cliente_nombre: dto.cliente_nombre || ticket.id_users,
-        cliente_email: email || `${ticket.id_users}@salud.com`,
+        cliente_email: email || `${ticket.id_users}@suscripciones.com`,
         cliente_telefono: dto.cliente_telefono || undefined,
-        salud_ref: `SAL-${ticket.id_contracts}`
+        suscripcion_id_ref: `SUB-${ticket.id_contracts}`
       };
 
       console.log(`[CRM] Enviando ticket #${ticket.id_support} al CRM... Payload:`, JSON.stringify(payload));
@@ -81,7 +81,7 @@ export class SoporteService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': 'salud_secret_p01'
+          'x-api-key': 'suscripciones_secret_p10'
         },
         body: JSON.stringify(payload)
       });

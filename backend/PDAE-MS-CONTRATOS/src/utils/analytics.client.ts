@@ -14,7 +14,7 @@ const SOURCE = 'subscriptions';
 
 interface SubscriptionCreatedPayload {
   contract_id: string;
-  user_id: number;
+  user_id: string | number;
   plan_id: number;
   start_date?: string | null;
   status?: string | null;
@@ -26,25 +26,25 @@ interface SubscriptionCreatedPayload {
 
 interface RenewalSuccessPayload {
   contract_id: string;
-  user_id: number;
+  user_id: string | number;
   plan_id: number;
 }
 
 interface RenewalFailedPayload {
   contract_id: string;
-  user_id: number;
+  user_id: string | number;
   plan_id: number;
 }
 
 interface PaymentSuccessPayload {
   contract_id: string;
-  user_id: number;
+  user_id: string | number;
   plan_id: number;
 }
 
 interface PaymentFailedPayload {
   contract_id: string;
-  user_id: number;
+  user_id: string | number;
   plan_id: number;
 }
 
