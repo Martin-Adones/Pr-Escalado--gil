@@ -360,6 +360,9 @@ services:
       CHOKIDAR_USEPOLLING: "true"
       MS_RUTAS_URL: "${MS_RUTAS_URL}"
       CORS_ORIGIN: "${CORS_ORIGIN}"
+      KEYCLOAK_URL: "${KEYCLOAK_URL}"
+      KEYCLOAK_REALM: "${KEYCLOAK_REALM}"
+      KEYCLOAK_CLIENT_ID: "${KEYCLOAK_CLIENT_ID}"
     ports:
       - "${GATEWAY_PORT}:${GATEWAY_PORT}"
     depends_on:
