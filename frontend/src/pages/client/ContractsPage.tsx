@@ -255,8 +255,8 @@ export default function Contracts({
       userRole="Premium Member"
       headerTitle="Mis Contratos"
       headerSubtitle="Revisa tus contratos activos e históricos."
-      headerRightLabel="Próximo Cobro"
-      headerRightValue={cycle.renewalDateLabel}
+      headerRightLabel={contrato ? "Próximo Cobro" : ""}
+      headerRightValue={contrato ? cycle.renewalDateLabel : ""}
     >
       {loading ? (
         <LoadingSpinner />

@@ -220,8 +220,8 @@ export default function Dashboard({ navItems, logoutItem, activeNavLabel, userId
       userRole="Miembro Premium"
       headerTitle="Dashboard de Cliente"
       headerSubtitle="Gestiona tus contratos y ciclos de pago de forma centralizada."
-      headerRightLabel="Próximo Cobro"
-      headerRightValue={cycle.renewalDateLabel}
+      headerRightLabel={contrato ? "Próximo Cobro" : ""}
+      headerRightValue={contrato ? cycle.renewalDateLabel : ""}
     >
       {loading ? (
         <LoadingSpinner />
