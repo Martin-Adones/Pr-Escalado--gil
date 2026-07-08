@@ -29,11 +29,9 @@ type Plan = {
   name: string
   level: string
   monthlyPrice: string
-  yearlyPrice: string
-  yearlyOriginalPrice: string
+  monthlyDiscountedPrice: string
+  yearlySavings: string
   rawMonthlyAmount: number
-  rawYearlyAmount: number
-  description: string
   productos: Producto[]
   isRecommended?: boolean
   isCurrent?: boolean
@@ -94,7 +92,7 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
         const mapped: Plan[] = sortedPlanes.map((p, i) => {
           const monthlyAmount = Number(p.amount)
           const yearlyAmount = getYearlyPrice(monthlyAmount)
-          const yearlyDiscounted = Math.round(yearlyAmount * (1 - getDiscountPct() / 100))
+
           const isCurrent = p.id_plans === activeContractPlanId
           const productos = (p.products || []).map(pr => ({
             id_products: pr.id_products,
@@ -109,11 +107,9 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
             name: p.name,
             level: getLevel(p.name, i, total),
             monthlyPrice: formatPrice(p.amount),
-            yearlyPrice: formatPrice(String(yearlyDiscounted)),
-            yearlyOriginalPrice: formatPrice(String(yearlyAmount)),
+            monthlyDiscountedPrice: formatPrice(String(Math.round(monthlyAmount * (1 - getDiscountPct() / 100)))),
+            yearlySavings: formatPrice(String(Math.round(yearlyAmount * getDiscountPct() / 100))),
             rawMonthlyAmount: monthlyAmount,
-            rawYearlyAmount: yearlyDiscounted,
-            description: `Plan ${p.name} - Ciclo de facturación: ${p.billing_cycle}`,
             productos,
             isRecommended: total > 2 && i === Math.floor(total / 2),
             isCurrent,
@@ -169,7 +165,7 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
       }
     }
 
-    const rawAmount = billingPeriod === 'monthly' ? selectedPlan.rawMonthlyAmount : selectedPlan.rawYearlyAmount
+    const rawAmount = billingPeriod === 'monthly' ? selectedPlan.rawMonthlyAmount : Math.round(selectedPlan.rawMonthlyAmount * 12 * (1 - getDiscountPct() / 100))
     const periodLabel = billingPeriod === 'monthly' ? 'mensual' : 'anual'
     const concept = `Cambio a ${selectedPlan.name} (${periodLabel})`
 
@@ -327,11 +323,6 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
               Anual
             </button>
           </div>
-          {billingPeriod === 'yearly' && (
-            <span className="rounded-md bg-emerald-100 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-emerald-700 shadow-sm">
-              Ahorra 15%
-            </span>
-          )}
         </div>
 
         {plansError && !isLoadingPlans && (
@@ -352,8 +343,8 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
         ) : (
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
             {plans.map((plan) => {
-              const price = billingPeriod === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice
-              const period = billingPeriod === 'monthly' ? '/mes' : '/año'
+              const price = billingPeriod === 'monthly' ? plan.monthlyPrice : plan.monthlyDiscountedPrice
+              const period = billingPeriod === 'monthly' ? '/mes' : '/mes'
 
               return (
                 <article
@@ -382,7 +373,7 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
 
                   <div>
                     <h4 className="text-2xl font-black text-[#353535]">{plan.name}</h4>
-                    <p className="mt-2 min-h-12 text-sm font-medium leading-6 text-gray-500">{plan.description}</p>
+                    <p className="mt-1 text-xs font-semibold text-gray-400">Ciclo: {plan.billingCycle}</p>
                   </div>
 
                   <div className="mt-6 border-y border-gray-100 py-5">
@@ -390,7 +381,9 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
                       <span className="text-4xl font-black tracking-tight text-[#284B63]">{price}</span>
                       <span className="pb-1 text-sm font-bold text-gray-400">{period}</span>
                       {billingPeriod === 'yearly' ? (
-                        <span className="pb-1 text-sm font-black text-gray-400 line-through">{plan.yearlyOriginalPrice}</span>
+                        <span className="ml-auto self-center rounded-md bg-emerald-100 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-emerald-700 shadow-sm">
+                          Ahorras {plan.yearlySavings}/año
+                        </span>
                       ) : null}
                     </div>
                   </div>
@@ -444,7 +437,7 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
           onConfirm={handleConfirmChange}
           currentPlanName={currentPlan?.name || 'Sin plan activo'}
           newPlanName={selectedPlan.name}
-          newPlanPrice={billingPeriod === 'monthly' ? selectedPlan.monthlyPrice : selectedPlan.yearlyPrice}
+          newPlanPrice={billingPeriod === 'monthly' ? selectedPlan.monthlyPrice : selectedPlan.monthlyDiscountedPrice}
           billingPeriod={billingPeriod}
           isUpgrade={!!currentPlan && (isUpgrade ?? false)}
           isProcessing={isProcessingPayment}

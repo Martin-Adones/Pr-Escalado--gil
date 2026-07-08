@@ -1755,15 +1755,38 @@ INSERT INTO "Products" ("name", "description", "type", "quantity", "price", "isA
   ('Almacenamiento 50GB',    'Almacenamiento en la nube de 50 GB',                        'storage', 1,      14990, TRUE),
   ('SSL Dedicado',           'Certificado SSL dedicado con validación extendida',          'service', NULL,   29990, TRUE);
 
--- 9. Plans_Products (7) — asociaciones plan ↔ producto
+-- 9. Plans_Products (15) — asociaciones progresivas plan ↔ producto
 INSERT INTO "Plans_Products" ("id_plans", "id_products") VALUES
-  (1, 1),  -- Básico → Soporte estándar
-  (1, 4),  -- Básico → Reportes básicos
-  (2, 2),  -- Profesional → Soporte prioritario
-  (2, 3),  -- Profesional → Panel de métricas
-  (2, 5),  -- Profesional → Automatización de pagos
-  (3, 6),  -- Enterprise → Usuarios ilimitados
-  (3, 7);  -- Enterprise → API REST privada
+  -- Básico ($19.990): esenciales gratuitos
+  (1, 1),  -- Soporte estándar
+  (1, 4),  -- Reportes básicos
+  (1, 5),  -- Automatización de pagos
+  -- Pyme ($24.990): añade métricas
+  (4, 1),  -- Soporte estándar
+  (4, 3),  -- Panel de métricas
+  (4, 4),  -- Reportes básicos
+  (4, 5),  -- Automatización de pagos
+  -- Profesional ($32.990): soporte prioritario + almacenamiento
+  (2, 2),  -- Soporte prioritario
+  (2, 3),  -- Panel de métricas
+  (2, 5),  -- Automatización de pagos
+  (2, 8),  -- Almacenamiento 10GB
+  -- Enterprise ($45.990): API + almacenamiento mayor + usuarios ilimitados
+  (3, 2),  -- Soporte prioritario
+  (3, 3),  -- Panel de métricas
+  (3, 5),  -- Automatización de pagos
+  (3, 6),  -- Usuarios ilimitados
+  (3, 7),  -- API REST privada
+  (3, 8),  -- Almacenamiento 10GB
+  (3, 9),  -- Almacenamiento 50GB
+  -- Corporativo ($59.990): todo lo anterior + SSL dedicado
+  (5, 2),  -- Soporte prioritario
+  (5, 3),  -- Panel de métricas
+  (5, 5),  -- Automatización de pagos
+  (5, 6),  -- Usuarios ilimitados
+  (5, 7),  -- API REST privada
+  (5, 9),  -- Almacenamiento 50GB
+  (5, 10); -- SSL Dedicado
 
 -- =============================================================================
 -- sp_sincronizar_usuario — upsert post-login con UUID de Keycloak
