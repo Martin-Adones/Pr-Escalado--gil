@@ -71,6 +71,8 @@ export class PagosService {
         throw new Error(`UCNPAY rechazó el registro: ${resJson.message || 'Error desconocido'}`);
       }
 
+      console.log(`[UCNPAY] POST init/suscription APROBADO — token=${resJson.paymentMethodToken}, brand=${resJson.card?.brand}, last4=${resJson.card?.last4}`);
+
       // Guardar localmente en la base de datos
       const localCard = await this.repository.registrarTarjeta(
         dto.id_users,
