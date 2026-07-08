@@ -486,6 +486,28 @@ export class PagosController {
     respuesta.type('text/html').send(html);
   }
 
+  // --- Mock endpoints UCNPAY (pasarela local) ---
+
+  async manejarMockUcnpayObtenerTarjetas(solicitud: FastifyRequest, respuesta: FastifyReply) {
+    try {
+      const { userId } = solicitud.params as any;
+      console.log(`[MockUCNPAY] GET tarjetas userId=${userId} — retornando vacío`);
+      return respuesta.status(200).send([]);
+    } catch (error: any) {
+      return respuesta.status(500).send({ success: false, message: error.message || 'Error interno' });
+    }
+  }
+
+  async manejarMockUcnpayEliminarTarjeta(solicitud: FastifyRequest, respuesta: FastifyReply) {
+    try {
+      const { userId, token } = solicitud.body as any;
+      console.log(`[MockUCNPAY] DELETE tarjeta token=${token} userId=${userId} — aceptado`);
+      return respuesta.status(200).send({ status: 'APROBADO', message: 'Tarjeta eliminada correctamente' });
+    } catch (error: any) {
+      return respuesta.status(500).send({ success: false, message: error.message || 'Error interno' });
+    }
+  }
+
   async manejarMockProcesar(solicitud: FastifyRequest, respuesta: FastifyReply) {
     try {
       const { id_payments, approve, id_users, tarjeta, titular } = solicitud.body as any;
