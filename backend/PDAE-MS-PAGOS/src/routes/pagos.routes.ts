@@ -20,4 +20,7 @@ export default async function rutasPagos(fastify: FastifyInstance) {
   // Simulación de pasarela UCNPAY
   fastify.get('/pagos/mock-externo/checkout-page', controlador.manejarMockCheckoutPage.bind(controlador));
   fastify.post('/pagos/mock-externo/procesar', controlador.manejarMockProcesar.bind(controlador));
+
+  // Mock endpoints UCNPAY (usados cuando UCNPAY_BASE_URL apunta a localhost)
+  fastify.delete('/ucnpay/tarjeta', controlador.manejarMockUcnpayEliminarTarjeta.bind(controlador));
 }
