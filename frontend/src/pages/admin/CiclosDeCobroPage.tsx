@@ -12,10 +12,9 @@ export default function CiclosDeCobroPage({ navItems, logoutItem, activeNavLabel
   const [isCobroManualOpen, setIsCobroManualOpen] = useState(false)
   const [idUsers, setIdUsers] = useState('')
   const [amount, setAmount] = useState('')
-  const [concept, setConcept] = useState('Cobro manual de ciclo de facturación')
-  const [idBillingCycles, setIdBillingCycles] = useState('')
   const [isProcesandoCobro, setIsProcesandoCobro] = useState(false)
   const [cobroError, setCobroError] = useState<string | null>(null)
+  const conceptoCobroManual = 'Cobro manual de ciclo de facturación'
 
   const handleCobroManual = () => {
     setCobroError(null)
@@ -31,8 +30,8 @@ export default function CiclosDeCobroPage({ navItems, logoutItem, activeNavLabel
     setCobroError(null)
 
     const amountNumber = Number(amount)
-    if (!idUsers.trim() || !Number.isFinite(amountNumber) || amountNumber < 1 || !concept.trim()) {
-      setCobroError('Completa usuario, monto y concepto antes de ejecutar el cobro.')
+    if (!idUsers.trim() || !Number.isFinite(amountNumber) || amountNumber < 1) {
+      setCobroError('Completa usuario y monto antes de ejecutar el cobro.')
       return
     }
 
@@ -41,16 +40,13 @@ export default function CiclosDeCobroPage({ navItems, logoutItem, activeNavLabel
       const response = await crearPago({
         id_users: idUsers.trim(),
         amount: amountNumber,
-        concept: concept.trim(),
-        id_billing_cycles: idBillingCycles.trim() || undefined,
+        concept: conceptoCobroManual,
       })
 
       window.alert(`Cobro ejecutado. Estado: ${response.pago.status}. ID pago: ${response.pago.id_payments}`)
       setIsCobroManualOpen(false)
       setIdUsers('')
       setAmount('')
-      setConcept('Cobro manual de ciclo de facturación')
-      setIdBillingCycles('')
     } catch (error: any) {
       setCobroError(error?.message || 'No se pudo ejecutar el cobro manual.')
     } finally {
@@ -185,24 +181,6 @@ export default function CiclosDeCobroPage({ navItems, logoutItem, activeNavLabel
                     className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#284B63] focus:outline-none focus:ring-1 focus:ring-[#284B63]"
                   />
                 </div>
-                <div>
-                  <label className="mb-1 block text-xs font-semibold text-gray-600">ID ciclo</label>
-                  <input
-                    value={idBillingCycles}
-                    onChange={(e) => setIdBillingCycles(e.target.value)}
-                    placeholder="Opcional"
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#284B63] focus:outline-none focus:ring-1 focus:ring-[#284B63]"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-gray-600">Concepto</label>
-                <input
-                  value={concept}
-                  onChange={(e) => setConcept(e.target.value)}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#284B63] focus:outline-none focus:ring-1 focus:ring-[#284B63]"
-                />
               </div>
 
               {cobroError && <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{cobroError}</div>}

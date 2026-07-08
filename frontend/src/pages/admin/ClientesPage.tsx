@@ -9,6 +9,15 @@ type AdminClientesPageProps = {
   activeNavLabel: string
 }
 
+function formatClienteId(idUsers: string | number) {
+  const value = `#${idUsers}`
+  return value.length > 7 ? `${value.slice(0, 7)}…` : value
+}
+
+function mostrarClienteCompleto(idUsers: string | number) {
+  window.alert(`ID completo del cliente: #${idUsers}`)
+}
+
 export default function ClientesPage({ navItems, logoutItem, activeNavLabel }: AdminClientesPageProps) {
   const [usuarios, setUsuarios] = useState<FilaUsuarioListado[]>([])
   const [loading, setLoading] = useState(true)
@@ -115,7 +124,20 @@ export default function ClientesPage({ navItems, logoutItem, activeNavLabel }: A
                     <tbody className="divide-y divide-gray-100 text-sm">
                       {clientesPagina.map((u) => (
                         <tr key={u.id_users} className="hover:bg-gray-50 transition">
-                          <td className="px-3 py-2 font-mono font-semibold text-[#353535]">#{u.id_users}</td>
+                          <td className="px-3 py-2 font-mono font-semibold text-[#353535]">
+                            <div className="inline-flex items-center gap-2">
+                              <span title={`#${u.id_users}`}>{formatClienteId(u.id_users)}</span>
+                              <button
+                                type="button"
+                                onClick={() => mostrarClienteCompleto(u.id_users)}
+                                className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-200 text-[10px] text-gray-500 hover:bg-gray-100 hover:text-[#284B63]"
+                                title="Ver ID completo"
+                                aria-label="Ver ID completo del cliente"
+                              >
+                                <i className="fa-solid fa-eye"></i>
+                              </button>
+                            </div>
+                          </td>
                           <td className="px-3 py-2 capitalize text-[#353535]">{u.type}</td>
                           <td className="px-3 py-2">
                             <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
