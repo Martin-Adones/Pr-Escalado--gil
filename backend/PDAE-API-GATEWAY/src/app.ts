@@ -237,7 +237,7 @@ export const createServer = async (): Promise<FastifyInstance> => {
         }
       }
     } catch (err) {
-      app.log.warn("No se pudo verificar el token de Keycloak en el Gateway");
+      app.log.warn({ err }, "No se pudo verificar el token de Keycloak en el Gateway");
     }
   });
 
