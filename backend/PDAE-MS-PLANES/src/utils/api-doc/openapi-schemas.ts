@@ -31,11 +31,30 @@ export const planProductoProperties = {
   id_products: { ...idBigint, description: 'Producto asociado; FK a Products.id_products.' },
 } as const;
 
+export const productoFilaProperties = {
+  id_plans: { ...idBigint, description: 'Plan al que pertenece el producto.' },
+  id_products: { ...idBigint, description: 'Identificador del producto (BIGSERIAL).' },
+  name: { type: 'string', description: 'Nombre del producto (VARCHAR 255).' },
+  description: { type: 'string', nullable: true, description: 'Descripcion del producto (TEXT).' },
+  type: { type: 'string', description: 'Tipo de producto (VARCHAR 255).' },
+  quantity: { type: 'string', nullable: true, description: 'Cantidad incluida (INTEGER).' },
+  price: { type: 'string', description: 'Precio del producto DECIMAL(12,2).' },
+} as const;
+
 export const planFilaListadoProperties = {
   ...planFilaProperties,
   total_count: {
     type: 'integer',
     description: 'Total de filas que coinciden con el filtro (misma en cada fila de la pagina)',
+  },
+  products: {
+    type: 'array',
+    nullable: true,
+    description: 'Productos asociados al plan.',
+    items: {
+      type: 'object',
+      properties: productoFilaProperties,
+    },
   },
 } as const;
 

@@ -8,6 +8,7 @@ import {
   FilaPlanListado,
   RegistrarProductosPlanEntradaDto,
   FilaPlanProducto,
+  FilaProducto,
 } from '../models/planes.dtos';
 
 /**
@@ -44,5 +45,9 @@ export class PlanesRepository extends BaseRepository {
   async ejecutarRegistrarProductosPlan(dto: RegistrarProductosPlanEntradaDto): Promise<FilaPlanProducto[]> {
     const params = [dto.id_plans, dto.id_products];
     return await this.callProcedure<FilaPlanProducto>('sp_registrar_productos_plan', params, undefined);
+  }
+
+  async ejecutarListarProductosDePlanes(idPlans: string[]): Promise<FilaProducto[]> {
+    return await this.callProcedure<FilaProducto>('sp_listar_productos_planes', [idPlans], undefined);
   }
 }

@@ -6,8 +6,19 @@ export interface FilaPlan {
   isActive: boolean
 }
 
+export interface FilaProducto {
+  id_plans: string
+  id_products: string
+  name: string
+  description: string | null
+  type: string
+  quantity: string | null
+  price: string
+}
+
 export interface FilaPlanListado extends FilaPlan {
   total_count: string
+  products?: FilaProducto[]
 }
 
 export interface FilaContrato {
