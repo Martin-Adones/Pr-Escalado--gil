@@ -143,13 +143,17 @@ export class PagosService {
   }
 
   async eliminarTarjeta(idUsers: string, token: string): Promise<boolean> {
+    let paso = 'inicio';
     try {
+      paso = 'obtenerKeycloakId';
       const keycloakId = await this.repository.obtenerKeycloakIdUsuario(idUsers);
       if (!keycloakId) {
-        throw new Error(`Usuario con id_users ${idUsers} no encontrado`);
+        console.error(`[UCNPAY] eliminarTarjeta: usuario ${idUsers} no encontrado en DB`);
+        return false;
       }
 
-      console.log(`[UCNPAY] Eliminando tarjeta para usuario: ${idUsers} (Keycloak: ${keycloakId}) en ${this.ucnpayUrl}/ucnpay/tarjeta`);
+      paso = 'fetchUcnpay';
+      console.log(`[UCNPAY] DELETE ${this.ucnpayUrl}/ucnpay/tarjeta body={userId:${keycloakId}, token:${token}}`);
 
       const response = await fetchConTimeout(`${this.ucnpayUrl}/ucnpay/tarjeta`, {
         method: 'DELETE',
@@ -164,20 +168,25 @@ export class PagosService {
       });
 
       if (!response.ok) {
-        console.error(`[UCNPAY] DELETE tarjeta respondió con HTTP ${response.status}`);
+        const text = await response.text();
+        console.error(`[UCNPAY] DELETE tarjeta HTTP ${response.status}: ${text}`);
         return false;
       }
 
+      paso = 'parseJson';
       const resJson = (await response.json()) as any;
+      console.log(`[UCNPAY] DELETE respuesta:`, JSON.stringify(resJson));
+
       if (resJson.status === 'APROBADO') {
+        paso = 'eliminarLocal';
         await this.repository.eliminarTarjeta(idUsers, token);
         return true;
       }
 
-      console.error(`[UCNPAY] DELETE tarjeta rechazado: ${resJson.message || 'desconocido'}`);
+      console.error(`[UCNPAY] DELETE tarjeta rechazado: ${resJson.message || 'sin mensaje'}`);
       return false;
     } catch (error) {
-      console.error('[UCNPAY] Error al eliminar tarjeta:', error);
+      console.error(`[UCNPAY] Error en eliminarTarjeta (paso=${paso}):`, error);
       return false;
     }
   }
