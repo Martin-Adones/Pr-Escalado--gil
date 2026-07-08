@@ -491,8 +491,8 @@ export class PagosController {
   async manejarMockUcnpayObtenerTarjetas(solicitud: FastifyRequest, respuesta: FastifyReply) {
     try {
       const { userId } = solicitud.params as any;
-      console.log(`[MockUCNPAY] GET tarjetas userId=${userId} — retornando vacío`);
-      return respuesta.status(200).send([]);
+      console.log(`[MockUCNPAY] GET tarjetas userId=${userId} — simulando caída de UCNPAY para usar fallback local`);
+      return respuesta.status(404).send({ message: 'Mock UCNPAY no disponible' });
     } catch (error: any) {
       return respuesta.status(500).send({ success: false, message: error.message || 'Error interno' });
     }
