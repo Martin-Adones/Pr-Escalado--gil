@@ -16,6 +16,14 @@ type ClientPlansPageProps = {
 
 type BillingPeriod = 'monthly' | 'yearly'
 
+type Producto = {
+  id_products: string
+  name: string
+  description: string | null
+  type: string
+  quantity: string | null
+}
+
 type Plan = {
   id: string
   name: string
@@ -26,7 +34,7 @@ type Plan = {
   rawMonthlyAmount: number
   rawYearlyAmount: number
   description: string
-  features: string[]
+  productos: Producto[]
   isRecommended?: boolean
   isCurrent?: boolean
   actionLabel: string
@@ -88,6 +96,13 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
           const yearlyAmount = getYearlyPrice(monthlyAmount)
           const yearlyDiscounted = Math.round(yearlyAmount * (1 - getDiscountPct() / 100))
           const isCurrent = p.id_plans === activeContractPlanId
+          const productos = (p.products || []).map(pr => ({
+            id_products: pr.id_products,
+            name: pr.name,
+            description: pr.description,
+            type: pr.type,
+            quantity: pr.quantity,
+          }))
 
           return {
             id: p.id_plans,
@@ -99,12 +114,7 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
             rawMonthlyAmount: monthlyAmount,
             rawYearlyAmount: yearlyDiscounted,
             description: `Plan ${p.name} - Ciclo de facturación: ${p.billing_cycle}`,
-            features: [
-              `Ciclo: ${p.billing_cycle}`,
-              `Monto: ${formatPrice(p.amount)}/${p.billing_cycle === 'yearly' ? 'año' : 'mes'}`,
-              isCurrent ? 'Plan actual' : 'Disponible para contratar',
-              `ID: #${p.id_plans}`,
-            ],
+            productos,
             isRecommended: total > 2 && i === Math.floor(total / 2),
             isCurrent,
             actionLabel: isCurrent ? 'Plan actual'
@@ -386,12 +396,24 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
                   </div>
 
                   <ul className="mt-6 flex-grow space-y-3">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-3 text-sm font-semibold text-gray-600">
-                        <i aria-hidden="true" className="fa-solid fa-circle-check mt-0.5 text-[#3C6E71]" />
-                        <span>{feature}</span>
+                    {plan.productos.length > 0 ? (
+                      plan.productos.map((prod) => (
+                        <li key={prod.id_products} className="flex items-start gap-3 text-sm font-semibold text-gray-600">
+                          <i aria-hidden="true" className="fa-solid fa-circle-check mt-0.5 text-[#3C6E71]" />
+                          <div>
+                            <span>{prod.name}</span>
+                            {prod.description && (
+                              <p className="text-xs font-normal text-gray-400 mt-0.5">{prod.description}</p>
+                            )}
+                          </div>
+                        </li>
+                      ))
+                    ) : (
+                      <li className="flex items-start gap-3 text-sm font-semibold text-gray-400">
+                        <i aria-hidden="true" className="fa-solid fa-minus-circle mt-0.5 text-gray-300" />
+                        <span>Sin productos asignados</span>
                       </li>
-                    ))}
+                    )}
                   </ul>
 
                   <button

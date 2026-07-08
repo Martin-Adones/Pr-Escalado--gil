@@ -622,6 +622,7 @@ BEGIN
         'sp_actualizar_plan',
         'sp_desactivar_plan',
         'sp_registrar_productos_plan',
+        'sp_listar_productos_planes',
         'fn_normalizar_nombre_plan',
         'fn_es_nombre_plan_valido',
         'fn_normalizar_ciclo_facturacion',
@@ -927,6 +928,38 @@ BEGIN
   FROM (SELECT DISTINCT unnest(p_id_products) AS id) s
   ON CONFLICT DO NOTHING
   RETURNING "id_plans", "id_products";
+
+  RETURN;
+END;
+$$ LANGUAGE plpgsql;
+
+-- -----------------------------------------------------------------------------
+-- sp_listar_productos_planes
+-- -----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION sp_listar_productos_planes(p_id_plans BIGINT[])
+RETURNS TABLE (
+    id_plans BIGINT,
+    id_products BIGINT,
+    name VARCHAR(255),
+    description TEXT,
+    type VARCHAR(255),
+    quantity INTEGER,
+    price DECIMAL(12, 2)
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    pp."id_plans",
+    pr."id_products",
+    pr."name",
+    pr."description",
+    pr."type",
+    pr."quantity",
+    pr."price"
+  FROM "Plans_Products" pp
+  JOIN "Products" pr ON pr."id_products" = pp."id_products"
+  WHERE pp."id_plans" = ANY(p_id_plans)
+  ORDER BY pp."id_plans", pr."name";
 
   RETURN;
 END;
