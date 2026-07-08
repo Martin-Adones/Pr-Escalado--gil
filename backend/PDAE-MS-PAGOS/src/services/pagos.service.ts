@@ -7,7 +7,7 @@ import {
   FilaUserCard
 } from '../models/pagos.dtos';
 
-const UCNPAY_TIMEOUT_MS = 5000;
+const UCNPAY_TIMEOUT_MS = 15000;
 
 async function fetchConTimeout(url: string, options: RequestInit, timeoutMs = UCNPAY_TIMEOUT_MS): Promise<Response> {
   const controller = new AbortController();

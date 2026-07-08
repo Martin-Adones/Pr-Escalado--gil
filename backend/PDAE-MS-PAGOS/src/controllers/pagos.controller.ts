@@ -156,9 +156,8 @@ export class PagosController {
       const { token } = solicitud.params as any;
 
       // Prevención de IDOR
-      const userRole = solicitud.headers?.['x-user-role'];
       const userId = solicitud.headers?.['x-user-id'];
-      if (userRole === 'client' && !userId) {
+      if (!userId) {
         return respuesta.status(401).send({ success: false, message: 'No autenticado' });
       }
 
