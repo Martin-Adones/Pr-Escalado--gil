@@ -31,6 +31,7 @@ export async function crearPago(data: {
   id_users: string
   amount: number
   concept: string
+  id_billing_cycles?: string
 }): Promise<CrearPagoResponse> {
   return apiPost<CrearPagoResponse>('/pagos/crear', data)
 }

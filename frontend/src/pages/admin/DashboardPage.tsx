@@ -120,14 +120,13 @@ export default function Dashboard({ navItems, logoutItem, activeNavLabel }: Admi
                       <th className="px-3 py-2 w-[18%]">Plan</th>
                       <th className="px-3 py-2 w-[14%]">Estado</th>
                       <th className="px-3 py-2 w-[18%]">Vencimiento</th>
-                      <th className="px-3 py-2 w-[20%] text-center">Acciones</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 text-sm">
                     {loading ? (
-                      <tr><td colSpan={6} className="px-3 py-8 text-center text-gray-400">Cargando...</td></tr>
+                      <tr><td colSpan={5} className="px-3 py-8 text-center text-gray-400">Cargando...</td></tr>
                     ) : contratos.length === 0 ? (
-                      <tr><td colSpan={6} className="px-3 py-8 text-center text-gray-400">No hay contratos registrados.</td></tr>
+                      <tr><td colSpan={5} className="px-3 py-8 text-center text-gray-400">No hay contratos registrados.</td></tr>
                     ) : contratos.slice(0, 10).map((c) => (
                       <tr key={c.id_contracts} className="hover:bg-gray-50 transition">
                         <td className="px-3 py-2 font-mono font-semibold text-[#353535]">#{c.id_contracts}</td>
@@ -148,16 +147,6 @@ export default function Dashboard({ navItems, logoutItem, activeNavLabel }: Admi
                           </span>
                         </td>
                         <td className="px-3 py-2 text-gray-500">{new Date(c.end_date).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                        <td className="px-3 py-2">
-                          <div className="flex justify-center gap-2">
-                            <button className="text-gray-400 p-1.5 bg-gray-100 rounded cursor-not-allowed" disabled title="Ver detalle">
-                              <i className="fa-solid fa-eye text-xs"></i>
-                            </button>
-                            <button className="text-gray-400 p-1.5 bg-gray-100 rounded cursor-not-allowed" disabled title="Editar">
-                              <i className="fa-solid fa-edit text-xs"></i>
-                            </button>
-                          </div>
-                        </td>
                       </tr>
                     ))}
                   </tbody>
