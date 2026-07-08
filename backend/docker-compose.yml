@@ -299,6 +299,9 @@ services:
           path: ./shared/package.json
 
   ms-pagos:
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     build:
       context: .
       dockerfile: PDAE-MS-PAGOS/Dockerfile
@@ -307,6 +310,7 @@ services:
       - path: ../.env
         required: false
     environment:
+      UCNPAY_BASE_URL: https://proyectogestionti.onrender.com/api
       DB_HOST: db
       DB_PORT: 5432
       DB_USER: ${DB_USER}
