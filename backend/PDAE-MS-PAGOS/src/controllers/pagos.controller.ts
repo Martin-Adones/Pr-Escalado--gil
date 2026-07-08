@@ -565,13 +565,4 @@ export class PagosController {
     }
   }
 
-  async manejarMockUcnpayEliminarTarjeta(solicitud: FastifyRequest, respuesta: FastifyReply) {
-    try {
-      const { userId, token } = solicitud.body as any;
-      console.log(`[MockUCNPAY] DELETE tarjeta token=${token} userId=${userId} — aceptado`);
-      return respuesta.status(200).send({ success: true });
-    } catch (error: any) {
-      return respuesta.status(500).send({ success: false, message: error.message || 'Error interno' });
-    }
-  }
 }

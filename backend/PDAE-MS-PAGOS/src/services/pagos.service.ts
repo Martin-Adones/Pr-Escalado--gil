@@ -7,6 +7,19 @@ import {
   FilaUserCard
 } from '../models/pagos.dtos';
 
+const UCNPAY_TIMEOUT_MS = 5000;
+
+async function fetchConTimeout(url: string, options: RequestInit, timeoutMs = UCNPAY_TIMEOUT_MS): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    return response;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export class PagosService {
   private repository: PagosRepository;
   private ucnpayUrl: string;
@@ -29,7 +42,7 @@ export class PagosService {
 
       console.log(`[UCNPAY] Registrando tarjeta para usuario: ${dto.id_users} (Keycloak: ${keycloakId}) en ${this.ucnpayUrl}/ucnpay/init/suscription`);
       
-      const response = await fetch(`${this.ucnpayUrl}/ucnpay/init/suscription`, {
+      const response = await fetchConTimeout(`${this.ucnpayUrl}/ucnpay/init/suscription`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -83,7 +96,7 @@ export class PagosService {
 
       console.log(`[UCNPAY] Obteniendo tarjetas para usuario: ${idUsers} (Keycloak: ${keycloakId}) en ${this.ucnpayUrl}/ucnpay/tarjeta/${keycloakId}`);
       
-      const response = await fetch(`${this.ucnpayUrl}/ucnpay/tarjeta/${keycloakId}`, {
+      const response = await fetchConTimeout(`${this.ucnpayUrl}/ucnpay/tarjeta/${keycloakId}`, {
         method: 'GET',
         headers: {
           'x-private-key': this.privateKey,
@@ -138,7 +151,7 @@ export class PagosService {
 
       console.log(`[UCNPAY] Eliminando tarjeta para usuario: ${idUsers} (Keycloak: ${keycloakId}) en ${this.ucnpayUrl}/ucnpay/tarjeta`);
 
-      const response = await fetch(`${this.ucnpayUrl}/ucnpay/tarjeta`, {
+      const response = await fetchConTimeout(`${this.ucnpayUrl}/ucnpay/tarjeta`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -150,10 +163,18 @@ export class PagosService {
         })
       });
 
-      if (response.ok) {
+      if (!response.ok) {
+        console.error(`[UCNPAY] DELETE tarjeta respondió con HTTP ${response.status}`);
+        return false;
+      }
+
+      const resJson = (await response.json()) as any;
+      if (resJson.status === 'APROBADO') {
         await this.repository.eliminarTarjeta(idUsers, token);
         return true;
       }
+
+      console.error(`[UCNPAY] DELETE tarjeta rechazado: ${resJson.message || 'desconocido'}`);
       return false;
     } catch (error) {
       console.error('[UCNPAY] Error al eliminar tarjeta:', error);
@@ -183,7 +204,7 @@ export class PagosService {
     try {
       console.log(`[UCNPAY] Tarjeta encontrada. Ejecutando cargo recurrente automático para el pago: ${pago.id_payments}`);
       
-      const response = await fetch(`${this.ucnpayUrl}/ucnpay/suscription/authorize`, {
+      const response = await fetchConTimeout(`${this.ucnpayUrl}/ucnpay/suscription/authorize`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

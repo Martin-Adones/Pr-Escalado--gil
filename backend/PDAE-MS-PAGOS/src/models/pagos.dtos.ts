@@ -146,6 +146,22 @@ export class UcnpayWebhookEntradaDto {
   @ValidateNested()
   @Type(() => CardWebhookDetailDto)
   card?: CardWebhookDetailDto;
+
+  @IsOptional()
+  @IsString()
+  operationType?: string;
+
+  @IsOptional()
+  @IsString()
+  moneda?: string;
+
+  @IsOptional()
+  @IsString()
+  customer?: string;
+
+  @IsOptional()
+  @IsString()
+  timestamp?: string;
 }
 
 export interface FilaPago {
