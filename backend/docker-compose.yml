@@ -23,6 +23,9 @@ services:
       start_period: 15s
 
   ms-contratos:
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     build:
       context: .
       dockerfile: PDAE-MS-CONTRATOS/Dockerfile
@@ -40,6 +43,9 @@ services:
       PORT: "${CONTRATOS_PORT}"
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
+      KEYCLOAK_URL: "${KEYCLOAK_URL}"
+      KEYCLOAK_REALM: "${KEYCLOAK_REALM}"
+      KEYCLOAK_CLIENT_ID: "${KEYCLOAK_CLIENT_ID}"
     depends_on:
       db:
         condition: service_healthy
@@ -69,6 +75,9 @@ services:
           path: ./shared/package.json
 
   ms-usuarios:
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     build:
       context: .
       dockerfile: PDAE-MS-USUARIOS/Dockerfile
@@ -86,6 +95,9 @@ services:
       PORT: "${USUARIOS_PORT}"
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
+      KEYCLOAK_URL: "${KEYCLOAK_URL}"
+      KEYCLOAK_REALM: "${KEYCLOAK_REALM}"
+      KEYCLOAK_CLIENT_ID: "${KEYCLOAK_CLIENT_ID}"
     depends_on:
       db:
         condition: service_healthy
@@ -115,6 +127,9 @@ services:
           path: ./shared/package.json
 
   ms-planes:
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     build:
       context: .
       dockerfile: PDAE-MS-PLANES/Dockerfile
@@ -132,6 +147,9 @@ services:
       PORT: "${PLANES_PORT}"
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
+      KEYCLOAK_URL: "${KEYCLOAK_URL}"
+      KEYCLOAK_REALM: "${KEYCLOAK_REALM}"
+      KEYCLOAK_CLIENT_ID: "${KEYCLOAK_CLIENT_ID}"
     depends_on:
       db:
         condition: service_healthy
@@ -161,6 +179,9 @@ services:
           path: ./shared/package.json
 
   ms-productos:
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     build:
       context: .
       dockerfile: PDAE-MS-PRODUCTOS/Dockerfile
@@ -178,6 +199,9 @@ services:
       PORT: "${PRODUCTOS_PORT}"
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
+      KEYCLOAK_URL: "${KEYCLOAK_URL}"
+      KEYCLOAK_REALM: "${KEYCLOAK_REALM}"
+      KEYCLOAK_CLIENT_ID: "${KEYCLOAK_CLIENT_ID}"
     depends_on:
       db:
         condition: service_healthy
@@ -207,6 +231,9 @@ services:
           path: ./shared/package.json
 
   ms-soporte:
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     build:
       context: .
       dockerfile: PDAE-MS-SOPORTE/Dockerfile
@@ -224,6 +251,9 @@ services:
       PORT: "${SOPORTE_PORT}"
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
+      KEYCLOAK_URL: "${KEYCLOAK_URL}"
+      KEYCLOAK_REALM: "${KEYCLOAK_REALM}"
+      KEYCLOAK_CLIENT_ID: "${KEYCLOAK_CLIENT_ID}"
     depends_on:
       db:
         condition: service_healthy
@@ -253,6 +283,9 @@ services:
           path: ./shared/package.json
 
   ms-auditoria:
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     build:
       context: .
       dockerfile: PDAE-MS-AUDITORIA/Dockerfile
@@ -270,6 +303,9 @@ services:
       PORT: "${AUDITORIA_PORT}"
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
+      KEYCLOAK_URL: "${KEYCLOAK_URL}"
+      KEYCLOAK_REALM: "${KEYCLOAK_REALM}"
+      KEYCLOAK_CLIENT_ID: "${KEYCLOAK_CLIENT_ID}"
     depends_on:
       db:
         condition: service_healthy
@@ -299,6 +335,9 @@ services:
           path: ./shared/package.json
 
   ms-pagos:
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     build:
       context: .
       dockerfile: PDAE-MS-PAGOS/Dockerfile
@@ -307,6 +346,7 @@ services:
       - path: ../.env
         required: false
     environment:
+      UCNPAY_BASE_URL: https://proyectogestionti.onrender.com/api
       DB_HOST: db
       DB_PORT: 5432
       DB_USER: ${DB_USER}
@@ -347,6 +387,9 @@ services:
           path: ./shared/package.json
 
   api-gateway:
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     build:
       context: .
       dockerfile: PDAE-API-GATEWAY/Dockerfile
@@ -360,6 +403,9 @@ services:
       CHOKIDAR_USEPOLLING: "true"
       MS_RUTAS_URL: "${MS_RUTAS_URL}"
       CORS_ORIGIN: "${CORS_ORIGIN}"
+      KEYCLOAK_URL: "${KEYCLOAK_URL}"
+      KEYCLOAK_REALM: "${KEYCLOAK_REALM}"
+      KEYCLOAK_CLIENT_ID: "${KEYCLOAK_CLIENT_ID}"
     ports:
       - "${GATEWAY_PORT}:${GATEWAY_PORT}"
     depends_on:

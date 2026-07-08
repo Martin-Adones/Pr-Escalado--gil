@@ -3,6 +3,9 @@ import {
   notificarSubscriptionCreated,
   notificarRenewalSuccess,
   notificarRenewalFailed,
+  notificarPaymentSuccess,
+  notificarPaymentFailed,
+  notificarSubscriptionCancelled,
 } from '../utils/analytics.client';
 import { notificarEmail, notificarEmailConFallbackSms } from '../utils/notifications.client';
 import {
@@ -30,23 +33,54 @@ export class ContratosService {
 
     if (resultado && resultado.length > 0) {
       const contrato = resultado[0];
+
+      await this.repositorio.registrarLogAuditoria(
+        contrato.id_contracts,
+        'CREAR_CONTRATO',
+        'sistema'
+      );
       const payload = {
         contract_id: String(contrato.id_contracts),
-        user_id: Number(contrato.id_users),
-        plan_id: Number(contrato.id_plans),
+        user_id: String(contrato.id_users),
         start_date: contrato.start_date ?? null,
-        status: contrato.status ?? null,
+        status: (contrato.status ?? '').toLowerCase() || null,
         end_date: contrato.end_date ?? null,
+        ...(contrato.status === 'ACTIVE' ? { renewed: false, auto_service: true, billing_success: true } : {}),
       };
       console.log('[analytics] Enviando subscription_created:', JSON.stringify(payload));
       notificarSubscriptionCreated(payload);
+
+      if (contrato.status === 'ACTIVE') {
+        const pagoPayload = {
+          contract_id: String(contrato.id_contracts),
+          user_id: String(contrato.id_users),
+        };
+        console.log('[analytics] Enviando payment_success (pago ya confirmado):', JSON.stringify(pagoPayload));
+        notificarPaymentSuccess(pagoPayload);
+      }
     }
 
     return resultado;
   }
 
   async finalizarContrato(dto: FinalizarContratoEntradaDto): Promise<FilaContrato[]> {
-    return await this.repositorio.ejecutarFinalizarContrato(dto);
+    const resultado = await this.repositorio.ejecutarFinalizarContrato(dto);
+
+    if (resultado && resultado.length > 0) {
+      const contrato = resultado[0];
+      await this.repositorio.registrarLogAuditoria(
+        contrato.id_contracts,
+        'FINALIZAR_CONTRATO',
+        'sistema'
+      );
+      notificarSubscriptionCancelled({
+        contract_id: String(contrato.id_contracts),
+        cancelled_at: new Date().toISOString(),
+        status: 'cancelled',
+      });
+    }
+
+    return resultado;
   }
 
   async listarContratos(dto: ListarContratosConsultaDto): Promise<FilaContratoListado[]> {
@@ -54,7 +88,29 @@ export class ContratosService {
   }
 
   async actualizarContrato(dto: ActualizarContratoEntradaDto): Promise<FilaContrato[]> {
-    return await this.repositorio.ejecutarActualizarContrato(dto);
+    const resultado = await this.repositorio.ejecutarActualizarContrato(dto);
+
+    if (resultado && resultado.length > 0) {
+      let accion = 'ACTUALIZAR_CONTRATO';
+      if (dto.id_plans) {
+        accion = 'CAMBIO_PLAN';
+      } else if (dto.status) {
+        if (dto.status === 'SUSPENDED') {
+          accion = 'SUSPENDER_CONTRATO';
+        } else if (dto.status === 'TERMINATED') {
+          accion = 'FINALIZAR_CONTRATO';
+        } else if (dto.status === 'ACTIVE') {
+          accion = 'ACTIVAR_CONTRATO';
+        }
+      }
+      await this.repositorio.registrarLogAuditoria(
+        resultado[0].id_contracts,
+        accion,
+        'sistema'
+      );
+    }
+
+    return resultado;
   }
 
   /**
@@ -92,13 +148,14 @@ export class ContratosService {
       const contrato = contratoActualizado[0];
       const payload = {
         contract_id: String(contrato.id_contracts),
-        user_id: Number(contrato.id_users),
-        plan_id: Number(contrato.id_plans),
+        user_id: String(contrato.id_users),
       };
       if (esCompletado) {
         notificarRenewalSuccess(payload);
+        notificarPaymentSuccess(payload);
       } else {
         notificarRenewalFailed(payload);
+        notificarPaymentFailed(payload);
       }
     }
 

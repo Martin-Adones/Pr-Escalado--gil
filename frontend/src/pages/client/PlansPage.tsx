@@ -223,6 +223,9 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
 
       if (activeContractId) {
         await cambiarPlanContrato(activeContractId, selectedPlan.id)
+        try {
+          window.dispatchEvent(new CustomEvent('auditoria:changed', { detail: { id_contracts: activeContractId } }))
+        } catch (e) { /* noop */ }
       } else {
         const nuevosContratos = await crearContrato({
           id_users: resolvedUserId,

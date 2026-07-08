@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PortalTemplate from '../../portal/PortalTemplate'
 import { getCurrentBillingCycle, formatDateLabel, clamp } from '../../utils/billingCycle'
-import { listarContratos } from '../../services/contratos.service'
+import { listarContratos, finalizarContrato } from '../../services/contratos.service'
 import { listarPlanes } from '../../services/planes.service'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import type { FilaContrato, FilaPlan } from '../../services/interfaces'
@@ -69,6 +69,9 @@ export default function Contracts({
   const [plan, setPlan] = useState<FilaPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
+  const [cancelError, setCancelError] = useState<string | null>(null)
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -216,6 +219,25 @@ export default function Contracts({
     }
   }, [activeContract])
 
+  const handleCancelContract = async () => {
+    if (!contrato) return
+    setIsCancelling(true)
+    setCancelError(null)
+    try {
+      await finalizarContrato(contrato.id_contracts)
+      setContrato(null)
+      setPlan(null)
+      setShowCancelModal(false)
+      try {
+        window.dispatchEvent(new CustomEvent('auditoria:changed', { detail: { id_contracts: contrato.id_contracts } }))
+      } catch (e) { /* noop */ }
+    } catch (err) {
+      setCancelError(err instanceof Error ? err.message : 'Error al cancelar el contrato')
+    } finally {
+      setIsCancelling(false)
+    }
+  }
+
   const cardClass = 'rounded-xl border border-gray-200 bg-white p-6 shadow-sm'
 
   const progressBarClass = 'h-full bg-[#3C6E71] rounded-full transition-all duration-500'
@@ -233,8 +255,8 @@ export default function Contracts({
       userRole="Premium Member"
       headerTitle="Mis Contratos"
       headerSubtitle="Revisa tus contratos activos e históricos."
-      headerRightLabel="Próximo Cobro"
-      headerRightValue={cycle.renewalDateLabel}
+      headerRightLabel={contrato ? "Próximo Cobro" : ""}
+      headerRightValue={contrato ? cycle.renewalDateLabel : ""}
     >
       {loading ? (
         <LoadingSpinner />
@@ -257,13 +279,22 @@ export default function Contracts({
                 </span>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={plansNavItem?.onClick ?? (() => navigate('/client/planes'))}
-              className="shrink-0 px-3 py-2 rounded-lg text-xs font-bold bg-[#284B63] text-white hover:opacity-90 transition"
-            >
-              Cambiar plan
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowCancelModal(true)}
+                className="shrink-0 px-3 py-2 rounded-lg text-xs font-bold border border-red-300 text-red-600 hover:bg-red-50 transition"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={plansNavItem?.onClick ?? (() => navigate('/client/planes'))}
+                className="shrink-0 px-3 py-2 rounded-lg text-xs font-bold bg-[#284B63] text-white hover:opacity-90 transition"
+              >
+                Cambiar plan
+              </button>
+            </div>
           </div>
 
           <div className="mt-6">
@@ -335,8 +366,79 @@ export default function Contracts({
           <p className="text-xs text-red-400 mt-1">{error}</p>
         </div>
       ) : (
-        <div className="rounded-xl border border-gray-200 bg-white p-10 shadow-sm text-center text-gray-400 text-sm">
-          No hay contratos activos en este momento.
+        <div className="rounded-xl border border-gray-200 bg-white p-10 shadow-sm text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+            <i className="fa-solid fa-file-contract text-2xl text-gray-400" />
+          </div>
+          <p className="text-sm font-bold text-gray-500">No tienes ningún contrato activo</p>
+          <p className="mt-1 text-xs text-gray-400">Selecciona un plan y comienza a usar nuestros servicios.</p>
+          <button
+            type="button"
+            onClick={plansNavItem?.onClick ?? (() => navigate('/client/planes'))}
+            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#284B63] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#3C6E71]"
+          >
+            <i className="fa-solid fa-arrow-right" />
+            Ver planes disponibles
+          </button>
+        </div>
+      )}
+
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="mb-6">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+                {isCancelling ? (
+                  <i className="fa-solid fa-circle-notch fa-spin text-xl text-red-600" />
+                ) : (
+                  <i className="fa-solid fa-ban text-xl text-red-600" />
+                )}
+              </div>
+              <h3 className="text-center text-xl font-bold text-[#353535]">¿Cancelar suscripción?</h3>
+              <p className="mt-2 text-center text-sm text-gray-600">
+                Se finalizará tu contrato{' '}
+                <span className="font-semibold">#{contrato?.id_contracts}</span>
+                {plan && <> del plan <span className="font-semibold">{plan.name}</span></>}.
+                Esta acción no se puede deshacer.
+              </p>
+            </div>
+
+            {cancelError && (
+              <div className="mb-6 flex items-start gap-3 rounded-lg bg-red-50 border border-red-200 p-3">
+                <i className="fa-solid fa-circle-exclamation mt-0.5 text-red-600" />
+                <div>
+                  <p className="text-sm font-semibold text-red-800">Error</p>
+                  <p className="mt-1 text-xs text-red-700">{cancelError}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => { setShowCancelModal(false); setCancelError(null) }}
+                disabled={isCancelling}
+                className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm font-bold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Volver
+              </button>
+              <button
+                type="button"
+                onClick={handleCancelContract}
+                disabled={isCancelling}
+                className="flex-1 rounded-xl bg-red-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isCancelling ? (
+                  <>
+                    <i className="fa-solid fa-circle-notch fa-spin" />
+                    Cancelando...
+                  </>
+                ) : (
+                  'Sí, cancelar'
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </PortalTemplate>

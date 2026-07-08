@@ -16,8 +16,12 @@ export async function listarTickets(params?: ListarTicketsParams): Promise<FilaT
 
 export async function crearTicket(data: {
   id_contracts: string
-  description: string
+  asunto: string
+  description?: string
   status?: string
+  cliente_nombre?: string
+  cliente_email?: string
+  cliente_telefono?: string
 }): Promise<FilaTicket[]> {
   return apiPost<FilaTicket[]>('/soporte/crear', data)
 }
@@ -30,3 +34,5 @@ export async function actualizarTicket(data: {
 }): Promise<FilaTicket[]> {
   return apiPost<FilaTicket[]>('/soporte/actualizar', data)
 }
+
+

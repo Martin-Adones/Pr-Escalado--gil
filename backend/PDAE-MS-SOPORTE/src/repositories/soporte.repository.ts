@@ -14,7 +14,7 @@ export class SoporteRepository extends BaseRepository {
   async ejecutarCrearTicket(dto: CrearTicketEntradaDto): Promise<FilaTicket[]> {
     const params = [
       dto.id_contracts,
-      dto.description,
+      dto.asunto,
       dto.status ?? 'open',
     ];
     return await this.callProcedure<FilaTicket>('sp_crear_ticket', params, undefined);

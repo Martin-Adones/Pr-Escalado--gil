@@ -12,6 +12,7 @@ import {
   Matches,
   IsIn,
   IsUUID,
+  IsEmail,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import {
@@ -32,15 +33,36 @@ export class CrearTicketEntradaDto {
 
   @TransformVacioAIndefinido
   @IsString()
-  @IsNotEmpty({ message: 'El campo description es requerido' })
-  @MinLength(1, { message: 'description no puede estar vacía' })
-  description!: string;
+  @IsNotEmpty({ message: 'El campo asunto es requerido' })
+  @MinLength(1, { message: 'asunto no puede estar vacío' })
+  asunto!: string;
+
+  @TransformVacioAIndefinido
+  @IsOptional()
+  @IsString()
+  description?: string;
 
   @TransformVacioAIndefinido
   @IsOptional()
   @IsString()
   @IsIn(SOPORTE_ESTADOS, { message: 'status debe ser uno de: open, in_progress, resolved, closed' })
   status?: string;
+
+  @TransformVacioAIndefinido
+  @IsOptional()
+  @IsString()
+  @MinLength(1, { message: 'cliente_nombre no puede estar vacío' })
+  cliente_nombre?: string;
+
+  @TransformVacioAIndefinido
+  @IsOptional()
+  @IsEmail({}, { message: 'cliente_email debe ser un email válido' })
+  cliente_email?: string;
+
+  @TransformVacioAIndefinido
+  @IsOptional()
+  @IsString()
+  cliente_telefono?: string;
 }
 
 export interface FilaTicket {

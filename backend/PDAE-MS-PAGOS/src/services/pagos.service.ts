@@ -7,6 +7,19 @@ import {
   FilaUserCard
 } from '../models/pagos.dtos';
 
+const UCNPAY_TIMEOUT_MS = 15000;
+
+async function fetchConTimeout(url: string, options: RequestInit, timeoutMs = UCNPAY_TIMEOUT_MS): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    return response;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export class PagosService {
   private repository: PagosRepository;
   private ucnpayUrl: string;
@@ -29,7 +42,7 @@ export class PagosService {
 
       console.log(`[UCNPAY] Registrando tarjeta para usuario: ${dto.id_users} (Keycloak: ${keycloakId}) en ${this.ucnpayUrl}/ucnpay/init/suscription`);
       
-      const response = await fetch(`${this.ucnpayUrl}/ucnpay/init/suscription`, {
+      const response = await fetchConTimeout(`${this.ucnpayUrl}/ucnpay/init/suscription`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -58,6 +71,8 @@ export class PagosService {
         throw new Error(`UCNPAY rechazó el registro: ${resJson.message || 'Error desconocido'}`);
       }
 
+      console.log(`[UCNPAY] POST init/suscription APROBADO — token=${resJson.paymentMethodToken}, brand=${resJson.card?.brand}, last4=${resJson.card?.last4}`);
+
       // Guardar localmente en la base de datos
       const localCard = await this.repository.registrarTarjeta(
         dto.id_users,
@@ -83,7 +98,7 @@ export class PagosService {
 
       console.log(`[UCNPAY] Obteniendo tarjetas para usuario: ${idUsers} (Keycloak: ${keycloakId}) en ${this.ucnpayUrl}/ucnpay/tarjeta/${keycloakId}`);
       
-      const response = await fetch(`${this.ucnpayUrl}/ucnpay/tarjeta/${keycloakId}`, {
+      const response = await fetchConTimeout(`${this.ucnpayUrl}/ucnpay/tarjeta/${keycloakId}`, {
         method: 'GET',
         headers: {
           'x-private-key': this.privateKey,
@@ -130,15 +145,19 @@ export class PagosService {
   }
 
   async eliminarTarjeta(idUsers: string, token: string): Promise<boolean> {
+    let paso = 'inicio';
     try {
+      paso = 'obtenerKeycloakId';
       const keycloakId = await this.repository.obtenerKeycloakIdUsuario(idUsers);
       if (!keycloakId) {
-        throw new Error(`Usuario con id_users ${idUsers} no encontrado`);
+        console.error(`[UCNPAY] eliminarTarjeta: usuario ${idUsers} no encontrado en DB`);
+        return false;
       }
 
-      console.log(`[UCNPAY] Eliminando tarjeta para usuario: ${idUsers} (Keycloak: ${keycloakId}) en ${this.ucnpayUrl}/ucnpay/tarjeta`);
+      paso = 'fetchUcnpay';
+      console.log(`[UCNPAY] DELETE ${this.ucnpayUrl}/ucnpay/tarjeta body={userId:${keycloakId}, token:${token}}`);
 
-      const response = await fetch(`${this.ucnpayUrl}/ucnpay/tarjeta`, {
+      const response = await fetchConTimeout(`${this.ucnpayUrl}/ucnpay/tarjeta`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -150,13 +169,26 @@ export class PagosService {
         })
       });
 
-      if (response.ok) {
+      if (!response.ok) {
+        const text = await response.text();
+        console.error(`[UCNPAY] DELETE tarjeta HTTP ${response.status}: ${text}`);
+        return false;
+      }
+
+      paso = 'parseJson';
+      const resJson = (await response.json()) as any;
+      console.log(`[UCNPAY] DELETE respuesta:`, JSON.stringify(resJson));
+
+      if (resJson.status === 'APROBADO') {
+        paso = 'eliminarLocal';
         await this.repository.eliminarTarjeta(idUsers, token);
         return true;
       }
+
+      console.error(`[UCNPAY] DELETE tarjeta rechazado: ${resJson.message || 'sin mensaje'}`);
       return false;
     } catch (error) {
-      console.error('[UCNPAY] Error al eliminar tarjeta:', error);
+      console.error(`[UCNPAY] Error en eliminarTarjeta (paso=${paso}):`, error);
       return false;
     }
   }
@@ -183,7 +215,7 @@ export class PagosService {
     try {
       console.log(`[UCNPAY] Tarjeta encontrada. Ejecutando cargo recurrente automático para el pago: ${pago.id_payments}`);
       
-      const response = await fetch(`${this.ucnpayUrl}/ucnpay/suscription/authorize`, {
+      const response = await fetchConTimeout(`${this.ucnpayUrl}/ucnpay/suscription/authorize`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

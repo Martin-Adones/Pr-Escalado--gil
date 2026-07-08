@@ -14,8 +14,7 @@ const SOURCE = 'subscriptions';
 
 interface SubscriptionCreatedPayload {
   contract_id: string;
-  user_id: number;
-  plan_id: number;
+  user_id: string | number;
   start_date?: string | null;
   status?: string | null;
   renewed?: boolean | null;
@@ -26,20 +25,37 @@ interface SubscriptionCreatedPayload {
 
 interface RenewalSuccessPayload {
   contract_id: string;
-  user_id: number;
-  plan_id: number;
+  user_id: string | number;
 }
 
 interface RenewalFailedPayload {
   contract_id: string;
-  user_id: number;
-  plan_id: number;
+  user_id: string | number;
+}
+
+interface PaymentSuccessPayload {
+  contract_id: string;
+  user_id: string | number;
+}
+
+interface PaymentFailedPayload {
+  contract_id: string;
+  user_id: string | number;
+}
+
+interface SubscriptionCancelledPayload {
+  contract_id: string;
+  cancelled_at: string;
+  status: string;
 }
 
 type AnalyticsEvent =
   | { source: typeof SOURCE; event_type: 'subscription_created'; payload: SubscriptionCreatedPayload }
   | { source: typeof SOURCE; event_type: 'renewal_success'; payload: RenewalSuccessPayload }
-  | { source: typeof SOURCE; event_type: 'renewal_failed'; payload: RenewalFailedPayload };
+  | { source: typeof SOURCE; event_type: 'renewal_failed'; payload: RenewalFailedPayload }
+  | { source: typeof SOURCE; event_type: 'payment_success'; payload: PaymentSuccessPayload }
+  | { source: typeof SOURCE; event_type: 'payment_failed'; payload: PaymentFailedPayload }
+  | { source: typeof SOURCE; event_type: 'subscription_cancelled'; payload: SubscriptionCancelledPayload };
 
 // ─── Envío interno ───────────────────────────────────────────────────────────
 
@@ -51,11 +67,12 @@ async function enviarEvento(evento: AnalyticsEvent): Promise<void> {
       body: JSON.stringify(evento),
     });
 
-    if (!respuesta.ok) {
+    if (respuesta.ok) {
       const texto = await respuesta.text().catch(() => '');
-      console.warn(
-        `[analytics] Evento "${evento.event_type}" rechazado con HTTP ${respuesta.status}: ${texto}`
-      );
+      console.log(`[analytics] Evento "${evento.event_type}" aceptado: ${texto}`);
+    } else {
+      const texto = await respuesta.text().catch(() => '');
+      console.warn(`[analytics] Evento "${evento.event_type}" rechazado con HTTP ${respuesta.status}: ${texto}`);
     }
   } catch (err) {
     console.error(`[analytics] Error al enviar evento "${evento.event_type}":`, err);
@@ -84,4 +101,16 @@ export function notificarRenewalSuccess(payload: RenewalSuccessPayload): void {
 
 export function notificarRenewalFailed(payload: RenewalFailedPayload): void {
   enviarEvento({ source: SOURCE, event_type: 'renewal_failed', payload });
+}
+
+export function notificarPaymentSuccess(payload: PaymentSuccessPayload): void {
+  enviarEvento({ source: SOURCE, event_type: 'payment_success', payload });
+}
+
+export function notificarPaymentFailed(payload: PaymentFailedPayload): void {
+  enviarEvento({ source: SOURCE, event_type: 'payment_failed', payload });
+}
+
+export function notificarSubscriptionCancelled(payload: SubscriptionCancelledPayload): void {
+  enviarEvento({ source: SOURCE, event_type: 'subscription_cancelled', payload });
 }

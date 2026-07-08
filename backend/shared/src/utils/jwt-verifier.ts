@@ -1,4 +1,4 @@
-import { createRemoteJWKSet, jwtVerify, decodeJwt, type JWTPayload } from "jose";
+import { createLocalJWKSet, jwtVerify, decodeJwt, type JWTPayload, type JWK } from "jose";
 
 /**
  * Verificación de JWTs emitidos por Keycloak (realm sistema-centralizado).
@@ -17,23 +17,32 @@ export interface KeycloakTokenPayload extends JWTPayload {
   resource_access?: Record<string, { roles: string[] }>;
 }
 
-let jwks: ReturnType<typeof createRemoteJWKSet> | null = null;
+let jwks: ReturnType<typeof createLocalJWKSet> | null = null;
+let jwksPromise: Promise<void> | null = null;
 
-function getJwks() {
-  if (!jwks) {
-    const keycloakUrl = process.env.KEYCLOAK_URL;
-    const realm = process.env.KEYCLOAK_REALM;
-    if (!keycloakUrl || !realm) {
-      throw new Error(
-        "KEYCLOAK_URL y KEYCLOAK_REALM son obligatorias para verificar JWTs",
-      );
-    }
-    const jwksUrl = new URL(
-      `${keycloakUrl}/realms/${realm}/protocol/openid-connect/certs`,
-    );
-    jwks = createRemoteJWKSet(jwksUrl);
+async function getJwks() {
+  if (!jwksPromise) {
+    jwksPromise = (async () => {
+      const keycloakUrl = process.env.KEYCLOAK_URL;
+      const realm = process.env.KEYCLOAK_REALM;
+      if (!keycloakUrl || !realm) {
+        throw new Error(
+          "KEYCLOAK_URL y KEYCLOAK_REALM son obligatorias para verificar JWTs",
+        );
+      }
+      const jwksUrl = `${keycloakUrl}/realms/${realm}/protocol/openid-connect/certs`;
+      const response = await fetch(jwksUrl, {
+        headers: { 'ngrok-skip-browser-warning': 'true' },
+      });
+      if (!response.ok) {
+        throw new Error(`Error al obtener JWKS: HTTP ${response.status}`);
+      }
+      const { keys } = (await response.json()) as { keys: JWK[] };
+      jwks = createLocalJWKSet({ keys });
+    })();
   }
-  return jwks;
+  await jwksPromise;
+  return jwks!;
 }
 
 /**
@@ -45,7 +54,7 @@ export async function verificarTokenKeycloak(
 ): Promise<KeycloakTokenPayload> {
   const keycloakUrl = process.env.KEYCLOAK_URL;
   const realm = process.env.KEYCLOAK_REALM;
-  const { payload } = await jwtVerify(token, getJwks(), {
+  const { payload } = await jwtVerify(token, await getJwks(), {
     issuer: `${keycloakUrl}/realms/${realm}`,
   });
   return payload as KeycloakTokenPayload;

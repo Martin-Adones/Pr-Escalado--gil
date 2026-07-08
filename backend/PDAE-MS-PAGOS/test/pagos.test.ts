@@ -219,6 +219,68 @@ describe('Endpoints de Pagos con UCNPAY', () => {
     });
   });
 
+  describe('DELETE /api/pagos/tarjeta/:token', () => {
+    it('debe eliminar la tarjeta en UCNPAY y localmente', async () => {
+      (db.query as jest.Mock)
+        .mockResolvedValueOnce({ rows: [{ id_users: 'eda5c8c2-dafd-451d-b860-34e592ece123' }] }) // obtenerKeycloakIdUsuario
+        .mockResolvedValueOnce({ rowCount: 1 }); // eliminarTarjeta (repository)
+
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ status: 'APROBADO', message: 'Tarjeta eliminada correctamente' })
+      });
+      global.fetch = mockFetch;
+
+      const response = await app.inject({
+        method: 'DELETE',
+        url: '/api/pagos/tarjeta/token_123',
+        headers: {
+          'x-user-id': 'eda5c8c2-dafd-451d-b860-34e592ece123',
+          'x-user-role': 'client'
+        }
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(true);
+      expect(body.message).toBe('Tarjeta eliminada con éxito');
+
+      // Verificar que fetch llamó a UCNPAY con DELETE y el token correcto
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const fetchCall = mockFetch.mock.calls[0];
+      expect(fetchCall[0]).toContain('/ucnpay/tarjeta');
+      expect(fetchCall[1].method).toBe('DELETE');
+      const sentBody = JSON.parse(fetchCall[1].body);
+      expect(sentBody.token).toBe('token_123');
+      expect(sentBody.userId).toBe('eda5c8c2-dafd-451d-b860-34e592ece123');
+    });
+
+    it('debe fallar si UCNPAY rechaza la eliminación', async () => {
+      (db.query as jest.Mock)
+        .mockResolvedValueOnce({ rows: [{ id_users: 'eda5c8c2-dafd-451d-b860-34e592ece123' }] }); // obtenerKeycloakIdUsuario
+
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ status: 'RECHAZADO', message: 'Tarjeta no encontrada' })
+      });
+      global.fetch = mockFetch;
+
+      const response = await app.inject({
+        method: 'DELETE',
+        url: '/api/pagos/tarjeta/token_xyz',
+        headers: {
+          'x-user-id': 'eda5c8c2-dafd-451d-b860-34e592ece123',
+          'x-user-role': 'client'
+        }
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = JSON.parse(response.body);
+      expect(body.success).toBe(false);
+      expect(body.message).toBe('No se pudo eliminar la tarjeta');
+    });
+  });
+
   describe('GET /api/pagos/tarjeta/:id_users', () => {
     it('debe listar las tarjetas registradas para el usuario', async () => {
       const mockCards = [

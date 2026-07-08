@@ -8,6 +8,10 @@ import {
   Min,
   ValidateNested,
   IsUUID,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+  ValidationArguments,
+  Validate,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import {
@@ -16,17 +20,35 @@ import {
   TransformVacioAIndefinido,
 } from 'shared';
 
+@ValidatorConstraint({ name: 'tarjetaNoVencida', async: false })
+class TarjetaNoVencidaConstraint implements ValidatorConstraintInterface {
+  validate(_value: any, args: ValidationArguments) {
+    const obj = args.object as any;
+    if (!obj.exp_mes || !obj.exp_ano) return false;
+    const now = new Date();
+    const ano = parseInt(obj.exp_ano, 10);
+    const mes = parseInt(obj.exp_mes, 10) - 1;
+    if (ano < now.getFullYear()) return false;
+    if (ano === now.getFullYear() && mes < now.getMonth()) return false;
+    return true;
+  }
+  defaultMessage() {
+    return 'La tarjeta está vencida';
+  }
+}
+
 export class TarjetaSubDto {
   @IsNotEmpty({ message: 'El número de tarjeta es requerido' })
   @IsString()
   numero!: string;
 
   @IsNotEmpty({ message: 'El mes de vencimiento es requerido' })
-  @IsString()
+  @Matches(/^(0[1-9]|1[0-2])$/, { message: 'El mes debe ser un valor entre 01 y 12' })
   exp_mes!: string;
 
   @IsNotEmpty({ message: 'El año de vencimiento es requerido' })
-  @IsString()
+  @Matches(/^\d{4}$/, { message: 'El año debe tener 4 dígitos' })
+  @Validate(TarjetaNoVencidaConstraint)
   exp_ano!: string;
 
   @IsNotEmpty({ message: 'El código CVC es requerido' })
@@ -124,6 +146,22 @@ export class UcnpayWebhookEntradaDto {
   @ValidateNested()
   @Type(() => CardWebhookDetailDto)
   card?: CardWebhookDetailDto;
+
+  @IsOptional()
+  @IsString()
+  operationType?: string;
+
+  @IsOptional()
+  @IsString()
+  moneda?: string;
+
+  @IsOptional()
+  @IsString()
+  customer?: string;
+
+  @IsOptional()
+  @IsString()
+  timestamp?: string;
 }
 
 export interface FilaPago {

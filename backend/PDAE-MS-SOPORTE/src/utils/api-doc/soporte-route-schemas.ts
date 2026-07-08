@@ -30,18 +30,35 @@ const SOPORTE_ESTADOS = ['open', 'in_progress', 'resolved', 'closed'] as const;
 
 const ticketObjetoSchema = {
   type: 'object' as const,
-  required: ['id_contracts', 'description'],
+  required: ['id_contracts', 'asunto'],
   properties: {
     id_contracts: idContract,
-    description: {
+    asunto: {
       type: 'string',
       minLength: 1,
-      description: 'Descripción detallada de la solicitud de soporte',
+      description: 'Asunto o motivo del ticket de soporte',
+    },
+    description: {
+      type: 'string',
+      description: 'Descripción o detalle adicional del problema (opcional)',
     },
     status: {
       type: 'string',
       enum: SOPORTE_ESTADOS,
       description: 'Estado inicial del ticket (por defecto "open")',
+    },
+    cliente_nombre: {
+      type: 'string',
+      description: 'Nombre del cliente asociado al ticket (opcional)',
+    },
+    cliente_email: {
+      type: 'string',
+      format: 'email',
+      description: 'Correo electrónico del cliente (opcional)',
+    },
+    cliente_telefono: {
+      type: 'string',
+      description: 'Número de teléfono del cliente (opcional)',
     },
   },
 };

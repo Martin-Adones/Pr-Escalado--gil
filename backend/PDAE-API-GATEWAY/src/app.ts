@@ -198,16 +198,23 @@ export const createServer = async (): Promise<FastifyInstance> => {
     },
   );
 
-  // Hook para verificar el JWT real de Keycloak, resolver el id_users
-  // numérico correspondiente vía ms-usuarios, e inyectar cabeceras de
-  // identidad seguras que los microservicios downstream ya consumen
-  // (ver protección anti-IDOR en MS-CONTRATOS).
+  // Hook para verificar el JWT real de Keycloak e inyectar cabeceras de
+  // identidad a los microservicios downstream.
+  // Siempre se inyecta x-user-id (Keycloak sub) si el token es válido,
+  // y adicionalmente x-user-role si el token tiene los roles esperados.
+  // Se intenta resolver el id_users numérico vía MS-USUARIOS, pero si falla
+  // se usa el sub de Keycloak como userId (UUID).
   app.addHook("preHandler", async (request, reply) => {
     const token = extraerBearerToken(request.headers.authorization);
     if (!token) return;
 
     try {
       const payload = await verificarTokenKeycloak(token);
+      const sub = payload.sub;
+      if (!sub) return;
+
+      request.headers["x-user-id"] = sub;
+
       const clientId = process.env.KEYCLOAK_CLIENT_ID || "p10";
       const clientRoles = payload.resource_access?.[clientId]?.roles || [];
       const role = clientRoles.includes("p10-admin")
@@ -216,28 +223,36 @@ export const createServer = async (): Promise<FastifyInstance> => {
           ? "client"
           : null;
 
-      if (!role || !MS_USUARIOS_URL) return;
-
-      const respuestaUsuario = await fetch(
-        `${MS_USUARIOS_URL}/api/usuarios/me`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-      if (!respuestaUsuario.ok) return;
-
-      const cuerpo = await respuestaUsuario.json();
-      if (cuerpo?.success && cuerpo?.data?.id_users) {
-        request.headers["x-user-id"] = String(cuerpo.data.id_users);
+      if (role) {
         request.headers["x-user-role"] = role;
-        if (payload.email) {
-          request.headers["x-user-email"] = payload.email;
+      }
+
+      if (payload.email) {
+        request.headers["x-user-email"] = payload.email;
+      }
+
+      // Intentar resolver el id_users numérico desde MS-USUARIOS
+      // Si falla, se mantiene el sub como x-user-id
+      if (role && MS_USUARIOS_URL) {
+        try {
+          const respuestaUsuario = await fetch(
+            `${MS_USUARIOS_URL}/api/usuarios/me`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            },
+          );
+          if (respuestaUsuario.ok) {
+            const cuerpo = await respuestaUsuario.json();
+            if (cuerpo?.success && cuerpo?.data?.id_users) {
+              request.headers["x-user-id"] = String(cuerpo.data.id_users);
+            }
+          }
+        } catch {
+          // Si falla la consulta a MS-USUARIOS, mantener el sub como userId
         }
       }
     } catch (err) {
-      app.log.warn("No se pudo verificar el token de Keycloak en el Gateway");
+      app.log.warn({ err }, "No se pudo verificar el token de Keycloak en el Gateway");
     }
   });
 
