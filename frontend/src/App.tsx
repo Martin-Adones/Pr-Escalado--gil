@@ -10,7 +10,6 @@ import AdminDashboard from "./pages/admin/DashboardPage";
 import ContratosPage from "./pages/admin/ContratosPage";
 import CiclosDeCobroPage from "./pages/admin/CiclosDeCobroPage";
 import ClientesPage from "./pages/admin/ClientesPage";
-import ConfiguracionPage from "./pages/admin/ConfiguracionPage";
 import Contracts from "./pages/client/ContractsPage";
 import ClientDashboard from "./pages/client/DashboardPage";
 import History from "./pages/client/HistoryPage";
@@ -33,7 +32,6 @@ const adminPathToLabel: Record<string, string> = {
   "/admin/contratos": "Contratos",
   "/admin/ciclos-de-cobro": "Ciclos de Cobro",
   "/admin/clientes": "Clientes",
-  "/admin/configuracion": "Configuración",
 };
 
 const clientPathToLabel: Record<string, string> = {
@@ -71,11 +69,6 @@ function AdminLayout({ onLogout }: { onLogout: () => void }) {
         label: "Clientes",
         iconClass: "fa-solid fa-users",
         onClick: () => navigate("/admin/clientes"),
-      },
-      {
-        label: "Configuración",
-        iconClass: "fa-solid fa-gear",
-        onClick: () => navigate("/admin/configuracion"),
       },
     ],
     [navigate],
@@ -118,16 +111,6 @@ function AdminLayout({ onLogout }: { onLogout: () => void }) {
           path="clientes"
           element={
             <ClientesPage navItems={navItems} logoutItem={logoutItem} activeNavLabel={activeNavLabel} />
-          }
-        />
-        <Route
-          path="configuracion"
-          element={
-            <ConfiguracionPage
-              navItems={navItems}
-              logoutItem={logoutItem}
-              activeNavLabel={activeNavLabel}
-            />
           }
         />
       </Routes>

@@ -23,6 +23,15 @@ function formatFecha(fecha: string) {
   return new Date(fecha).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
+function formatClienteId(idUsers: string | number) {
+  const value = `#${idUsers}`
+  return value.length > 7 ? `${value.slice(0, 7)}…` : value
+}
+
+function mostrarClienteCompleto(idUsers: string | number) {
+  window.alert(`ID completo del cliente: #${idUsers}`)
+}
+
 export default function ContratosPage({ navItems, logoutItem, activeNavLabel }: AdminContractsPageProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [contratos, setContratos] = useState<FilaContratoListado[]>([])
@@ -169,7 +178,20 @@ export default function ContratosPage({ navItems, logoutItem, activeNavLabel }: 
                         return (
                           <tr key={c.id_contracts} className="hover:bg-gray-50 transition">
                             <td className="px-3 py-2 font-mono font-semibold text-[#353535]">#{c.id_contracts}</td>
-                            <td className="px-3 py-2 font-mono text-[#353535]">#{c.id_users}</td>
+                            <td className="px-3 py-2 font-mono text-[#353535]">
+                              <div className="inline-flex items-center gap-2">
+                                <span title={`#${c.id_users}`}>{formatClienteId(c.id_users)}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => mostrarClienteCompleto(c.id_users)}
+                                  className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-200 text-[10px] text-gray-500 hover:bg-gray-100 hover:text-[#284B63]"
+                                  title="Ver ID completo"
+                                  aria-label="Ver ID completo del cliente"
+                                >
+                                  <i className="fa-solid fa-eye"></i>
+                                </button>
+                              </div>
+                            </td>
                             <td className="px-3 py-2 text-[#353535] truncate">{planes[c.id_plans] ?? `#${c.id_plans}`}</td>
                             <td className="px-3 py-2">
                               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${status.className}`}>
