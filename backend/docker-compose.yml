@@ -254,6 +254,7 @@ services:
       KEYCLOAK_URL: "${KEYCLOAK_URL}"
       KEYCLOAK_REALM: "${KEYCLOAK_REALM}"
       KEYCLOAK_CLIENT_ID: "${KEYCLOAK_CLIENT_ID}"
+      CRM_API_KEY: ${CRM_API_KEY}
     depends_on:
       db:
         condition: service_healthy

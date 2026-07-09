@@ -198,6 +198,7 @@ services:
       PORT: "${SOPORTE_PORT}"
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
+      CRM_API_KEY: "${CRM_API_KEY}"
     depends_on:
       db:
         condition: service_healthy

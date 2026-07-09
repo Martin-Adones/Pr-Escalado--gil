@@ -81,7 +81,7 @@ export class SoporteService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': 'suscripciones_secret_p10'
+          'x-api-key': process.env.CRM_API_KEY || ''
         },
         body: JSON.stringify(payload)
       });

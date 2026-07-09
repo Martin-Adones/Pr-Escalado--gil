@@ -31,6 +31,7 @@ export default function PaymentMethods({ navItems, logoutItem, activeNavLabel, u
   const [cvc, setCvc] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [addCardError, setAddCardError] = useState<string | null>(null)
 
   const [reloadTrigger, setReloadTrigger] = useState(0)
 
@@ -116,12 +117,32 @@ export default function PaymentMethods({ navItems, logoutItem, activeNavLabel, u
     e.preventDefault()
     if (!userId) return
     if (!holderName || !cardNumber || !expMonth || !expYear || !cvc) {
-      setErrorMessage('Por favor, completa todos los campos de la tarjeta.')
+      setAddCardError('Por favor, completa todos los campos de la tarjeta.')
+      return
+    }
+
+    const monthNum = parseInt(expMonth, 10)
+    if (monthNum < 1 || monthNum > 12) {
+      setAddCardError('El mes de expiración debe estar entre 01 y 12.')
+      return
+    }
+
+    const yearNum = parseInt(expYear, 10)
+    if (expYear.length !== 4 || yearNum < 2025) {
+      setAddCardError('El año de expiración debe tener 4 dígitos y ser igual o mayor a 2025.')
+      return
+    }
+
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const currentMonth = now.getMonth() + 1
+    if (yearNum < currentYear || (yearNum === currentYear && monthNum < currentMonth)) {
+      setAddCardError('La tarjeta está vencida. Verifica la fecha de expiración.')
       return
     }
 
     setIsSubmitting(true)
-    setErrorMessage(null)
+    setAddCardError(null)
     setSuccessMessage(null)
 
     try {
@@ -147,7 +168,7 @@ export default function PaymentMethods({ navItems, logoutItem, activeNavLabel, u
     } catch (err) {
       console.error('Error al registrar tarjeta:', err)
       const msg = err instanceof Error ? err.message : 'Error al guardar la tarjeta en la pasarela.'
-      setErrorMessage(msg)
+      setAddCardError(msg)
     } finally {
       setIsSubmitting(false)
     }
@@ -192,8 +213,8 @@ export default function PaymentMethods({ navItems, logoutItem, activeNavLabel, u
       userRole="Premium Member"
       headerTitle="Métodos de Pago"
       headerSubtitle="Administra tus tarjetas guardadas y configuraciones de pago."
-      headerRightLabel="Estado Pasarela"
-      headerRightValue="UCNPAY Habilitado"
+      headerRightLabel="Estado UCNPAY"
+      headerRightValue="Habilitado"
     >
       <div className="space-y-6">
         {errorMessage && (
@@ -210,17 +231,18 @@ export default function PaymentMethods({ navItems, logoutItem, activeNavLabel, u
           </div>
         )}
 
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-bold text-[#353535]">Tus tarjetas vinculadas</h3>
-          <button
-            type="button"
-            onClick={() => setShowAddForm(true)}
-            className="flex items-center gap-2 rounded-xl bg-[#284B63] hover:bg-[#3C6E71] text-white px-4 py-2.5 text-sm font-black transition-all shadow-sm"
-          >
-            <i aria-hidden="true" className="fa-solid fa-plus" />
-            Agregar Tarjeta
-          </button>
-        </div>
+        {cards.length > 0 && (
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => { setShowAddForm(true); setAddCardError(null) }}
+              className="flex items-center gap-2 rounded-xl bg-[#284B63] hover:bg-[#3C6E71] text-white px-4 py-2.5 text-sm font-black transition-all shadow-sm"
+            >
+              <i aria-hidden="true" className="fa-solid fa-plus" />
+              Agregar Tarjeta
+            </button>
+          </div>
+        )}
 
         {showAddForm && createPortal(
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -228,8 +250,8 @@ export default function PaymentMethods({ navItems, logoutItem, activeNavLabel, u
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                 <h2 className="text-sm font-black text-[#353535]">Nueva tarjeta</h2>
                 <button
-                  onClick={() => setShowAddForm(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                    onClick={() => { setShowAddForm(false); setAddCardError(null) }}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
                 >
                   <i aria-hidden="true" className="fa-solid fa-times" />
                 </button>
@@ -312,10 +334,16 @@ export default function PaymentMethods({ navItems, logoutItem, activeNavLabel, u
                   </div>
                 </div>
 
+                {addCardError && (
+                  <div className="flex items-start gap-3 rounded-lg bg-red-50 border border-red-200 p-3">
+                    <i className="fa-solid fa-circle-exclamation mt-0.5 text-red-600 shrink-0" />
+                    <p className="text-xs text-red-700">{addCardError}</p>
+                  </div>
+                )}
                 <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
                   <button
                     type="button"
-                    onClick={() => setShowAddForm(false)}
+                    onClick={() => { setShowAddForm(false); setAddCardError(null) }}
                     className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 transition"
                   >
                     Cancelar
@@ -411,6 +439,14 @@ export default function PaymentMethods({ navItems, logoutItem, activeNavLabel, u
             <p className="mt-2 text-sm text-gray-500 font-medium leading-relaxed max-w-sm mx-auto">
               Vincula una tarjeta para habilitar el cobro recurrente automático y poder cambiar de plan sin interrupciones.
             </p>
+            <button
+              type="button"
+              onClick={() => { setShowAddForm(true); setAddCardError(null) }}
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#284B63] hover:bg-[#3C6E71] text-white px-5 py-2.5 text-sm font-black transition-all shadow-sm"
+            >
+              <i aria-hidden="true" className="fa-solid fa-plus" />
+              Agregar Tarjeta
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
