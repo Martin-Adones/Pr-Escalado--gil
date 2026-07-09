@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Fragment } from 'react'
 import PortalTemplate from '../../portal/PortalTemplate'
 import PlanChangeModal from '../../components/PlanChangeModal'
 import { listarPlanes } from '../../services/planes.service'
@@ -271,6 +271,38 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
     ? plans.indexOf(selectedPlan) > plans.indexOf(currentPlan)
     : false
 
+  const allProducts: Producto[] = (() => {
+    const seen = new Set<string>()
+    const result: Producto[] = []
+    for (const plan of plans) {
+      for (const prod of plan.productos) {
+        if (!seen.has(prod.id_products)) {
+          seen.add(prod.id_products)
+          result.push(prod)
+        }
+      }
+    }
+    return result.sort((a, b) => {
+      const aFirst = plans.findIndex(p => p.productos.some(pp => pp.id_products === a.id_products))
+      const bFirst = plans.findIndex(p => p.productos.some(pp => pp.id_products === b.id_products))
+      if (aFirst !== bFirst) return aFirst - bFirst
+      return Number(a.id_products) - Number(b.id_products)
+    })
+  })()
+
+  const productTypeLabels: Record<string, string> = {
+    service: 'Servicios',
+    feature: 'Funcionalidades',
+    storage: 'Almacenamiento',
+  }
+
+  const groupedProducts = allProducts.reduce<Record<string, Producto[]>>((acc, prod) => {
+    const type = prod.type || 'other'
+    if (!acc[type]) acc[type] = []
+    acc[type].push(prod)
+    return acc
+  }, {})
+
   return (
     <PortalTemplate
       sidebarTitle="Cliente"
@@ -340,94 +372,138 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
 
         {isLoadingPlans ? (
           <LoadingSpinner />
+        ) : plans.length === 0 ? (
+          <div className="text-center py-12 text-gray-500 text-sm font-semibold">No hay planes disponibles</div>
         ) : (
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-            {plans.map((plan) => {
-              const price = billingPeriod === 'monthly' ? plan.monthlyPrice : plan.monthlyDiscountedPrice
-              const period = billingPeriod === 'monthly' ? '/mes' : '/mes'
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4">
+              {plans.map((plan) => {
+                const price = billingPeriod === 'monthly' ? plan.monthlyPrice : plan.monthlyDiscountedPrice
 
-              return (
-                <article
-                  key={plan.id}
-                  className={
-                    plan.isRecommended
-                      ? 'relative flex min-h-full flex-col rounded-2xl border-2 border-[#3C6E71] bg-white p-6 shadow-lg transition duration-300 hover:-translate-y-1 hover:shadow-2xl'
-                      : 'relative flex min-h-full flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[#3C6E71]/50 hover:shadow-xl'
-                  }
-                >
-                  {plan.isRecommended ? (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#3C6E71] px-4 py-1 text-[10px] font-black uppercase tracking-wide text-white shadow-sm">
-                      Más popular
-                    </span>
-                  ) : null}
-
-                  {plan.isCurrent ? (
-                    <span className="mb-4 w-fit rounded-full bg-[#284B63]/10 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-[#284B63]">
-                      Tu Plan Actual
-                    </span>
-                  ) : (
-                    <span className="mb-4 w-fit rounded-full bg-gray-100 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-gray-500">
-                      {plan.level}
-                    </span>
-                  )}
-
-                  <div>
-                    <h4 className="text-2xl font-black text-[#353535]">{plan.name}</h4>
-                    <p className="mt-1 text-xs font-semibold text-gray-400">Ciclo: {plan.billingCycle}</p>
-                  </div>
-
-                  <div className="mt-6 border-y border-gray-100 py-5">
-                    <div className="flex items-end gap-2">
-                      <span className="text-4xl font-black tracking-tight text-[#284B63]">{price}</span>
-                      <span className="pb-1 text-sm font-bold text-gray-400">{period}</span>
-                      {billingPeriod === 'yearly' ? (
-                        <span className="ml-auto self-center rounded-md bg-emerald-100 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-emerald-700 shadow-sm">
-                          Ahorras {plan.yearlySavings}/año
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  <ul className="mt-6 flex-grow space-y-3">
-                    {plan.productos.length > 0 ? (
-                      plan.productos.map((prod) => (
-                        <li key={prod.id_products} className="flex items-start gap-3 text-sm font-semibold text-gray-600">
-                          <i aria-hidden="true" className="fa-solid fa-circle-check mt-0.5 text-[#3C6E71]" />
-                          <div>
-                            <span>{prod.name}</span>
-                            {prod.description && (
-                              <p className="text-xs font-normal text-gray-400 mt-0.5">{prod.description}</p>
-                            )}
-                          </div>
-                        </li>
-                      ))
-                    ) : (
-                      <li className="flex items-start gap-3 text-sm font-semibold text-gray-400">
-                        <i aria-hidden="true" className="fa-solid fa-minus-circle mt-0.5 text-gray-300" />
-                        <span>Sin productos asignados</span>
-                      </li>
-                    )}
-                  </ul>
-
-                  <button
-                    type="button"
-                    disabled={plan.isCurrent}
-                    onClick={() => handlePlanSelect(plan)}
-                    className={
+                return (
+                  <div
+                    key={plan.id}
+                    className={`relative flex flex-col rounded-2xl bg-white p-5 transition-all duration-200 ${
                       plan.isCurrent
-                        ? 'mt-8 w-full cursor-default rounded-xl bg-gray-100 px-4 py-3 text-sm font-black text-gray-400'
-                        : plan.isRecommended
-                          ? 'mt-8 w-full rounded-xl bg-[#3C6E71] px-4 py-3 text-sm font-black text-white transition hover:bg-[#284B63] hover:shadow-lg'
-                          : 'mt-8 w-full rounded-xl border border-[#284B63] px-4 py-3 text-sm font-black text-[#284B63] transition hover:bg-[#284B63] hover:text-white hover:shadow-lg'
-                    }
+                        ? 'border-2 border-[#284B63] shadow-md'
+                        : plan.isRecommended && !plan.isCurrent
+                          ? 'border-2 border-[#3C6E71] shadow-lg'
+                          : 'border border-gray-200 shadow-sm hover:border-[#3C6E71]/50 hover:shadow-md'
+                    }`}
                   >
-                    {plan.actionLabel}
-                  </button>
-                </article>
-              )
+                    {plan.isRecommended && !plan.isCurrent && (
+                      <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full bg-[#3C6E71] px-3 py-0.5 text-[8px] font-black uppercase tracking-wide text-white shadow-sm whitespace-nowrap">
+                        Más popular
+                      </span>
+                    )}
+
+                    <div className="mb-3">
+                      {plan.isCurrent ? (
+                        <span className="inline-block rounded-full bg-[#284B63]/10 px-2.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-[#284B63] mb-2">
+                          Tu Plan Actual
+                        </span>
+                      ) : (
+                        <span className="inline-block rounded-full bg-gray-100 px-2.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-gray-500 mb-2">
+                          {plan.level}
+                        </span>
+                      )}
+                      <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-400">
+                        Atención Domiciliaria
+                      </h4>
+                      <p className="text-lg font-black text-[#353535] mt-0.5 leading-tight">
+                        {plan.name.slice(plan.name.lastIndexOf(' ') + 1)}
+                      </p>
+                    </div>
+
+                    <div className="border-t border-gray-100 pt-3 mb-4">
+                      <span className="text-2xl font-black text-[#284B63]">{price}</span>
+                      <span className="text-xs font-bold text-gray-400 ml-0.5">/mes</span>
+                      {billingPeriod === 'yearly' && (
+                        <div className="mt-1 rounded-md bg-emerald-100 px-2 py-0.5 text-[8px] font-black text-emerald-700 inline-block">
+                          Ahorras {plan.yearlySavings}/año
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex-grow" />
+
+                    <button
+                      type="button"
+                      disabled={plan.isCurrent}
+                      onClick={() => handlePlanSelect(plan)}
+                      className={`w-full rounded-xl py-2.5 text-xs font-black transition ${
+                        plan.isCurrent
+                          ? 'bg-gray-100 text-gray-400 cursor-default'
+                          : plan.isRecommended
+                            ? 'bg-[#3C6E71] text-white hover:bg-[#284B63] hover:shadow-md'
+                            : 'border-2 border-[#284B63] text-[#284B63] hover:bg-[#284B63] hover:text-white hover:shadow-md'
+                      }`}
+                    >
+                      {plan.actionLabel}
+                    </button>
+                  </div>
+                )
               })}
             </div>
-          )}
+
+            {allProducts.length > 0 && (
+              <div className="overflow-x-auto rounded-2xl bg-white shadow-sm border border-gray-200">
+                <table className="w-full text-left border-collapse min-w-[600px]">
+                  <thead>
+                    <tr>
+                      <th className="px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-gray-400 min-w-[160px]">
+                        Productos incluidos
+                      </th>
+                      {plans.map((plan) => (
+                        <th key={plan.id} className={`px-4 py-3 text-center text-[10px] font-black text-[#353535] ${plan.isCurrent ? 'bg-[#284B63]/5' : ''}`}>
+                          {plan.name.slice(plan.name.lastIndexOf(' ') + 1)}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(['service', 'feature', 'storage'] as const).map((typeKey) => {
+                      const products = groupedProducts[typeKey]
+                      if (!products || products.length === 0) return null
+                      const label = productTypeLabels[typeKey]
+                      return (
+                        <Fragment key={typeKey}>
+                          <tr className="bg-gray-50">
+                            <td className="px-5 py-2 text-[9px] font-black uppercase tracking-widest text-gray-400" colSpan={plans.length + 1}>
+                              {label}
+                            </td>
+                          </tr>
+                          {products.map((prod) => (
+                            <tr key={prod.id_products} className="border-b border-gray-50 hover:bg-[#284B63]/[0.02] transition-colors">
+                              <td className="px-5 py-3.5 text-sm font-semibold text-gray-700">
+                                <span>{prod.name}</span>
+                                {prod.description && (
+                                  <p className="text-xs font-normal text-gray-400 mt-0.5 leading-snug">{prod.description}</p>
+                                )}
+                              </td>
+                              {plans.map((plan) => {
+                                const hasProduct = plan.productos.some(p => p.id_products === prod.id_products)
+                                return (
+                                  <td key={plan.id} className={`px-4 py-3.5 text-center ${plan.isCurrent ? 'bg-[#284B63]/5' : ''}`}>
+                                    {hasProduct ? (
+                                      <i className="fa-solid fa-check text-[#3C6E71] text-sm" />
+                                    ) : (
+                                      <span className="text-gray-300 font-bold">−</span>
+                                    )}
+                                  </td>
+                                )
+                              })}
+                            </tr>
+                          ))}
+                        </Fragment>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {selectedPlan && (
@@ -439,6 +515,7 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
           newPlanName={selectedPlan.name}
           newPlanPrice={billingPeriod === 'monthly' ? selectedPlan.monthlyPrice : selectedPlan.monthlyDiscountedPrice}
           billingPeriod={billingPeriod}
+          isNewContract={!currentPlan}
           isUpgrade={!!currentPlan && (isUpgrade ?? false)}
           isProcessing={isProcessingPayment}
           errorMessage={paymentError}

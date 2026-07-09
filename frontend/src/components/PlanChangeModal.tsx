@@ -6,6 +6,7 @@ type PlanChangeModalProps = {
   newPlanName: string
   newPlanPrice: string
   billingPeriod: 'monthly' | 'yearly'
+  isNewContract: boolean
   isUpgrade: boolean
   isProcessing?: boolean
   errorMessage?: string | null
@@ -19,6 +20,7 @@ export default function PlanChangeModal({
   newPlanName,
   newPlanPrice,
   billingPeriod,
+  isNewContract,
   isUpgrade,
   isProcessing = false,
   errorMessage = null,
@@ -35,14 +37,24 @@ export default function PlanChangeModal({
             {isProcessing ? (
               <i className="fa-solid fa-circle-notch fa-spin text-xl text-[#284B63]" />
             ) : (
-              <i className="fa-solid fa-arrow-right-arrow-left text-xl text-[#284B63]" />
+              <i className={`fa-solid ${isNewContract ? 'fa-cart-plus' : 'fa-arrow-right-arrow-left'} text-xl text-[#284B63]`} />
             )}
           </div>
-          <h3 className="text-center text-xl font-bold text-[#353535]">Confirmar cambio de plan</h3>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Estás a punto de cambiar tu suscripción de <span className="font-semibold">{currentPlanName}</span> a{' '}
-            <span className="font-semibold">{newPlanName}</span>
-          </p>
+          <h3 className="text-center text-xl font-bold text-[#353535]">
+            {isNewContract ? 'Confirmar contratación' : 'Confirmar cambio de plan'}
+          </h3>
+          {isNewContract ? (
+            <p className="mt-2 text-center text-sm text-gray-600">
+              Estás a punto de contratar el plan{' '}
+              <span className="font-semibold">{newPlanName}</span> por{' '}
+              <span className="font-semibold">{newPlanPrice}</span> {periodLabel}
+            </p>
+          ) : (
+            <p className="mt-2 text-center text-sm text-gray-600">
+              Estás a punto de cambiar tu suscripción de <span className="font-semibold">{currentPlanName}</span> a{' '}
+              <span className="font-semibold">{newPlanName}</span>
+            </p>
+          )}
         </div>
 
         <div className="mb-6 rounded-xl bg-gray-50 p-4">
@@ -69,7 +81,17 @@ export default function PlanChangeModal({
         )}
 
         <div className="mb-6 space-y-3">
-          {isUpgrade ? (
+          {isNewContract ? (
+            <div className="flex items-start gap-3 rounded-lg bg-blue-50 p-3">
+              <i className="fa-solid fa-cart-plus mt-0.5 text-blue-600" />
+              <div>
+                <p className="text-sm font-semibold text-blue-800">Nueva suscripción</p>
+                <p className="mt-1 text-xs text-blue-700">
+                  Se creará una nueva suscripción con el plan seleccionado. El cobro se realizará al confirmar.
+                </p>
+              </div>
+            </div>
+          ) : isUpgrade ? (
             <div className="flex items-start gap-3 rounded-lg bg-green-50 p-3">
               <i className="fa-solid fa-circle-check mt-0.5 text-green-600" />
               <div>
@@ -114,6 +136,8 @@ export default function PlanChangeModal({
                 <i className="fa-solid fa-circle-notch fa-spin" />
                 Procesando...
               </>
+            ) : isNewContract ? (
+              'Contratar ahora'
             ) : (
               'Confirmar cambio'
             )}

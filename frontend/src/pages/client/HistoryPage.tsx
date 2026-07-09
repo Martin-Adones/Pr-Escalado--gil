@@ -54,28 +54,27 @@ export default function History({ navItems, logoutItem, activeNavLabel, userId }
         )
 
         const mapped: Transaction[] = filteredLogs.map((log) => {
-          let concepto = `Acción en contrato #${log.id_contracts}: ${log.action}`
+          let concepto = log.action
           let monto = 0
 
           const contrato = log.id_contracts ? contractById.get(log.id_contracts) : undefined
           const plan = contrato ? planesById.get(contrato.id_plans) : undefined
           const planName = plan ? plan.name : contrato?.id_plans ?? 'Plan desconocido'
           const planAmount = plan ? plan.amount : 0
-          const actorInfo = log.assigned_to ? ` por ${log.assigned_to}` : ''
-          const priceLabel = planAmount > 0 ? ` por ${new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(planAmount)}` : ''
+          const priceLabel = planAmount > 0 ? ` - ${new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(planAmount)}` : ''
 
           if (log.action === 'CREAR_CONTRATO') {
-            concepto = `Nuevo plan adquirido en contrato #${log.id_contracts} → ${planName}${priceLabel}${actorInfo}`
+            concepto = `${planName} adquirido${priceLabel}`
             monto = planAmount
           } else if (log.action === 'CAMBIO_CONTRATO' || log.action === 'CAMBIO_PLAN' || log.action === 'ACTUALIZAR_PLAN') {
-            concepto = `Cambio de plan en contrato #${log.id_contracts} → ${planName}${priceLabel}${actorInfo}`
+            concepto = `Cambio a ${planName}${priceLabel}`
             monto = planAmount
           } else if (log.action === 'ACTUALIZAR_CONTRATO') {
-            concepto = `Actualización de contrato #${log.id_contracts}${actorInfo}`
+            concepto = 'Contrato actualizado'
           } else if (log.action === 'SUSPENDER_CONTRATO') {
-            concepto = `Suspensión de contrato #${log.id_contracts}${actorInfo}`
+            concepto = 'Suscripción suspendida'
           } else if (log.action === 'FINALIZAR_CONTRATO') {
-            concepto = `Finalización de contrato #${log.id_contracts}${actorInfo}`
+            concepto = 'Suscripción finalizada'
           }
 
           const parsedDate = log.created_at ? new Date(log.created_at) : new Date()

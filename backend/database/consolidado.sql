@@ -1755,38 +1755,18 @@ INSERT INTO "Products" ("name", "description", "type", "quantity", "price", "isA
   ('Almacenamiento 50GB',    'Almacenamiento en la nube de 50 GB',                        'storage', 1,      14990, TRUE),
   ('SSL Dedicado',           'Certificado SSL dedicado con validación extendida',          'service', NULL,   29990, TRUE);
 
--- 9. Plans_Products (15) — asociaciones progresivas plan ↔ producto
+-- 9. Plans_Products (28) — progresión escalonada perfecta
 INSERT INTO "Plans_Products" ("id_plans", "id_products") VALUES
-  -- Básico ($19.990): esenciales gratuitos
-  (1, 1),  -- Soporte estándar
-  (1, 4),  -- Reportes básicos
-  (1, 5),  -- Automatización de pagos
-  -- Pyme ($24.990): añade métricas
-  (4, 1),  -- Soporte estándar
-  (4, 3),  -- Panel de métricas
-  (4, 4),  -- Reportes básicos
-  (4, 5),  -- Automatización de pagos
-  -- Profesional ($32.990): soporte prioritario + almacenamiento
-  (2, 2),  -- Soporte prioritario
-  (2, 3),  -- Panel de métricas
-  (2, 5),  -- Automatización de pagos
-  (2, 8),  -- Almacenamiento 10GB
-  -- Enterprise ($45.990): API + almacenamiento mayor + usuarios ilimitados
-  (3, 2),  -- Soporte prioritario
-  (3, 3),  -- Panel de métricas
-  (3, 5),  -- Automatización de pagos
-  (3, 6),  -- Usuarios ilimitados
-  (3, 7),  -- API REST privada
-  (3, 8),  -- Almacenamiento 10GB
-  (3, 9),  -- Almacenamiento 50GB
-  -- Corporativo ($59.990): todo lo anterior + SSL dedicado
-  (5, 2),  -- Soporte prioritario
-  (5, 3),  -- Panel de métricas
-  (5, 5),  -- Automatización de pagos
-  (5, 6),  -- Usuarios ilimitados
-  (5, 7),  -- API REST privada
-  (5, 9),  -- Almacenamiento 50GB
-  (5, 10); -- SSL Dedicado
+  -- Básica (1): esenciales gratuitos (3)
+  (1, 5), (1, 1), (1, 4),
+  -- Esencial (4): añade Panel de métricas (4)
+  (4, 5), (4, 1), (4, 4), (4, 3),
+  -- Profesional (2): añade Soporte prioritario + Almacenamiento 10GB (6)
+  (2, 5), (2, 1), (2, 4), (2, 3), (2, 2), (2, 8),
+  -- Premium (3): añade Usuarios ilimitados + API REST + Almacenamiento 50GB (9)
+  (3, 5), (3, 1), (3, 4), (3, 3), (3, 2), (3, 8), (3, 6), (3, 7), (3, 9),
+  -- Elite (5): añade SSL Dedicado (10)
+  (5, 5), (5, 1), (5, 4), (5, 3), (5, 2), (5, 8), (5, 6), (5, 7), (5, 9), (5, 10);
 
 -- =============================================================================
 -- sp_sincronizar_usuario — upsert post-login con UUID de Keycloak
