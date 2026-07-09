@@ -37,9 +37,35 @@ class TarjetaNoVencidaConstraint implements ValidatorConstraintInterface {
   }
 }
 
+@ValidatorConstraint({ name: 'luhn', async: false })
+class LuhnConstraint implements ValidatorConstraintInterface {
+  validate(value: any) {
+    if (typeof value !== 'string') return false;
+    const digits = value.replace(/\D/g, '');
+    if (digits.length < 13 || digits.length > 19) return false;
+    let sum = 0;
+    let alternate = false;
+    for (let i = digits.length - 1; i >= 0; i--) {
+      let d = parseInt(digits[i], 10);
+      if (alternate) {
+        d *= 2;
+        if (d > 9) d -= 9;
+      }
+      sum += d;
+      alternate = !alternate;
+    }
+    return sum % 10 === 0;
+  }
+  defaultMessage() {
+    return 'El número de tarjeta no es válido (checksum Luhn)';
+  }
+}
+
 export class TarjetaSubDto {
   @IsNotEmpty({ message: 'El número de tarjeta es requerido' })
   @IsString()
+  @Matches(/^\d{13,19}$/, { message: 'El número de tarjeta debe contener entre 13 y 19 dígitos' })
+  @Validate(LuhnConstraint)
   numero!: string;
 
   @IsNotEmpty({ message: 'El mes de vencimiento es requerido' })

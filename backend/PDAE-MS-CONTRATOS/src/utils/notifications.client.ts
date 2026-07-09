@@ -1,5 +1,5 @@
-const NOTIFICATIONS_URL = 'https://ucn-agil-notificaciones.up.railway.app/notifications/send';
-const API_KEY = '8PtUwQxMoK3hVbR6cSjYnE1fDzA9GiL5';
+const NOTIFICATIONS_URL = process.env.NOTIFICATIONS_URL || 'https://ucn-agil-notificaciones.up.railway.app/notifications/send';
+const API_KEY = process.env.NOTIFICATIONS_API_KEY || '';
 
 interface EmailPayload {
   email: string;
