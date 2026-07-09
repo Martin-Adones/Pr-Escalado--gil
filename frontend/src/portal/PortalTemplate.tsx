@@ -72,8 +72,8 @@ export default function PortalTemplate({
                   onClick={item.onClick}
                   className={
                     isActive
-                      ? 'flex items-center gap-3 p-3 bg-white/10 rounded-lg font-medium transition w-full text-left'
-                      : 'flex items-center gap-3 p-3 hover:bg-white/5 rounded-lg text-white/70 hover:text-white transition w-full text-left'
+                      ? 'flex items-center gap-3 p-3 bg-white/10 rounded-lg font-medium transition w-full text-left cursor-pointer'
+                      : 'flex items-center gap-3 p-3 hover:bg-white/5 rounded-lg text-white/70 hover:text-white transition w-full text-left cursor-pointer'
                   }
                 >
                   <i className={`${item.iconClass} text-sm`} /> {item.label}
@@ -87,7 +87,7 @@ export default function PortalTemplate({
               <button
                 type="button"
                 onClick={logoutItem.onClick}
-                className="flex items-center gap-3 p-3 w-full text-left rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition"
+                className="flex items-center gap-3 p-3 w-full text-left rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition cursor-pointer"
               >
                 <i className={`${logoutItem.iconClass} text-sm`} /> {logoutItem.label}
               </button>

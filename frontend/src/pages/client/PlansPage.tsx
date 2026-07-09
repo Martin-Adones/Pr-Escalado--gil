@@ -351,8 +351,8 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
                   key={plan.id}
                   className={
                     plan.isRecommended
-                      ? 'relative flex min-h-full flex-col rounded-2xl border-2 border-[#3C6E71] bg-white p-6 shadow-lg transition duration-300 hover:-translate-y-1 hover:shadow-2xl'
-                      : 'relative flex min-h-full flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[#3C6E71]/50 hover:shadow-xl'
+                      ? 'relative flex min-h-full flex-col rounded-2xl border-2 border-[#3C6E71] bg-white p-6 shadow-lg transition duration-300 hover:shadow-2xl hover:brightness-[1.02]'
+                      : 'relative flex min-h-full flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition duration-300 hover:border-[#3C6E71]/50 hover:shadow-xl hover:brightness-[1.02]'
                   }
                 >
                   {plan.isRecommended ? (
