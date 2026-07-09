@@ -11,6 +11,7 @@ export { registerSwagger, type SwaggerConfig } from "./utils/api-doc/swagger";
 export {
   respuestaErrorValidacion,
   respuestaErrorServidor,
+  idBigintSchema,
 } from "./utils/api-doc/openapi-schemas";
 export { healthRoute } from "./routes/health-routes";
 export {

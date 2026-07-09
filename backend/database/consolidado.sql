@@ -159,41 +159,22 @@ CREATE TABLE "Plans_Products" (
 -- -----------------------------------------------------------------------------
 -- Paso 1: eliminar funciones antiguas (otro idioma, otra firma, pruebas fallidas)
 -- -----------------------------------------------------------------------------
-DO $$
-DECLARE
-  r RECORD;
-BEGIN
-  FOR r IN
-    SELECT p.oid::regprocedure AS sig
-    FROM pg_proc p
-    JOIN pg_namespace n ON p.pronamespace = n.oid
-    WHERE n.nspname = 'public'
-      AND p.proname IN (
-        -- Procedimientos en inglés (versiones anteriores del repo)
-        'sp_create_contrato',
-        'sp_update_contrato',
-        'sp_list_contrato',
-        'sp_terminate_contrato',
-        'sp_delete_contrato',
-        -- Procedimientos en español (por si re-ejecutás el script)
-        'sp_crear_contrato',
-        'sp_actualizar_contrato',
-        'sp_listar_contratos',
-        'sp_finalizar_contrato',
-        'sp_eliminar_contrato_descontinuado',
-        -- Helpers en inglés
-        'fn_contrato_status_normalizado',
-        'fn_contrato_status_es_valido',
-        'fn_contrato_transicion_permitida',
-        -- Helpers en español
-        'fn_normalizar_estado_contrato',
-        'fn_es_estado_contrato_valido',
-        'fn_transicion_estado_contrato_permitida'
-      )
-  LOOP
-    EXECUTE 'DROP FUNCTION IF EXISTS ' || r.sig::text || ' CASCADE';
-  END LOOP;
-END $$;
+DROP FUNCTION IF EXISTS sp_create_contrato CASCADE;
+DROP FUNCTION IF EXISTS sp_update_contrato CASCADE;
+DROP FUNCTION IF EXISTS sp_list_contrato CASCADE;
+DROP FUNCTION IF EXISTS sp_terminate_contrato CASCADE;
+DROP FUNCTION IF EXISTS sp_delete_contrato CASCADE;
+DROP FUNCTION IF EXISTS sp_crear_contrato CASCADE;
+DROP FUNCTION IF EXISTS sp_actualizar_contrato CASCADE;
+DROP FUNCTION IF EXISTS sp_listar_contratos CASCADE;
+DROP FUNCTION IF EXISTS sp_finalizar_contrato CASCADE;
+DROP FUNCTION IF EXISTS sp_eliminar_contrato_descontinuado CASCADE;
+DROP FUNCTION IF EXISTS fn_contrato_status_normalizado CASCADE;
+DROP FUNCTION IF EXISTS fn_contrato_status_es_valido CASCADE;
+DROP FUNCTION IF EXISTS fn_contrato_transicion_permitida CASCADE;
+DROP FUNCTION IF EXISTS fn_normalizar_estado_contrato CASCADE;
+DROP FUNCTION IF EXISTS fn_es_estado_contrato_valido CASCADE;
+DROP FUNCTION IF EXISTS fn_transicion_estado_contrato_permitida CASCADE;
 
 -- -----------------------------------------------------------------------------
 -- Paso 2: helpers — lógica de estados reutilizada por los sp_
@@ -607,31 +588,16 @@ $$ LANGUAGE plpgsql;
 -- Aplicacion: psql -v ON_ERROR_STOP=1 -U <usuario> -d <base> -f database/planes/planes_funciones.sql
 -- =============================================================================
 
-DO $$
-DECLARE
-  r RECORD;
-BEGIN
-  FOR r IN
-    SELECT p.oid::regprocedure AS sig
-    FROM pg_proc p
-    JOIN pg_namespace n ON p.pronamespace = n.oid
-    WHERE n.nspname = 'public'
-      AND p.proname IN (
-        'sp_crear_plan',
-        'sp_listar_planes',
-        'sp_actualizar_plan',
-        'sp_desactivar_plan',
-        'sp_registrar_productos_plan',
-        'sp_listar_productos_planes',
-        'fn_normalizar_nombre_plan',
-        'fn_es_nombre_plan_valido',
-        'fn_normalizar_ciclo_facturacion',
-        'fn_es_ciclo_facturacion_valido'
-      )
-  LOOP
-    EXECUTE 'DROP FUNCTION IF EXISTS ' || r.sig::text || ' CASCADE';
-  END LOOP;
-END $$;
+DROP FUNCTION IF EXISTS sp_crear_plan CASCADE;
+DROP FUNCTION IF EXISTS sp_listar_planes CASCADE;
+DROP FUNCTION IF EXISTS sp_actualizar_plan CASCADE;
+DROP FUNCTION IF EXISTS sp_desactivar_plan CASCADE;
+DROP FUNCTION IF EXISTS sp_registrar_productos_plan CASCADE;
+DROP FUNCTION IF EXISTS sp_listar_productos_planes CASCADE;
+DROP FUNCTION IF EXISTS fn_normalizar_nombre_plan CASCADE;
+DROP FUNCTION IF EXISTS fn_es_nombre_plan_valido CASCADE;
+DROP FUNCTION IF EXISTS fn_normalizar_ciclo_facturacion CASCADE;
+DROP FUNCTION IF EXISTS fn_es_ciclo_facturacion_valido CASCADE;
 
 -- Normaliza nombre del plan (trim)
 CREATE OR REPLACE FUNCTION fn_normalizar_nombre_plan(p_nombre VARCHAR)
@@ -978,29 +944,14 @@ $$ LANGUAGE plpgsql;
 -- Aplicacion: psql -v ON_ERROR_STOP=1 -U <usuario> -d <base> -f database/productos/productos_funciones.sql
 -- =============================================================================
 
-DO $$
-DECLARE
-  r RECORD;
-BEGIN
-  FOR r IN
-    SELECT p.oid::regprocedure AS sig
-    FROM pg_proc p
-    JOIN pg_namespace n ON p.pronamespace = n.oid
-    WHERE n.nspname = 'public'
-      AND p.proname IN (
-        'sp_crear_producto',
-        'sp_listar_productos',
-        'sp_actualizar_producto',
-        'sp_desactivar_producto',
-        'fn_normalizar_nombre_producto',
-        'fn_es_nombre_producto_valido',
-        'fn_normalizar_tipo_producto',
-        'fn_es_tipo_producto_valido'
-      )
-  LOOP
-    EXECUTE 'DROP FUNCTION IF EXISTS ' || r.sig::text || ' CASCADE';
-  END LOOP;
-END $$;
+DROP FUNCTION IF EXISTS sp_crear_producto CASCADE;
+DROP FUNCTION IF EXISTS sp_listar_productos CASCADE;
+DROP FUNCTION IF EXISTS sp_actualizar_producto CASCADE;
+DROP FUNCTION IF EXISTS sp_desactivar_producto CASCADE;
+DROP FUNCTION IF EXISTS fn_normalizar_nombre_producto CASCADE;
+DROP FUNCTION IF EXISTS fn_es_nombre_producto_valido CASCADE;
+DROP FUNCTION IF EXISTS fn_normalizar_tipo_producto CASCADE;
+DROP FUNCTION IF EXISTS fn_es_tipo_producto_valido CASCADE;
 
 -- Normaliza nombre del producto (trim)
 CREATE OR REPLACE FUNCTION fn_normalizar_nombre_producto(p_nombre VARCHAR)
@@ -1335,27 +1286,12 @@ $$;
 -- Aplicación: psql -v ON_ERROR_STOP=1 -U <usuario> -d <base> -f database/usuarios/usuarios_funciones.sql
 -- =============================================================================
 
-DO $$
-DECLARE
-  r RECORD;
-BEGIN
-  FOR r IN
-    SELECT p.oid::regprocedure AS sig
-    FROM pg_proc p
-    JOIN pg_namespace n ON p.pronamespace = n.oid
-    WHERE n.nspname = 'public'
-      AND p.proname IN (
-        'sp_crear_usuario',
-        'sp_listar_usuarios',
-        'sp_actualizar_usuario',
-        'sp_buscar_usuario_por_keycloak_id',
-        'fn_normalizar_tipo_usuario',
-        'fn_es_tipo_usuario_valido'
-      )
-  LOOP
-    EXECUTE 'DROP FUNCTION IF EXISTS ' || r.sig::text || ' CASCADE';
-  END LOOP;
-END $$;
+DROP FUNCTION IF EXISTS sp_crear_usuario CASCADE;
+DROP FUNCTION IF EXISTS sp_listar_usuarios CASCADE;
+DROP FUNCTION IF EXISTS sp_actualizar_usuario CASCADE;
+DROP FUNCTION IF EXISTS sp_buscar_usuario_por_keycloak_id CASCADE;
+DROP FUNCTION IF EXISTS fn_normalizar_tipo_usuario CASCADE;
+DROP FUNCTION IF EXISTS fn_es_tipo_usuario_valido CASCADE;
 
 -- Texto recortado; debe ser no vacío y caber en VARCHAR(255).
 CREATE OR REPLACE FUNCTION fn_normalizar_tipo_usuario(p_tipo VARCHAR)
@@ -1537,24 +1473,9 @@ $$ LANGUAGE plpgsql;
 -- Requisito: haber ejecutado database/init.sql.
 -- =============================================================================
 
-DO $$
-DECLARE
-  r RECORD;
-BEGIN
-  FOR r IN
-    SELECT p.oid::regprocedure AS sig
-    FROM pg_proc p
-    JOIN pg_namespace n ON p.pronamespace = n.oid
-    WHERE n.nspname = 'public'
-      AND p.proname IN (
-        'sp_crear_ticket',
-        'sp_listar_tickets',
-        'sp_actualizar_ticket'
-      )
-  LOOP
-    EXECUTE 'DROP FUNCTION IF EXISTS ' || r.sig::text || ' CASCADE';
-  END LOOP;
-END $$;
+DROP FUNCTION IF EXISTS sp_crear_ticket CASCADE;
+DROP FUNCTION IF EXISTS sp_listar_tickets CASCADE;
+DROP FUNCTION IF EXISTS sp_actualizar_ticket CASCADE;
 
 -- -----------------------------------------------------------------------------
 -- sp_crear_ticket

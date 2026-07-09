@@ -3,11 +3,8 @@
  * IDs numéricos como string (BIGSERIAL; `pg` suele devolver string).
  */
 
-const idBigint = {
-  type: 'string' as const,
-  pattern: '^[0-9]+$',
-  description: 'Identificador numérico (BIGSERIAL). En JSON como cadena, ej. "1".',
-};
+import { idBigintSchema } from 'shared';
+const idBigint = idBigintSchema;
 
 export const usuarioFilaProperties = {
   id_users: { ...idBigint, description: 'Identificador del usuario.' },

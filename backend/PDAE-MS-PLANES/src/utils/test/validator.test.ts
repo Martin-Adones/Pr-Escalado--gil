@@ -1,41 +1,41 @@
 import { transformAndValidate } from 'shared';
 import { Type } from 'class-transformer';
-import { ValidateNested, IsNotEmpty, IsOptional } from 'class-validator';
+import { ValidateNested, IsNotEmpty, IsOptional, IsPositive } from 'class-validator';
 
-class ChildDTO {
-  @IsNotEmpty({ message: 'Child name required' })
-  childName!: string;
+class CicloTestDto {
+  @IsNotEmpty({ message: 'El tipo de ciclo es requerido' })
+  tipoCiclo!: string;
 }
 
-class CustomTestDTO {
-  @IsNotEmpty({ message: 'Nombre es requerido' })
-  nombre!: string;
+class PlanTestDto {
+  @IsNotEmpty({ message: 'El nombre del plan es requerido' })
+  nombrePlan!: string;
 
-  @IsOptional()
-  edad?: number;
+  @IsPositive({ message: 'El costo del plan debe ser un número positivo' })
+  costo!: number;
 
   @ValidateNested()
-  @Type(() => ChildDTO)
+  @Type(() => CicloTestDto)
   @IsOptional()
-  child?: ChildDTO;
+  ciclo?: CicloTestDto;
 }
 
-describe('Validator Utils', () => {
-  it('debe validar correctamente un objeto DTO válido', async () => {
-    const validData = { nombre: 'Test', edad: 20 };
-    const result = await transformAndValidate(CustomTestDTO, validData);
-    expect(result).toBeInstanceOf(CustomTestDTO);
-    expect(result.nombre).toBe('Test');
-    expect(result.edad).toBe(20);
+describe('Validaciones de DTO para Planes', () => {
+  it('debe validar un plan con datos correctos', async () => {
+    const datos = { nombrePlan: 'Plan Profesional', costo: 29990 };
+    const resultado = await transformAndValidate(PlanTestDto, datos);
+    expect(resultado).toBeInstanceOf(PlanTestDto);
+    expect(resultado.nombrePlan).toBe('Plan Profesional');
+    expect(resultado.costo).toBe(29990);
   });
 
-  it('debe arrojar error si faltan campos obligatorios', async () => {
-    const invalidData = { edad: 20 };
-    await expect(transformAndValidate(CustomTestDTO, invalidData)).rejects.toThrow('Error de Validación: Nombre es requerido');
+  it('debe fallar si el costo del plan es negativo', async () => {
+    const datos = { nombrePlan: 'Plan Básico', costo: -500 };
+    await expect(transformAndValidate(PlanTestDto, datos)).rejects.toThrow('El costo del plan debe ser un número positivo');
   });
 
-  it('debe formatear errores anidados recursivamente en propiedades hijas', async () => {
-    const invalidData = { nombre: 'Valid', child: { childName: '' } }; // object present but empty child property fails IsNotEmpty validation
-    await expect(transformAndValidate(CustomTestDTO, invalidData)).rejects.toThrow('Child name required');
+  it('debe fallar recursivamente si los datos del ciclo de facturación son inválidos', async () => {
+    const datos = { nombrePlan: 'Plan Profesional', costo: 29990, ciclo: { tipoCiclo: '' } };
+    await expect(transformAndValidate(PlanTestDto, datos)).rejects.toThrow('El tipo de ciclo es requerido');
   });
 });

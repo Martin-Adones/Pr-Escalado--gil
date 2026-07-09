@@ -187,7 +187,7 @@ export class PagosController {
         data: resultado,
       });
     } catch (error: any) {
-      console.error('ERROR EN webhookProveedor CONTROLLER:', error);
+      console.error('ERROR EN manejarWebhookPagos CONTROLLER:', error);
       if (error.message?.startsWith('Error de Validación:')) {
         return respuesta.status(400).send({ success: false, message: error.message });
       }

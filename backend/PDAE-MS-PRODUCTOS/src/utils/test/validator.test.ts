@@ -1,41 +1,41 @@
 import { transformAndValidate } from 'shared';
 import { Type } from 'class-transformer';
-import { ValidateNested, IsNotEmpty, IsOptional } from 'class-validator';
+import { ValidateNested, IsNotEmpty, IsOptional, IsNumber } from 'class-validator';
 
-class ChildDTO {
-  @IsNotEmpty({ message: 'Child name required' })
-  childName!: string;
+class CategoriaTestDto {
+  @IsNotEmpty({ message: 'La descripción de la categoría es requerida' })
+  descripcion!: string;
 }
 
-class CustomTestDTO {
-  @IsNotEmpty({ message: 'Nombre es requerido' })
-  nombre!: string;
+class ProductoTestDto {
+  @IsNotEmpty({ message: 'El nombre del producto es requerido' })
+  nombreProducto!: string;
 
-  @IsOptional()
-  edad?: number;
+  @IsNumber({}, { message: 'El precio debe ser un número válido' })
+  precio!: number;
 
   @ValidateNested()
-  @Type(() => ChildDTO)
+  @Type(() => CategoriaTestDto)
   @IsOptional()
-  child?: ChildDTO;
+  categoria?: CategoriaTestDto;
 }
 
-describe('Validator Utils', () => {
-  it('debe validar correctamente un objeto DTO válido', async () => {
-    const validData = { nombre: 'Test', edad: 20 };
-    const result = await transformAndValidate(CustomTestDTO, validData);
-    expect(result).toBeInstanceOf(CustomTestDTO);
-    expect(result.nombre).toBe('Test');
-    expect(result.edad).toBe(20);
+describe('Validaciones de DTO para Productos', () => {
+  it('debe validar un producto con datos correctos', async () => {
+    const datos = { nombreProducto: 'Licencia SaaS', precio: 15000 };
+    const resultado = await transformAndValidate(ProductoTestDto, datos);
+    expect(resultado).toBeInstanceOf(ProductoTestDto);
+    expect(resultado.nombreProducto).toBe('Licencia SaaS');
+    expect(resultado.precio).toBe(15000);
   });
 
-  it('debe arrojar error si faltan campos obligatorios', async () => {
-    const invalidData = { edad: 20 };
-    await expect(transformAndValidate(CustomTestDTO, invalidData)).rejects.toThrow('Error de Validación: Nombre es requerido');
+  it('debe fallar si el precio no es un número', async () => {
+    const datos = { nombreProducto: 'Licencia SaaS', precio: 'gratis' };
+    await expect(transformAndValidate(ProductoTestDto, datos)).rejects.toThrow('El precio debe ser un número válido');
   });
 
-  it('debe formatear errores anidados recursivamente en propiedades hijas', async () => {
-    const invalidData = { nombre: 'Valid', child: { childName: '' } }; // object present but empty child property fails IsNotEmpty validation
-    await expect(transformAndValidate(CustomTestDTO, invalidData)).rejects.toThrow('Child name required');
+  it('debe fallar recursivamente si los datos de categoría son inválidos', async () => {
+    const datos = { nombreProducto: 'Licencia SaaS', precio: 15000, categoria: { descripcion: '' } };
+    await expect(transformAndValidate(ProductoTestDto, datos)).rejects.toThrow('La descripción de la categoría es requerida');
   });
 });

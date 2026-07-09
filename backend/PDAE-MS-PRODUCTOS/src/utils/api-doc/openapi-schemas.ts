@@ -1,10 +1,7 @@
+import { idBigintSchema } from 'shared';
 export { respuestaErrorValidacion, respuestaErrorServidor } from 'shared';
 
-const idBigint = {
-  type: 'string' as const,
-  pattern: '^[0-9]+$',
-  description: 'Identificador numerico (BIGINT / BIGSERIAL en PostgreSQL). En JSON va como cadena, ej. "1".',
-};
+const idBigint = idBigintSchema;
 
 export const productoFilaProperties = {
   id_products: { ...idBigint, description: 'Identificador del producto (BIGSERIAL).' },

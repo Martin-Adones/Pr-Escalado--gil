@@ -1,3 +1,4 @@
+import { idBigintSchema } from 'shared';
 export {
   respuestaErrorValidacion,
   respuestaErrorServidor,
@@ -5,11 +6,7 @@ export {
 
 export const DESCRIPCION_ESTADOS = `Estados posibles: **DRAFT** (borrador), **ACTIVE** (vigente), **SUSPENDED** (suspendido), **TERMINATED** (finalizado con la operación de finalizar), **CANCELLED** (cancelado). Al **crear** solo se permiten DRAFT o ACTIVE. Las transiciones al **actualizar** las valida PostgreSQL.`;
 
-const idBigint = {
-  type: 'string' as const,
-  pattern: '^[0-9]+$',
-  description: 'Identificador numérico (BIGINT / BIGSERIAL en PostgreSQL). En JSON va como cadena, ej. "1".',
-};
+const idBigint = idBigintSchema;
 
 export const contratoFilaProperties = {
   id_contracts: { ...idBigint, description: 'Identificador del contrato (BIGSERIAL).' },

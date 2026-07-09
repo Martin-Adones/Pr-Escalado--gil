@@ -2,40 +2,40 @@ import { transformAndValidate } from 'shared';
 import { Type } from 'class-transformer';
 import { ValidateNested, IsNotEmpty, IsOptional } from 'class-validator';
 
-class ChildDTO {
-  @IsNotEmpty({ message: 'Child name required' })
-  childName!: string;
+class ClienteTicketTestDto {
+  @IsNotEmpty({ message: 'El identificador del cliente es requerido' })
+  idCliente!: string;
 }
 
-class CustomTestDTO {
-  @IsNotEmpty({ message: 'Nombre es requerido' })
-  nombre!: string;
+class TicketTestDto {
+  @IsNotEmpty({ message: 'El asunto del ticket es requerido' })
+  asunto!: string;
 
   @IsOptional()
-  edad?: number;
+  prioridad?: string;
 
   @ValidateNested()
-  @Type(() => ChildDTO)
+  @Type(() => ClienteTicketTestDto)
   @IsOptional()
-  child?: ChildDTO;
+  cliente?: ClienteTicketTestDto;
 }
 
-describe('Validator Utils', () => {
-  it('debe validar correctamente un objeto DTO válido', async () => {
-    const validData = { nombre: 'Test', edad: 20 };
-    const result = await transformAndValidate(CustomTestDTO, validData);
-    expect(result).toBeInstanceOf(CustomTestDTO);
-    expect(result.nombre).toBe('Test');
-    expect(result.edad).toBe(20);
+describe('Validaciones de DTO para Soporte', () => {
+  it('debe validar un ticket con datos correctos', async () => {
+    const datos = { asunto: 'Error de cobro en factura', prioridad: 'alta' };
+    const resultado = await transformAndValidate(TicketTestDto, datos);
+    expect(resultado).toBeInstanceOf(TicketTestDto);
+    expect(resultado.asunto).toBe('Error de cobro en factura');
+    expect(resultado.prioridad).toBe('alta');
   });
 
-  it('debe arrojar error si faltan campos obligatorios', async () => {
-    const invalidData = { edad: 20 };
-    await expect(transformAndValidate(CustomTestDTO, invalidData)).rejects.toThrow('Error de Validación: Nombre es requerido');
+  it('debe fallar si el asunto está vacío', async () => {
+    const datos = { prioridad: 'media' };
+    await expect(transformAndValidate(TicketTestDto, datos)).rejects.toThrow('El asunto del ticket es requerido');
   });
 
-  it('debe formatear errores anidados recursivamente en propiedades hijas', async () => {
-    const invalidData = { nombre: 'Valid', child: { childName: '' } }; // object present but empty child property fails IsNotEmpty validation
-    await expect(transformAndValidate(CustomTestDTO, invalidData)).rejects.toThrow('Child name required');
+  it('debe fallar recursivamente si los datos del cliente son inválidos', async () => {
+    const datos = { asunto: 'Fallo de acceso', cliente: { idCliente: '' } };
+    await expect(transformAndValidate(TicketTestDto, datos)).rejects.toThrow('El identificador del cliente es requerido');
   });
 });

@@ -2,40 +2,40 @@ import { transformAndValidate } from 'shared';
 import { Type } from 'class-transformer';
 import { ValidateNested, IsNotEmpty, IsOptional } from 'class-validator';
 
-class ChildDTO {
-  @IsNotEmpty({ message: 'Child name required' })
-  childName!: string;
+class MetadatosTestDto {
+  @IsNotEmpty({ message: 'El valor de metadatos es requerido' })
+  valor!: string;
 }
 
-class CustomTestDTO {
-  @IsNotEmpty({ message: 'Nombre es requerido' })
-  nombre!: string;
+class AuditoriaTestDto {
+  @IsNotEmpty({ message: 'La acción a registrar es requerida' })
+  accion!: string;
 
   @IsOptional()
-  edad?: number;
+  ipUsuario?: string;
 
   @ValidateNested()
-  @Type(() => ChildDTO)
+  @Type(() => MetadatosTestDto)
   @IsOptional()
-  child?: ChildDTO;
+  metadatos?: MetadatosTestDto;
 }
 
-describe('Validator Utils', () => {
-  it('debe validar correctamente un objeto DTO válido', async () => {
-    const validData = { nombre: 'Test', edad: 20 };
-    const result = await transformAndValidate(CustomTestDTO, validData);
-    expect(result).toBeInstanceOf(CustomTestDTO);
-    expect(result.nombre).toBe('Test');
-    expect(result.edad).toBe(20);
+describe('Validaciones de DTO para Auditoría', () => {
+  it('debe validar un registro de auditoría con datos correctos', async () => {
+    const datos = { accion: 'crear_contrato', ipUsuario: '192.168.1.1' };
+    const resultado = await transformAndValidate(AuditoriaTestDto, datos);
+    expect(resultado).toBeInstanceOf(AuditoriaTestDto);
+    expect(resultado.accion).toBe('crear_contrato');
+    expect(resultado.ipUsuario).toBe('192.168.1.1');
   });
 
-  it('debe arrojar error si faltan campos obligatorios', async () => {
-    const invalidData = { edad: 20 };
-    await expect(transformAndValidate(CustomTestDTO, invalidData)).rejects.toThrow('Error de Validación: Nombre es requerido');
+  it('debe fallar si la acción a registrar está vacía', async () => {
+    const datos = { ipUsuario: '192.168.1.1' };
+    await expect(transformAndValidate(AuditoriaTestDto, datos)).rejects.toThrow('La acción a registrar es requerida');
   });
 
-  it('debe formatear errores anidados recursivamente en propiedades hijas', async () => {
-    const invalidData = { nombre: 'Valid', child: { childName: '' } }; // object present but empty child property fails IsNotEmpty validation
-    await expect(transformAndValidate(CustomTestDTO, invalidData)).rejects.toThrow('Child name required');
+  it('debe fallar recursivamente si los metadatos son inválidos', async () => {
+    const datos = { accion: 'crear_contrato', metadatos: { valor: '' } };
+    await expect(transformAndValidate(AuditoriaTestDto, datos)).rejects.toThrow('El valor de metadatos es requerido');
   });
 });

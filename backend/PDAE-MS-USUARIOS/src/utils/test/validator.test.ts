@@ -1,41 +1,41 @@
 import { transformAndValidate } from 'shared';
 import { Type } from 'class-transformer';
-import { ValidateNested, IsNotEmpty, IsOptional } from 'class-validator';
+import { ValidateNested, IsNotEmpty, IsOptional, IsEmail } from 'class-validator';
 
-class ChildDTO {
-  @IsNotEmpty({ message: 'Child name required' })
-  childName!: string;
+class UsuarioDetallesTestDto {
+  @IsNotEmpty({ message: 'El teléfono es requerido' })
+  telefono!: string;
 }
 
-class CustomTestDTO {
-  @IsNotEmpty({ message: 'Nombre es requerido' })
+class UsuarioTestDto {
+  @IsNotEmpty({ message: 'El nombre es requerido' })
   nombre!: string;
 
-  @IsOptional()
-  edad?: number;
+  @IsEmail({}, { message: 'El correo debe ser válido' })
+  correo!: string;
 
   @ValidateNested()
-  @Type(() => ChildDTO)
+  @Type(() => UsuarioDetallesTestDto)
   @IsOptional()
-  child?: ChildDTO;
+  detalles?: UsuarioDetallesTestDto;
 }
 
-describe('Validator Utils', () => {
-  it('debe validar correctamente un objeto DTO válido', async () => {
-    const validData = { nombre: 'Test', edad: 20 };
-    const result = await transformAndValidate(CustomTestDTO, validData);
-    expect(result).toBeInstanceOf(CustomTestDTO);
-    expect(result.nombre).toBe('Test');
-    expect(result.edad).toBe(20);
+describe('Validaciones de DTO para Usuarios', () => {
+  it('debe validar un usuario con datos correctos', async () => {
+    const datos = { nombre: 'Juan', correo: 'juan@example.com' };
+    const resultado = await transformAndValidate(UsuarioTestDto, datos);
+    expect(resultado).toBeInstanceOf(UsuarioTestDto);
+    expect(resultado.nombre).toBe('Juan');
+    expect(resultado.correo).toBe('juan@example.com');
   });
 
-  it('debe arrojar error si faltan campos obligatorios', async () => {
-    const invalidData = { edad: 20 };
-    await expect(transformAndValidate(CustomTestDTO, invalidData)).rejects.toThrow('Error de Validación: Nombre es requerido');
+  it('debe fallar si el correo no tiene formato válido', async () => {
+    const datos = { nombre: 'Juan', correo: 'correo-invalido' };
+    await expect(transformAndValidate(UsuarioTestDto, datos)).rejects.toThrow('El correo debe ser válido');
   });
 
-  it('debe formatear errores anidados recursivamente en propiedades hijas', async () => {
-    const invalidData = { nombre: 'Valid', child: { childName: '' } }; // object present but empty child property fails IsNotEmpty validation
-    await expect(transformAndValidate(CustomTestDTO, invalidData)).rejects.toThrow('Child name required');
+  it('debe fallar recursivamente si los detalles del usuario son inválidos', async () => {
+    const datos = { nombre: 'Juan', correo: 'juan@example.com', detalles: { telefono: '' } };
+    await expect(transformAndValidate(UsuarioTestDto, datos)).rejects.toThrow('El teléfono es requerido');
   });
 });
