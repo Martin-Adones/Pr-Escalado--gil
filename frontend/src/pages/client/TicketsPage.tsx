@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, useMemo } from 'react'
 import PortalTemplate from '../../portal/PortalTemplate'
-import { listarTickets, crearTicket, actualizarTicket } from '../../services/tickets.service'
+import { listarTickets, crearTicket, actualizarTicket, sincronizarTicketCrm } from '../../services/tickets.service'
 import { listarContratos } from '../../services/contratos.service'
 import { listarPlanes } from '../../services/planes.service'
 import { lockBodyScroll } from '../../utils/scrollLock'
@@ -85,6 +85,8 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
 
   const [selectedTicket, setSelectedTicket] = useState<(FilaTicketListado & { planName: string; priority: 'Alta' | 'Media' | 'Baja' }) | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set())
 
   const loadData = useCallback(async () => {
     if (!userId) return
@@ -110,6 +112,18 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
     setError(null)
     loadData()
   }, [loadData])
+
+  const handleSyncCrm = async (idSupport: string) => {
+    setSyncingIds(prev => new Set(prev).add(idSupport))
+    try {
+      const updated = await sincronizarTicketCrm(idSupport)
+      setTickets(prev => prev.map(t => t.id_support === idSupport ? { ...t, status: updated.status } : t))
+    } catch (err: any) {
+      console.error(`Error al sincronizar ticket #${idSupport} con CRM:`, err)
+    } finally {
+      setSyncingIds(prev => { const next = new Set(prev); next.delete(idSupport); return next })
+    }
+  }
 
   useEffect(() => {
     loadData()
@@ -194,6 +208,7 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
       return
     }
 
+    setSubmitting(true)
     try {
       await crearTicket({
         id_contracts,
@@ -209,6 +224,8 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
       loadData()
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Error al crear tu ticket')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -390,21 +407,13 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
                       <td className="px-5 py-3">
                         <div className="flex justify-center gap-1.5">
                           <button
-                            onClick={() => handleOpenView(ticket)}
-                            title="Ver detalles"
-                            className="p-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-[#284B63]/10 hover:text-[#284B63] transition-colors"
+                            onClick={() => handleSyncCrm(ticket.id_support)}
+                            disabled={syncingIds.has(ticket.id_support)}
+                            title="Sincronizar estado con CRM"
+                            className="p-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-green-100 hover:text-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            <i aria-hidden="true" className="fa-solid fa-eye text-xs"></i>
+                            <i aria-hidden="true" className={`fa-solid fa-rotate ${syncingIds.has(ticket.id_support) ? 'animate-spin' : ''} text-xs`}></i>
                           </button>
-                          {ticket.status === 'open' && (
-                            <button
-                              onClick={() => handleOpenEdit(ticket)}
-                              title="Editar descripción"
-                              className="p-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-[#3C6E71]/10 hover:text-[#3C6E71] transition-colors"
-                            >
-                              <i aria-hidden="true" className="fa-solid fa-edit text-xs"></i>
-                            </button>
-                          )}
                         </div>
                       </td>
                     </tr>
@@ -569,10 +578,10 @@ export default function ClientTicketsPage({ navItems, logoutItem, activeNavLabel
                 </button>
                 <button
                   type="submit"
-                  disabled={contracts.filter(c => c.status === 'ACTIVE').length === 0}
+                  disabled={submitting || contracts.filter(c => c.status === 'ACTIVE').length === 0}
                   className="px-4 py-2 bg-[#284B63] hover:opacity-90 disabled:opacity-40 text-white rounded-lg text-xs font-bold transition"
                 >
-                  Enviar Solicitud
+                  {submitting ? 'Enviando...' : 'Enviar Solicitud'}
                 </button>
               </div>
             </form>

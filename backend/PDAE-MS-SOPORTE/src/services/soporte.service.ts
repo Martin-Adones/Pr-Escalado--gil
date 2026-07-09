@@ -117,7 +117,10 @@ export class SoporteService {
     });
     if (!tickets.length) return null;
     const ticket = tickets[0];
-    if (!ticket.crm_ticket_id) return ticket;
+    if (!ticket.crm_ticket_id) {
+      console.log(`[CRM] Ticket #${idSupport} no tiene crm_ticket_id — no se puede sincronizar`);
+      return ticket;
+    }
 
     try {
       const response = await fetch(
@@ -128,6 +131,7 @@ export class SoporteService {
         return ticket;
       }
       const data = (await response.json()) as any;
+      console.log(`[CRM] Ticket #${idSupport} sincronizado: estado CRM="${data?.ticket?.estado}" → local="${ticket.status}"`);
       if (!data?.ticket?.estado) return ticket;
 
       const statusMap: Record<string, string> = {

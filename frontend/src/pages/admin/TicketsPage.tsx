@@ -420,13 +420,6 @@ export default function TicketsPage({ navItems, logoutItem, activeNavLabel }: Ad
                       <td className="px-6 py-4 text-xs text-gray-600">{formatDate(ticket.created_at)}</td>
                       <td className="px-6 py-4 text-center">
                         <div className="flex justify-center gap-2">
-                          <button 
-                            onClick={() => handleOpenView(ticket)}
-                            title="Ver detalles"
-                            className="text-blue-600 hover:text-blue-800 p-1.5 bg-blue-50 rounded transition-colors"
-                          >
-                            <i className="fa-solid fa-eye text-xs"></i>
-                          </button>
                           <button
                             onClick={() => handleSyncCrm(ticket.id_support)}
                             disabled={syncingIds.has(ticket.id_support)}
