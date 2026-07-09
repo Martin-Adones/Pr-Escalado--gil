@@ -372,7 +372,8 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
                   )}
 
                   <div>
-                    <h4 className="text-2xl font-black text-[#353535]">{plan.name}</h4>
+                    <h4 className="text-lg font-black text-gray-500 uppercase tracking-wide">Atención Domiciliaria</h4>
+                    <p className="text-2xl font-black text-[#353535]">{plan.name.slice(plan.name.lastIndexOf(' ') + 1)}</p>
                     <p className="mt-1 text-xs font-semibold text-gray-400">Ciclo: {plan.billingCycle}</p>
                   </div>
 

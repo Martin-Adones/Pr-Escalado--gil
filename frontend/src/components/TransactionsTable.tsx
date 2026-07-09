@@ -36,11 +36,13 @@ const statusConfig: Record<TransactionStatus, { label: string; className: string
   },
 }
 
-function formatDate(date: Date): string {
+function formatDateTime(date: Date): string {
   const day = String(date.getDate()).padStart(2, '0')
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const year = date.getFullYear()
-  return `${day}/${month}/${year}`
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${day}/${month}/${year} ${hours}:${minutes}`
 }
 
 function formatCurrency(amount: number, currency: string): string {
@@ -100,8 +102,8 @@ export default function TransactionsTable({ transactions }: TransactionsTablePro
         <table className="w-full text-left">
           <thead className="bg-gray-50 text-xs text-gray-600 uppercase border-b border-gray-200">
             <tr>
-              <th className="px-5 py-3 font-semibold">Fecha</th>
-              <th className="px-5 py-3 font-semibold">Concepto</th>
+              <th className="px-5 py-3 font-semibold">Fecha y Hora</th>
+              <th className="px-5 py-3 font-semibold">Descripción</th>
               <th className="px-5 py-3 font-semibold text-right">Monto</th>
               <th className="px-5 py-3 font-semibold text-center">Estado</th>
               <th className="px-5 py-3 font-semibold text-center">Acciones</th>
@@ -120,10 +122,10 @@ export default function TransactionsTable({ transactions }: TransactionsTablePro
                 const isFailed = transaction.estado === 'fallido'
                 return (
                   <tr key={transaction.id} className={`hover:bg-gray-50 transition ${isFailed ? 'bg-red-50/30' : ''}`}>
-                    <td className="px-5 py-3 font-medium text-gray-700">{formatDate(transaction.fecha)}</td>
+                    <td className="px-5 py-3 font-medium text-gray-700 whitespace-nowrap">{formatDateTime(transaction.fecha)}</td>
                     <td className="px-5 py-3 text-gray-600">{transaction.concepto}</td>
                     <td className="px-5 py-3 text-right font-bold text-[#353535]">
-                      {formatCurrency(transaction.monto, transaction.moneda)}
+                      {transaction.monto === 0 ? '-' : formatCurrency(transaction.monto, transaction.moneda)}
                     </td>
                     <td className="px-5 py-3 text-center">
                       <div className="relative group inline-block">
