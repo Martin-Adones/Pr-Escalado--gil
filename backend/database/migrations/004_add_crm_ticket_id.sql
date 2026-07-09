@@ -1,0 +1,1 @@
+ALTER TABLE "Support" ADD COLUMN IF NOT EXISTS "crm_ticket_id" VARCHAR(255);

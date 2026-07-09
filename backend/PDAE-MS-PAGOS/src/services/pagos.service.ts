@@ -248,7 +248,8 @@ export class PagosService {
         reason: resJson.message,
         paymentMethodToken: resJson.paymentMethodToken,
         mandateId: resJson.mandateId,
-        card: resJson.card
+        card: resJson.card,
+        user_email: dto.user_email,
       };
 
       const pagoActualizado = await this.procesarPagoWebhook(webhookPayload);
@@ -297,11 +298,14 @@ export class PagosService {
       
       if (infoContrato) {
         const msContratosUrl = process.env.MS_CONTRATOS_URL || 'http://localhost:3002';
-        const webhookPayload = {
+        const webhookPayload: Record<string, any> = {
           event: isCompleted ? 'pago.completado' : 'pago.fallido',
           id_contracts: infoContrato.id_contracts,
           amount: Number(pagoActualizado.amount),
         };
+        if (dto.user_email) {
+          webhookPayload.user_email = dto.user_email;
+        }
 
         console.log(`[PagosService] Notificando a Contratos webhook: ${msContratosUrl}/api/contratos/webhook-pagos`, webhookPayload);
 

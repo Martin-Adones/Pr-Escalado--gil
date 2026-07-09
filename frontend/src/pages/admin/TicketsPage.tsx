@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import PortalTemplate from '../../portal/PortalTemplate'
-import { listarTickets } from '../../services/tickets.service'
+import { listarTickets, sincronizarTicketCrm } from '../../services/tickets.service'
 import { listarContratos } from '../../services/contratos.service'
 import { listarPlanes } from '../../services/planes.service'
 import { lockBodyScroll } from '../../utils/scrollLock'
@@ -98,6 +98,9 @@ export default function TicketsPage({ navItems, logoutItem, activeNavLabel }: Ad
   // Selected ticket for modal details
   const [selectedTicket, setSelectedTicket] = useState<(FilaTicketListado & { clientName: string; planName: string; priority: 'Alta' | 'Media' | 'Baja' }) | null>(null)
 
+  // CRM sync
+  const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set())
+
   const loadData = async () => {
     setLoading(true)
     setError(null)
@@ -113,6 +116,18 @@ export default function TicketsPage({ navItems, logoutItem, activeNavLabel }: Ad
       setError(err.message || 'Error al conectar con el servidor')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSyncCrm = async (idSupport: string) => {
+    setSyncingIds(prev => new Set(prev).add(idSupport))
+    try {
+      const updated = await sincronizarTicketCrm(idSupport)
+      setTickets(prev => prev.map(t => t.id_support === idSupport ? { ...t, status: updated.status } : t))
+    } catch (err: any) {
+      console.error(`Error al sincronizar ticket #${idSupport} con CRM:`, err)
+    } finally {
+      setSyncingIds(prev => { const next = new Set(prev); next.delete(idSupport); return next })
     }
   }
 
@@ -411,6 +426,14 @@ export default function TicketsPage({ navItems, logoutItem, activeNavLabel }: Ad
                             className="text-blue-600 hover:text-blue-800 p-1.5 bg-blue-50 rounded transition-colors"
                           >
                             <i className="fa-solid fa-eye text-xs"></i>
+                          </button>
+                          <button
+                            onClick={() => handleSyncCrm(ticket.id_support)}
+                            disabled={syncingIds.has(ticket.id_support)}
+                            title="Sincronizar estado con CRM"
+                            className="text-green-600 hover:text-green-800 p-1.5 bg-green-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <i className={`fa-solid fa-rotate ${syncingIds.has(ticket.id_support) ? 'animate-spin' : ''} text-xs`}></i>
                           </button>
                         </div>
                       </td>

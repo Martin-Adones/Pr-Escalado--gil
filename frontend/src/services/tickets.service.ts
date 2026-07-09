@@ -35,4 +35,8 @@ export async function actualizarTicket(data: {
   return apiPost<FilaTicket[]>('/soporte/actualizar', data)
 }
 
+export async function sincronizarTicketCrm(idSupport: string): Promise<FilaTicket> {
+  return apiGet<FilaTicket>(`/soporte/sincronizar-crm/${idSupport}`)
+}
+
 

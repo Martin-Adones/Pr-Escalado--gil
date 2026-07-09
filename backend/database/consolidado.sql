@@ -108,7 +108,8 @@ CREATE TABLE "Support" (
     "description" TEXT NOT NULL,
     "status" VARCHAR(50) NOT NULL,
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "crm_ticket_id" VARCHAR(255)
 );
 
 -- 4. Tablas de Unión (Relaciones Muchos a Muchos)
@@ -1492,7 +1493,8 @@ RETURNS TABLE (
     description TEXT,
     status VARCHAR(50),
     created_at TIMESTAMP,
-    updated_at TIMESTAMP
+    updated_at TIMESTAMP,
+    crm_ticket_id VARCHAR(255)
 ) AS $$
 #variable_conflict use_column
 DECLARE
@@ -1513,7 +1515,7 @@ BEGIN
   RETURNING "id_support" INTO v_id_support;
 
   RETURN QUERY
-  SELECT s."id_support", s."id_contracts", c."id_users", s."description", s."status", s."created_at", s."updated_at"
+  SELECT s."id_support", s."id_contracts", c."id_users", s."description", s."status", s."created_at", s."updated_at", s."crm_ticket_id"
   FROM "Support" s
   JOIN "Contracts" c ON s."id_contracts" = c."id_contracts"
   WHERE s."id_support" = v_id_support;
@@ -1541,6 +1543,7 @@ RETURNS TABLE (
     status VARCHAR(50),
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
+    crm_ticket_id VARCHAR(255),
     total_count BIGINT
 ) AS $$
 #variable_conflict use_column
@@ -1572,6 +1575,7 @@ BEGIN
     s."status",
     s."created_at",
     s."updated_at",
+    s."crm_ticket_id",
     v_total AS total_count
   FROM "Support" s
   JOIN "Contracts" c ON s."id_contracts" = c."id_contracts"
@@ -1599,11 +1603,12 @@ CREATE OR REPLACE FUNCTION sp_actualizar_ticket(
 RETURNS TABLE (
     id_support BIGINT,
     id_contracts BIGINT,
-    id_users BIGINT,
+    id_users UUID,
     description TEXT,
     status VARCHAR(50),
     created_at TIMESTAMP,
-    updated_at TIMESTAMP
+    updated_at TIMESTAMP,
+    crm_ticket_id VARCHAR(255)
 ) AS $$
 #variable_conflict use_column
 DECLARE
@@ -1634,7 +1639,7 @@ BEGIN
   WHERE s."id_support" = p_id_support;
 
   RETURN QUERY
-  SELECT s."id_support", s."id_contracts", c."id_users", s."description", s."status", s."created_at", s."updated_at"
+  SELECT s."id_support", s."id_contracts", c."id_users"::UUID, s."description", s."status", s."created_at", s."updated_at", s."crm_ticket_id"
   FROM "Support" s
   JOIN "Contracts" c ON s."id_contracts" = c."id_contracts"
   WHERE s."id_support" = p_id_support;

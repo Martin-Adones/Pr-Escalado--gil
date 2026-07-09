@@ -61,6 +61,7 @@ export interface FilaTicket {
   status: 'open' | 'in_progress' | 'resolved' | 'closed'
   created_at: string
   updated_at: string
+  crm_ticket_id: string | null
 }
 
 export interface FilaTicketListado extends FilaTicket {

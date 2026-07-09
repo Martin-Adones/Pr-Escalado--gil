@@ -113,6 +113,11 @@ export class CrearPagoEntradaDto {
   @IsString()
   @Matches(REGEX_ID_BIGINT, { message: `id_billing_cycles: ${MENSAJE_ID_BIGINT}` })
   id_billing_cycles?: string;
+
+  @TransformVacioAIndefinido
+  @IsOptional()
+  @IsString()
+  user_email?: string;
 }
 
 export class CardWebhookDetailDto {
@@ -188,6 +193,10 @@ export class UcnpayWebhookEntradaDto {
   @IsOptional()
   @IsString()
   timestamp?: string;
+
+  @IsOptional()
+  @IsString()
+  user_email?: string;
 }
 
 export interface FilaPago {

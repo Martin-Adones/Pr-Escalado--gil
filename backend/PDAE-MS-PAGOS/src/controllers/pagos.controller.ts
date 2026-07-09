@@ -22,6 +22,11 @@ export class PagosController {
       datos.id_users = String(userId);
     }
 
+    const userEmail = solicitud.headers?.['x-user-email'] as string | undefined;
+    if (userEmail) {
+      datos.user_email = userEmail;
+    }
+
     const entrada = await transformAndValidate(CrearPagoEntradaDto, datos);
     const resultado = await this.servicio.crearPago(entrada);
 

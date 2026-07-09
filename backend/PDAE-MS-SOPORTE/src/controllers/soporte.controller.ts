@@ -48,4 +48,13 @@ export class SoporteController {
     const resultado = await this.servicio.actualizarTicket(entrada);
     return respuesta.status(200).send({ success: true, data: resultado });
   }
+
+  async manejarSincronizarCrm(solicitud: FastifyRequest, respuesta: FastifyReply) {
+    const { id_support } = solicitud.params as any;
+    const resultado = await this.servicio.sincronizarEstadoCrm(id_support);
+    if (!resultado) {
+      return respuesta.status(404).send({ success: false, message: 'Ticket no encontrado' });
+    }
+    return respuesta.status(200).send({ success: true, data: resultado });
+  }
 }

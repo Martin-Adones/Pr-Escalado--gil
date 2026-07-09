@@ -73,6 +73,7 @@ export interface FilaTicket {
   status: string;
   created_at: Date;
   updated_at: Date;
+  crm_ticket_id: string | null;
 }
 
 /** Query GET -> `sp_listar_tickets` */

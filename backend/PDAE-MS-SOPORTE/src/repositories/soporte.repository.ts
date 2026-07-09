@@ -42,6 +42,22 @@ export class SoporteRepository extends BaseRepository {
     return await this.callProcedure<FilaTicket>('sp_actualizar_ticket', params, undefined);
   }
 
+  async guardarCrmTicketId(idSupport: string, crmTicketId: string): Promise<void> {
+    const db = this.getDb();
+    await db.query(
+      `UPDATE "Support" SET "crm_ticket_id" = $1, "updated_at" = CURRENT_TIMESTAMP WHERE "id_support" = $2`,
+      [crmTicketId, idSupport]
+    );
+  }
+
+  async sincronizarEstadoCrm(idSupport: string, status: string): Promise<void> {
+    const db = this.getDb();
+    await db.query(
+      `UPDATE "Support" SET "status" = $1, "updated_at" = CURRENT_TIMESTAMP WHERE "id_support" = $2`,
+      [status, idSupport]
+    );
+  }
+
   async obtenerDetallesContrato(idContracts: string): Promise<{ id_users: string; plan_name: string } | null> {
     const db = this.getDb();
     const isMock = process.env.NODE_ENV === 'mock' || process.env.NODE_ENV === 'test';

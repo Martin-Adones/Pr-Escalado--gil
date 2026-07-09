@@ -343,6 +343,7 @@ describe('Soporte API Endpoints', () => {
         status: 'open',
         created_at: new Date(),
         updated_at: new Date(),
+        crm_ticket_id: null,
       }]);
 
       const service = new (require('../src/services/soporte.service').SoporteService)();
@@ -366,6 +367,7 @@ describe('Soporte API Endpoints', () => {
         status: 'open',
         created_at: new Date(),
         updated_at: new Date(),
+        crm_ticket_id: null,
       }]);
 
       const service = new (require('../src/services/soporte.service').SoporteService)();
@@ -387,6 +389,7 @@ describe('Soporte API Endpoints', () => {
         status: 'open',
         created_at: new Date(),
         updated_at: new Date(),
+        crm_ticket_id: null,
       }]);
 
       const service = new (require('../src/services/soporte.service').SoporteService)();

@@ -28,4 +28,8 @@ export default async function rutasSoporte(fastify: FastifyInstance) {
     { schema: esquemaPostActualizarTicket },
     controlador.manejarActualizarTicket.bind(controlador),
   );
+  fastify.get(
+    '/soporte/sincronizar-crm/:id_support',
+    controlador.manejarSincronizarCrm.bind(controlador),
+  );
 }
