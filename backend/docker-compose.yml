@@ -347,6 +347,7 @@ services:
         required: false
     environment:
       UCNPAY_BASE_URL: https://proyectogestionti.onrender.com/api
+      UCNPAY_PRIVATE_KEY: ${UCNPAY_PRIVATE_KEY}
       DB_HOST: db
       DB_PORT: 5432
       DB_USER: ${DB_USER}
