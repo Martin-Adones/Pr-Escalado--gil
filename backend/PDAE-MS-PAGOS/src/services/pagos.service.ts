@@ -28,7 +28,7 @@ export class PagosService {
   constructor() {
     this.repository = new PagosRepository();
     this.ucnpayUrl = process.env.UCNPAY_BASE_URL || 'https://proyectogestionti.onrender.com/api';
-    this.privateKey = process.env.UCNPAY_PRIVATE_KEY || 'sk_135865fd689444a98430bb6c550703d7';
+    this.privateKey = process.env.UCNPAY_PRIVATE_KEY;
   }
 
   // --- Integración con UCNPAY Pasarela ---

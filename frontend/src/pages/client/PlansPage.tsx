@@ -116,9 +116,7 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
             actionLabel: isCurrent ? 'Plan actual'
               : activeContractPlanId === null
                 ? 'Contratar ahora'
-                : i < sortedPlanes.findIndex(sp => sp.id_plans === activeContractPlanId)
-                  ? `Cambiar a ${p.name}`
-                  : 'Actualizar ahora',
+                : 'Actualizar plan',
             billingCycle: p.billing_cycle,
           }
         })
