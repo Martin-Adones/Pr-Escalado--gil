@@ -28,3 +28,8 @@ export {
   extraerSubDeJwt,
   type KeycloakTokenPayload,
 } from "./utils/jwt-verifier";
+export {
+  createMicroserviceApp,
+  type MicroserviceAppOptions,
+} from "./utils/create-microservice-app";
+export { AppError } from "./utils/app-error";

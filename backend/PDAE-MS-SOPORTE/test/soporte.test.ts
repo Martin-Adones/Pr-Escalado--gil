@@ -125,7 +125,7 @@ describe('Soporte API Endpoints', () => {
     it('debe retornar 400 si ocurre una validación de DTO', async () => {
       jest
         .spyOn(SoporteRepository.prototype, 'ejecutarCrearTicket')
-        .mockRejectedValue(new Error('Error de Validacion: descripcion invalida'));
+        .mockRejectedValue(new Error('Error de Validación: descripcion invalida'));
 
       const response = await supertest(app.server)
         .post('/api/soporte/crear')
@@ -138,7 +138,7 @@ describe('Soporte API Endpoints', () => {
 
       expect(response.body).toEqual({
         success: false,
-        message: 'Error de Validacion: descripcion invalida',
+        message: 'Error de Validación: descripcion invalida',
       });
     });
 
@@ -158,7 +158,7 @@ describe('Soporte API Endpoints', () => {
 
       expect(response.body).toEqual({
         success: false,
-        message: 'Error de DB simulado',
+        message: 'Error interno del servidor',
       });
     });
   });
@@ -211,7 +211,7 @@ describe('Soporte API Endpoints', () => {
     it('debe retornar 400 si ocurre una validación de DTO en listado', async () => {
       jest
         .spyOn(SoporteRepository.prototype, 'ejecutarListarTickets')
-        .mockRejectedValue(new Error('Error de Validacion: filtro invalido'));
+        .mockRejectedValue(new Error('Error de Validación: filtro invalido'));
 
       const response = await supertest(app.server)
         .get('/api/soporte/listar')
@@ -222,7 +222,7 @@ describe('Soporte API Endpoints', () => {
 
       expect(response.body).toEqual({
         success: false,
-        message: 'Error de Validacion: filtro invalido',
+        message: 'Error de Validación: filtro invalido',
       });
     });
 
@@ -240,7 +240,7 @@ describe('Soporte API Endpoints', () => {
 
       expect(response.body).toEqual({
         success: false,
-        message: 'Error de DB genérico',
+        message: 'Error interno del servidor',
       });
     });
   });
@@ -291,7 +291,7 @@ describe('Soporte API Endpoints', () => {
     it('debe retornar 400 si ocurre una validación de DTO en actualización', async () => {
       jest
         .spyOn(SoporteRepository.prototype, 'ejecutarActualizarTicket')
-        .mockRejectedValue(new Error('Error de Validacion: campos invalidos'));
+        .mockRejectedValue(new Error('Error de Validación: campos invalidos'));
 
       const response = await supertest(app.server)
         .post('/api/soporte/actualizar')
@@ -302,7 +302,7 @@ describe('Soporte API Endpoints', () => {
 
       expect(response.body).toEqual({
         success: false,
-        message: 'Error de Validacion: campos invalidos',
+        message: 'Error de Validación: campos invalidos',
       });
     });
 
@@ -320,7 +320,7 @@ describe('Soporte API Endpoints', () => {
 
       expect(response.body).toEqual({
         success: false,
-        message: 'Error de DB genérico',
+        message: 'Error interno del servidor',
       });
     });
   });

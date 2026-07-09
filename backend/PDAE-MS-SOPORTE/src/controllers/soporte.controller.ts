@@ -7,9 +7,6 @@ import {
   ActualizarTicketEntradaDto,
 } from '../models/soporte.dtos';
 
-/**
- * Capa HTTP: valida DTOs y delega en {@link SoporteService}.
- */
 export class SoporteController {
   private servicio: SoporteService;
 
@@ -18,105 +15,37 @@ export class SoporteController {
   }
 
   async manejarCrearTicket(solicitud: FastifyRequest, respuesta: FastifyReply) {
-    solicitud.log?.debug?.({ procedimiento: 'sp_crear_ticket' }, 'ejecutando procedimiento');
+    const datos = solicitud.method === 'GET' ? solicitud.query : solicitud.body;
 
-    try {
-      const datos = solicitud.method === 'GET' ? solicitud.query : solicitud.body;
+    const rawTickets = Array.isArray(datos)
+      ? datos
+      : datos && Array.isArray((datos as any).tickets)
+        ? (datos as any).tickets
+        : [datos];
 
-      const rawTickets = Array.isArray(datos)
-        ? datos
-        : datos && Array.isArray((datos as any).tickets)
-          ? (datos as any).tickets
-          : [datos];
+    const entradas = await Promise.all(
+      rawTickets.map((item: any) => transformAndValidate(CrearTicketEntradaDto, item))
+    );
+    const token = extraerBearerToken(solicitud.headers.authorization) || undefined;
+    const resultado = await this.servicio.crearTicket(
+      entradas.length === 1 ? entradas[0] : entradas,
+      token
+    );
 
-      const entradas = await Promise.all(
-        rawTickets.map((item: any) => transformAndValidate(CrearTicketEntradaDto, item))
-      );
-      const token = extraerBearerToken(solicitud.headers.authorization) || undefined;
-      const resultado = await this.servicio.crearTicket(
-        entradas.length === 1 ? entradas[0] : entradas,
-        token
-      );
-
-      return respuesta.status(200).send({ success: true, data: resultado });
-    } catch (error: any) {
-      if (error.message.startsWith('Error de Validacion:')) {
-        return respuesta.status(400).send({
-          success: false,
-          message: error.message,
-        });
-      }
-
-      solicitud.log?.error?.(
-        { error: error.message, procedimiento: 'sp_crear_ticket' },
-        'Error en ejecucion de procedimiento'
-      );
-      return respuesta.status(500).send({
-        success: false,
-        message: error.message || 'Error interno del servidor',
-      });
-    }
+    return respuesta.status(200).send({ success: true, data: resultado });
   }
 
   async manejarListarTickets(solicitud: FastifyRequest, respuesta: FastifyReply) {
-    solicitud.log?.debug?.({ procedimiento: 'sp_listar_tickets' }, 'ejecutando procedimiento');
-
-    try {
-      const datos = solicitud.method === 'GET' ? solicitud.query : solicitud.body;
-      const entrada = await transformAndValidate(ListarTicketsConsultaDto, datos);
-      const resultado = await this.servicio.listarTickets(entrada);
-
-      return respuesta.status(200).send({
-        success: true,
-        data: resultado,
-      });
-    } catch (error: any) {
-      if (error.message.startsWith('Error de Validacion:')) {
-        return respuesta.status(400).send({
-          success: false,
-          message: error.message,
-        });
-      }
-
-      solicitud.log?.error?.(
-        { error: error.message, procedimiento: 'sp_listar_tickets' },
-        'Error en ejecucion de procedimiento'
-      );
-      return respuesta.status(500).send({
-        success: false,
-        message: error.message || 'Error interno del servidor',
-      });
-    }
+    const datos = solicitud.method === 'GET' ? solicitud.query : solicitud.body;
+    const entrada = await transformAndValidate(ListarTicketsConsultaDto, datos);
+    const resultado = await this.servicio.listarTickets(entrada);
+    return respuesta.status(200).send({ success: true, data: resultado });
   }
 
   async manejarActualizarTicket(solicitud: FastifyRequest, respuesta: FastifyReply) {
-    solicitud.log?.debug?.({ procedimiento: 'sp_actualizar_ticket' }, 'ejecutando procedimiento');
-
-    try {
-      const datos = solicitud.method === 'GET' ? solicitud.query : solicitud.body;
-      const entrada = await transformAndValidate(ActualizarTicketEntradaDto, datos);
-      const resultado = await this.servicio.actualizarTicket(entrada);
-
-      return respuesta.status(200).send({
-        success: true,
-        data: resultado,
-      });
-    } catch (error: any) {
-      if (error.message.startsWith('Error de Validacion:')) {
-        return respuesta.status(400).send({
-          success: false,
-          message: error.message,
-        });
-      }
-
-      solicitud.log?.error?.(
-        { error: error.message, procedimiento: 'sp_actualizar_ticket' },
-        'Error en ejecucion de procedimiento'
-      );
-      return respuesta.status(500).send({
-        success: false,
-        message: error.message || 'Error interno del servidor',
-      });
-    }
+    const datos = solicitud.method === 'GET' ? solicitud.query : solicitud.body;
+    const entrada = await transformAndValidate(ActualizarTicketEntradaDto, datos);
+    const resultado = await this.servicio.actualizarTicket(entrada);
+    return respuesta.status(200).send({ success: true, data: resultado });
   }
 }

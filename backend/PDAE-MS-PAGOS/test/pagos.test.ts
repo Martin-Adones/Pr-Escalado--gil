@@ -42,7 +42,7 @@ describe('Endpoints de Pagos con UCNPAY', () => {
         }
       });
 
-      expect(response.statusCode).toBe(500);
+      expect(response.statusCode).toBe(400);
       const body = JSON.parse(response.body);
       expect(body.success).toBe(false);
       expect(body.message).toContain('No tienes ningún método de pago registrado');
@@ -161,7 +161,7 @@ describe('Endpoints de Pagos con UCNPAY', () => {
       expect(response.statusCode).toBe(500);
       const body = JSON.parse(response.body);
       expect(body.success).toBe(false);
-      expect(body.message).toContain('Saldo insuficiente');
+      expect(body.message).toBe('Error interno del servidor');
     });
   });
 

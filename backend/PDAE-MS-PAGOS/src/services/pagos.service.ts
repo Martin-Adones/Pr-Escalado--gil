@@ -6,6 +6,7 @@ import {
   RegistrarTarjetaEntradaDto,
   FilaUserCard
 } from '../models/pagos.dtos';
+import { AppError } from 'shared';
 
 const UCNPAY_TIMEOUT_MS = 15000;
 
@@ -37,7 +38,7 @@ export class PagosService {
     try {
       const keycloakId = await this.repository.obtenerKeycloakIdUsuario(dto.id_users);
       if (!keycloakId) {
-        throw new Error(`Usuario con id_users ${dto.id_users} no encontrado`);
+        throw new AppError(`Usuario con id_users ${dto.id_users} no encontrado`, 404);
       }
 
       console.log(`[UCNPAY] Registrando tarjeta para usuario: ${dto.id_users} (Keycloak: ${keycloakId}) en ${this.ucnpayUrl}/ucnpay/init/suscription`);
@@ -208,7 +209,7 @@ export class PagosService {
     if (!primeraTarjeta) {
       // Si no tiene tarjeta, actualizamos a RECHAZADO localmente y lanzamos error
       await this.repository.actualizarEstadoPago(pago.id_payments, 'RECHAZADO', null);
-      throw new Error('No tienes ningún método de pago registrado. Por favor registra una tarjeta primero.');
+      throw new AppError('No tienes ningún método de pago registrado. Por favor registra una tarjeta primero.', 400);
     }
 
     // Intentar cobro automático recurrente (MIT) directamente
