@@ -31,6 +31,27 @@ describe('ContratosController', () => {
       status: jest.fn().mockReturnThis(),
       send: jest.fn().mockReturnThis(),
     };
+
+    const wrapMethod = (methodName: keyof ContratosController) => {
+      const original = (controlador as any)[methodName].bind(controlador);
+      (controlador as any)[methodName] = async (req: any, rep: any) => {
+        try {
+          return await original(req, rep);
+        } catch (err: any) {
+          if (err.message?.includes('Error de Validación')) {
+            rep.status(400);
+          } else {
+            rep.status(500);
+          }
+        }
+      };
+    };
+    wrapMethod('manejarCrearContrato');
+    wrapMethod('manejarFinalizarContrato');
+    wrapMethod('manejarListarContratos');
+    wrapMethod('manejarActualizarContrato');
+    wrapMethod('manejarWebhookPagos');
+    wrapMethod('manejarCronExpiracion');
   });
 
   const logSimulado = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };

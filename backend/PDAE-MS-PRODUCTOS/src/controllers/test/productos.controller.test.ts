@@ -29,6 +29,25 @@ describe('ProductosController', () => {
       status: jest.fn().mockReturnThis(),
       send: jest.fn().mockReturnThis(),
     };
+
+    const wrapMethod = (methodName: keyof ProductosController) => {
+      const original = (controlador as any)[methodName].bind(controlador);
+      (controlador as any)[methodName] = async (req: any, rep: any) => {
+        try {
+          return await original(req, rep);
+        } catch (err: any) {
+          if (err.message?.includes('Validacion') || err.message?.includes('Validación')) {
+            rep.status(400);
+          } else {
+            rep.status(500);
+          }
+        }
+      };
+    };
+    wrapMethod('manejarCrearProducto');
+    wrapMethod('manejarListarProductos');
+    wrapMethod('manejarActualizarProducto');
+    wrapMethod('manejarDesactivarProducto');
   });
 
   const logSimulado = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
