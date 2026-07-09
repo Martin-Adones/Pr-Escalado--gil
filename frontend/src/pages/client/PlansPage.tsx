@@ -383,7 +383,7 @@ export default function Plans({ navItems, logoutItem, activeNavLabel, userId }: 
                     key={plan.id}
                     className={`relative flex flex-col rounded-2xl bg-white p-5 transition-all duration-200 ${
                       plan.isCurrent
-                        ? 'border-2 border-[#284B63] shadow-md'
+                        ? 'border border-gray-200 shadow-sm'
                         : plan.isRecommended && !plan.isCurrent
                           ? 'border-2 border-[#3C6E71] shadow-lg'
                           : 'border border-gray-200 shadow-sm hover:border-[#3C6E71]/50 hover:shadow-md'
